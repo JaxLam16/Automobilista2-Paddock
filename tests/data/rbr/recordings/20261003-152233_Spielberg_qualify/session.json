@@ -1,0 +1,201 @@
+{
+  "format": 1,
+  "recorder_version": "0.1.0",
+  "label": "jacks",
+  "hostname": "JaxsLPTP",
+  "hz": 20.0,
+  "shm_version": 14,
+  "build_version": 3436,
+  "started_at": "2026-10-03T15:22:33",
+  "session_type": "qualify",
+  "track_location": "Spielberg",
+  "track_variation": "Spielberg_Modern",
+  "track_location_translated": "Spielberg",
+  "track_variation_translated": "Spielberg",
+  "track_length": 4307.28,
+  "num_sectors": 3,
+  "laps_in_event": 0,
+  "session_duration_min": 300.0,
+  "session_additional_laps": 1,
+  "local": {
+    "name": "Jax_Lam",
+    "car": "Nissan R390 GT1",
+    "car_class": "GT1"
+  },
+  "status": "complete",
+  "end_reason": "session_change",
+  "ended_at": "2026-10-03T15:28:00",
+  "duration_s": 326.99,
+  "green_t": null,
+  "ticks": 6531,
+  "final": [
+    {
+      "name": "Jax_Lam",
+      "car": "Nissan R390 GT1",
+      "race_pos": 7,
+      "laps_completed": 2,
+      "race_state": "finished",
+      "fastest_lap": 87.5
+    },
+    {
+      "name": "Toshihiro Sakurai",
+      "car": "Nissan R390 GT1",
+      "race_pos": 18,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 89.564
+    },
+    {
+      "name": "Erik Dalmas",
+      "car": "Nissan R390 GT1",
+      "race_pos": 13,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 88.16
+    },
+    {
+      "name": "Agiro Sasaki",
+      "car": "Nissan R390 GT1",
+      "race_pos": 11,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.975
+    },
+    {
+      "name": "Markell Grimm",
+      "car": "Nissan R390 GT1",
+      "race_pos": 17,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 88.921
+    },
+    {
+      "name": "Ricardo Zonta",
+      "car": "Mercedes-Benz CLK LM",
+      "race_pos": 1,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 86.997
+    },
+    {
+      "name": "John-Paul Gagnon",
+      "car": "Mercedes-Benz CLK LM",
+      "race_pos": 4,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.319
+    },
+    {
+      "name": "Fred Morrie",
+      "car": "Mercedes-Benz CLK LM",
+      "race_pos": 10,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.764
+    },
+    {
+      "name": "Rulf Fenstermacher",
+      "car": "Mercedes-Benz CLK LM",
+      "race_pos": 6,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.5
+    },
+    {
+      "name": "Claude Boucher",
+      "car": "Mercedes-Benz CLK LM",
+      "race_pos": 16,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 88.62
+    },
+    {
+      "name": "Maurice Leymann",
+      "car": "Mercedes-Benz CLK LM",
+      "race_pos": 5,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.433
+    },
+    {
+      "name": "Bernhard Snyder",
+      "car": "Mercedes-Benz CLK LM",
+      "race_pos": 2,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.062
+    },
+    {
+      "name": "Jean-Finis Detraz",
+      "car": "Porsche 911 GT1-98",
+      "race_pos": 12,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 88.155
+    },
+    {
+      "name": "Greg Gyles",
+      "car": "McLaren F1 GTR",
+      "race_pos": 21,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 90.279
+    },
+    {
+      "name": "Scott Cooper",
+      "car": "McLaren F1 GTR",
+      "race_pos": 9,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.602
+    },
+    {
+      "name": "Kiichiro Tsuji",
+      "car": "McLaren F1 GTR",
+      "race_pos": 19,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 89.918
+    },
+    {
+      "name": "Atsuo Tanaka",
+      "car": "McLaren F1 GTR",
+      "race_pos": 20,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 90.02
+    },
+    {
+      "name": "Jaakko Juhani Lahti",
+      "car": "McLaren F1 GTR",
+      "race_pos": 8,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.507
+    },
+    {
+      "name": "Sven Swanson",
+      "car": "McLaren F1 GTR",
+      "race_pos": 15,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 88.542
+    },
+    {
+      "name": "Daniel Bradley",
+      "car": "Panoz Esperante GTR-1",
+      "race_pos": 3,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 87.26
+    },
+    {
+      "name": "Francis Langlois",
+      "car": "Panoz Esperante GTR-1",
+      "race_pos": 14,
+      "laps_completed": 2,
+      "race_state": "racing",
+      "fastest_lap": 88.218
+    }
+  ]
+}

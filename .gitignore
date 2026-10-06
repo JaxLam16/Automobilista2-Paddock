@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.egg-info/
+.pytest_cache/
+*.pyc
+
+# Your data, created next to the app when it runs. Anchored to the top level (/...) so the test
+# fixtures in tests/data/*/recordings and tests/data/*/tracks are still committed.
+/recordings/
+/demo_recordings/
+/championships/
+/engineer/
+/livery_editor/
+/tracks/
+/car_icons/
+/ams2season.json
+/ams2season.log*
+/.appwindow/
+*.db

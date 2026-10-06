@@ -1,0 +1,29 @@
+{"t": 0.0, "type": "session_state", "value": 3}
+{"t": 15.5997, "type": "local_crash_state", "value": 1}
+{"t": 18.5497, "type": "local_crash_state", "value": 0}
+{"t": 96.305, "type": "race_state", "name": "Jean-Finis Detraz", "from": "not_started", "to": "racing"}
+{"t": 97.8053, "type": "race_state", "name": "Markell Grimm", "from": "not_started", "to": "racing"}
+{"t": 98.7051, "type": "race_state", "name": "Claude Boucher", "from": "not_started", "to": "racing"}
+{"t": 98.855, "type": "race_state", "name": "Sven Swanson", "from": "not_started", "to": "racing"}
+{"t": 100.1053, "type": "race_state", "name": "Erik Dalmas", "from": "not_started", "to": "racing"}
+{"t": 100.9052, "type": "race_state", "name": "Fred Morrie", "from": "not_started", "to": "racing"}
+{"t": 101.9553, "type": "race_state", "name": "Agiro Sasaki", "from": "not_started", "to": "racing"}
+{"t": 102.1553, "type": "race_state", "name": "Francis Langlois", "from": "not_started", "to": "racing"}
+{"t": 103.1052, "type": "race_state", "name": "Rulf Fenstermacher", "from": "not_started", "to": "racing"}
+{"t": 104.155, "type": "race_state", "name": "Maurice Leymann", "from": "not_started", "to": "racing"}
+{"t": 104.7553, "type": "race_state", "name": "John-Paul Gagnon", "from": "not_started", "to": "racing"}
+{"t": 106.1052, "type": "race_state", "name": "Scott Cooper", "from": "not_started", "to": "racing"}
+{"t": 106.9052, "type": "race_state", "name": "Jaakko Juhani Lahti", "from": "not_started", "to": "racing"}
+{"t": 107.9052, "type": "race_state", "name": "Bernhard Snyder", "from": "not_started", "to": "racing"}
+{"t": 108.6053, "type": "race_state", "name": "Ricardo Zonta", "from": "not_started", "to": "racing"}
+{"t": 108.6554, "type": "race_state", "name": "Greg Gyles", "from": "not_started", "to": "racing"}
+{"t": 108.9052, "type": "race_state", "name": "Daniel Bradley", "from": "not_started", "to": "racing"}
+{"t": 109.7549, "type": "race_state", "name": "Kiichiro Tsuji", "from": "not_started", "to": "racing"}
+{"t": 110.705, "type": "race_state", "name": "Atsuo Tanaka", "from": "not_started", "to": "racing"}
+{"t": 111.4549, "type": "race_state", "name": "Toshihiro Sakurai", "from": "not_started", "to": "racing"}
+{"t": 123.0353, "type": "race_state", "name": "Jax_Lam", "from": "not_started", "to": "racing"}
+{"t": 275.0037, "type": "local_crash_state", "value": 1}
+{"t": 276.8537, "type": "local_crash_state", "value": 0}
+{"t": 279.5539, "type": "local_crash_state", "value": 1}
+{"t": 283.2541, "type": "local_crash_state", "value": 0}
+{"t": 300.0038, "type": "race_state", "name": "Jax_Lam", "from": "racing", "to": "finished"}

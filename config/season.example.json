@@ -1,0 +1,32 @@
+{
+  "name": "Friday Night GT3 - Season 1",
+  "drivers": [
+    {"key": "jax",   "display": "Jax",   "aliases": ["JaxLam16", "Jax L"]},
+    {"key": "mason", "display": "Mason", "aliases": ["MasonRacing"]},
+    {"key": "eli",   "display": "Eli",   "aliases": []},
+    {"key": "theo",  "display": "Theo",  "aliases": []}
+  ],
+  "points": {
+    "f1":     [25, 18, 15, 12, 10, 8, 6, 4, 2, 1],
+    "linear": [10, 8, 6, 5, 4, 3, 2, 1],
+    "motogp": [25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+  },
+  "default_points": "f1",
+  "ai_policy": "humans_only",
+  "fastest_lap_bonus": 1,
+  "drop_rounds": 0,
+  "points_for_dnf": false,
+  "pass_detection": {
+    "hold_s": 3.0,
+    "gift_speed_ratio": 0.5,
+    "battle_gap_s": 1.0,
+    "battle_min_laps": 2.0
+  },
+  "corners": {
+    "Spa-Francorchamps|Grand Prix": [
+      {"name": "La Source", "apex": 380},
+      {"name": "Eau Rouge", "apex": 1100},
+      {"name": "Les Combes", "apex": 2800}
+    ]
+  }
+}
