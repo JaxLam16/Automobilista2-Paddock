@@ -1,8 +1,8 @@
 """Season database: ingest analysed races, apply stewarding corrections, compute standings and
 season-long stats.
 
-Humans are persistent `driver` rows matched by name/alias from the season config. AI are
-race-scoped entrants with driver_id NULL and are never tracked across rounds.
+Human aliases and explicitly assigned fictional AI are persistent driver rows.
+Unassigned AI remain race-scoped entrants; their raw names never register them.
 """
 from __future__ import annotations
 
@@ -18,6 +18,8 @@ import pandas as pd
 
 from .passes import PassParams
 from .race import COUNTED, _norm, analyze_race
+
+ANALYSIS_VERSION = 3  # opportunity-aware starts and linked-corner exit clearance
 
 SCHEMA = """
 PRAGMA foreign_keys = ON;
@@ -78,6 +80,8 @@ class SeasonConfig:
     teams: list = field(default_factory=list)      # [{"key", "name", "color", "icon", "members": [driver keys]}]
     team_count: int = 0                            # 0 = every member's points count; N = best N per race
     team_colors_for_drivers: bool = False
+    livery_ai: bool = False
+    car_class: str = ""                      # catalog filter for roster/livery pickers
 
     @classmethod
     def load(cls, path: str | Path) -> "SeasonConfig":
@@ -101,7 +105,8 @@ class SeasonConfig:
         return m
 
     def human_names(self) -> set[str]:
-        return set(self.alias_map())
+        return {_norm(n) for d in self.drivers if d.get('role', 'human') != 'ai'
+                for n in [d.get('display', d['key']), d['key'], *d.get('aliases', [])]}
 
     def corners_for(self, track: str, layout: str) -> list[dict] | None:
         c = self.corners.get(f"{track}|{layout}")
@@ -162,8 +167,8 @@ def _py(v):
 def ingest(db_path: str | Path, cfg: SeasonConfig, session_dir: str | Path, round_no: int | None = None,
            race_no: int = 1, note: str | None = None) -> dict:
     """Analyse a race recording and store it as round `round_no` (replaces an earlier ingest)."""
-    from .derive import load_session
-    sess = load_session(session_dir)
+    from .identities import project_session, revision
+    sess = project_session(session_dir, cfg)
     ra = analyze_race(sess, humans=cfg.human_names(),
                       corners_override=cfg.corners_for(sess.meta["track_location"], sess.meta["track_variation"]),
                       params=cfg.pass_params())
@@ -190,13 +195,16 @@ def ingest(db_path: str | Path, cfg: SeasonConfig, session_dir: str | Path, roun
             amap = cfg.alias_map()
             eid = {}
             for e in ra.entrants.itertuples():
-                key = amap.get(_norm(e.name))
+                key = sess.meta.get('_livery_drivers', {}).get(e.name) if e.is_ai else amap.get(_norm(e.name))
+                recorded_name = sess.meta.get('_recorded_names', {}).get(e.name, e.name)
                 c = con.execute("INSERT INTO entrant(session_id, driver_id, name, car, car_class, is_ai) VALUES(?,?,?,?,?,?)",
-                                (sid, ids.get(key) if key else None, e.name, e.car, e.car_class, int(e.is_ai)))
+                                (sid, ids.get(key) if key else None, recorded_name, e.car, e.car_class, int(e.is_ai)))
                 eid[e.name] = c.lastrowid
             stats = ra.stats.set_index("name")
             for r in ra.classification.itertuples():
                 s = {k: _py(v) for k, v in stats.loc[r.name].to_dict().items()}
+                s["_analysis_v"] = ANALYSIS_VERSION
+                s['_identity_v'] = revision(session_dir, cfg)
                 con.execute("INSERT INTO result VALUES(?,?,?,?,?,?,?,?)",
                             (eid[r.name], _py(r.grid), r.pos, r.status, r.laps, _py(r.total_time),
                              s.get("best_lap"), json.dumps(s)))
@@ -242,6 +250,16 @@ def add_correction(db_path, round_no: int, driver: str, kind: str, value: float 
     if kind not in CORRECTION_KINDS:
         raise ValueError(f"kind must be one of {CORRECTION_KINDS}")
     con = connect(db_path)
+    cfg = stored_config(con)
+    if cfg:
+        key = cfg.alias_map().get(_norm(driver))
+        if key:
+            row = con.execute('''SELECT en.name FROM entrant en JOIN driver d ON d.id=en.driver_id
+                JOIN session s ON s.id=en.session_id JOIN event ev ON ev.id=s.event_id
+                WHERE ev.round=? AND s.race_no=? AND s.type='race' AND d.key=? AND en.is_ai=1''',
+                (round_no, race_no, key)).fetchone()
+            if row:
+                driver = row['name']  # stewarding follows the recorded car when its paint is corrected
     with con:
         cur = con.execute("INSERT INTO correction(round, race_no, driver, kind, value, note, created_at) VALUES(?,?,?,?,?,?,?)",
                           (round_no, race_no, driver, kind, value, note, datetime.now().isoformat(timespec="seconds")))
@@ -329,8 +347,12 @@ def file_practice(db_path, cfg: "SeasonConfig", session_dir, round_no: int) -> d
         ids = _sync_config(con, cfg)
         amap = cfg.alias_map()
         stats = practice_stats(session_dir)
-        humans = {n: amap[_norm(n)] for n in stats if amap.get(_norm(n))}
+        humans = {n: amap[_norm(n)] for n in stats if _norm(n) in cfg.human_names()}
         won = awards(stats, humans, cfg.practice_awards, cfg.practice_points) if cfg.practice_points else []
+        if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='weekend'").fetchone():
+            p1 = {r[0] for r in con.execute('SELECT practice1 FROM weekend WHERE practice1 IS NOT NULL')}
+            if session_dir.name in p1:
+                won = []  # setup/learning sessions never add championship points
         ids = ids or dict(con.execute("SELECT key, id FROM driver").fetchall())
         con.execute("DELETE FROM practice WHERE path = ?", (str(session_dir),))
         cur = con.execute("INSERT INTO practice(round, path, started_at, track, filed_at) VALUES (?,?,?,?,?)",
@@ -400,7 +422,7 @@ def standings(con: sqlite3.Connection, cfg: SeasonConfig, policy: str | None = N
         st.attrs["policy"], st.attrs["points"] = policy, points_name or cfg.default_points
         return st.reset_index(drop=True)
     eligible_status = {"finished", "running"} | ({"dnf", "disconnected"} if cfg.points_for_dnf else set())
-    hum = races[~races.is_ai & races.driver.notna()].copy()
+    hum = races[races.driver.notna() & (~races.is_ai if policy == 'humans_only' else True)].copy()
     rank_col = "human_rank" if policy == "humans_only" else "finish"
     hum["rank"] = hum[rank_col].astype(int)
     hum["pts"] = [
@@ -421,7 +443,7 @@ def standings(con: sqlite3.Connection, cfg: SeasonConfig, policy: str | None = N
         scores = sorted(per.values())
         dropped = scores[:cfg.drop_rounds] if cfg.drop_rounds and len(scores) > cfg.drop_rounds else []
         pp = prac.pop(key, {}).get("points", 0.0)
-        rows.append({"driver": g.display.iat[0], "points": sum(scores) - sum(dropped) + pp,
+        rows.append({"driver": g.display.iat[0], "is_ai": bool(g.is_ai.iat[0]), "points": sum(scores) - sum(dropped) + pp,
                      **{lab: per.get(lab, np.nan) for lab in labels}, "practice": pp,
                      "wins": int((g["rank"] == 1).sum()), "podiums": int((g["rank"] <= 3).sum()),
                      "best": int(g["rank"].min()), "races": len(g)})
@@ -443,7 +465,7 @@ def _stats_frame(races: pd.DataFrame) -> pd.DataFrame:
     return races.drop(columns=["stats"]).join(s[keep].drop(columns=["name"], errors="ignore"))
 
 
-def driver_stats(con: sqlite3.Connection, cfg: SeasonConfig) -> pd.DataFrame:
+def driver_stats(con: sqlite3.Connection, cfg: SeasonConfig, include_ai: bool = False) -> pd.DataFrame:
     races = classified_races(con, cfg)
     if races.empty:
         return pd.DataFrame()
@@ -451,12 +473,12 @@ def driver_stats(con: sqlite3.Connection, cfg: SeasonConfig) -> pd.DataFrame:
     df["classified"] = df.status.isin(["finished", "running"])
     fastest = df[df.best_lap.notna()].groupby(["round", "race_no"]).best_lap.transform("min")
     df["fastest_lap"] = df.best_lap.eq(fastest.reindex(df.index))
-    hum = df[~df.is_ai & df.driver.notna()]
+    hum = df[df.driver.notna() & (~df.is_ai if not include_ai else True)]
     rows = []
     for key, g in hum.groupby("driver"):
         gc = g[g.classified]
         rows.append({
-            "driver": g.display.iat[0], "races": len(g),
+            "driver": g.display.iat[0], "is_ai": bool(g.is_ai.iat[0]), "races": len(g),
             "wins": int((g.finish == 1).sum()), "podiums": int((g.finish <= 3).sum()),
             "human_wins": int((g.human_rank == 1).sum()),
             "avg_grid": g.grid.mean(), "avg_finish": gc.finish.mean(), "avg_human_rank": g.human_rank.mean(),
@@ -550,7 +572,7 @@ def rounds_summary(con: sqlite3.Connection, cfg: SeasonConfig) -> list[dict]:
             "round": r["round"], "race_no": r["race_no"], "track": r["track"], "layout": r["layout"],
             "started_at": r["started_at"], "recording": Path(r["path"]).name, "path": r["path"],
             "recording_exists": Path(r["path"]).exists(),
-            "winner": race.name.iat[0] if len(race) else None,
+            "winner": (race.display.iat[0] if pd.notna(race.display.iat[0]) else race.name.iat[0]) if len(race) else None,
             "winner_is_ai": bool(race.is_ai.iat[0]) if len(race) else None,
             "first_human": hum.name.iat[0] if len(hum) else None,
             "first_human_pos": int(hum.finish.iat[0]) if len(hum) else None,
@@ -583,10 +605,43 @@ def remove_round(db_path, round_no: int, race_no: int = 1) -> None:
             if not ev:
                 return
             con.execute("DELETE FROM session WHERE event_id=? AND type='race' AND race_no=?", (ev["id"], race_no))
+            if race_no == 1 and con.execute("SELECT 1 FROM sqlite_master WHERE name='weekend'").fetchone():
+                con.execute('UPDATE weekend SET race=NULL WHERE round=?', (round_no,))
             if not con.execute("SELECT 1 FROM session WHERE event_id=?", (ev["id"],)).fetchone():
                 con.execute("DELETE FROM event WHERE id=?", (ev["id"],))
     finally:
         con.close()
+
+
+def refresh_analysis(db_path, cfg: SeasonConfig) -> list[str]:
+    """Refresh outdated stored race analyses, retaining event notes and steward corrections."""
+    con = connect(db_path)
+    try:
+        rows = con.execute("""SELECT ev.round, s.race_no, s.path, r.stats FROM session s
+            JOIN event ev ON ev.id=s.event_id JOIN entrant en ON en.session_id=s.id
+            JOIN result r ON r.entrant_id=en.id WHERE s.type='race'""").fetchall()
+    finally:
+        con.close()
+    stale = {}
+    for r in rows:
+        try:
+            version = json.loads(r["stats"] or "{}").get("_analysis_v")
+        except (ValueError, AttributeError):
+            version = None
+        from .identities import revision
+        identity_version = json.loads(r['stats'] or '{}').get('_identity_v', '')
+        if version != ANALYSIS_VERSION or identity_version != revision(r['path'], cfg):
+            stale[(r["round"], r["race_no"])] = r["path"]
+    problems = []
+    for (round_no, race_no), path in stale.items():
+        if not (Path(path) / "frames.parquet").is_file():
+            problems.append(f"Round {round_no}, race {race_no}: recording missing; stored results retained.")
+            continue
+        try:
+            ingest(db_path, cfg, path, round_no=round_no, race_no=race_no)
+        except Exception as exc:
+            problems.append(f"Round {round_no}, race {race_no}: analysis refresh failed ({exc}).")
+    return problems
 
 
 def reingest_all(db_path, cfg: SeasonConfig) -> list[str]:
@@ -606,8 +661,7 @@ def reingest_all(db_path, cfg: SeasonConfig) -> list[str]:
             ingest(db_path, cfg, r["path"], round_no=r["round"], race_no=r["race_no"])
         except Exception as exc:
             problems.append(f"round {r['round']}: {exc}")
-    if not rows:
-        save_config(db_path, cfg)
+    save_config(db_path, cfg)  # retain settings even when a recording is unavailable
     return problems
 
 
@@ -650,7 +704,7 @@ def race_points(con, cfg: SeasonConfig, policy: str | None = None, points_name: 
     if races.empty:
         return pd.DataFrame(columns=["round", "race_no", "driver", "display", "pts", "rank"])
     eligible = {"finished", "running"} | ({"dnf", "disconnected"} if cfg.points_for_dnf else set())
-    hum = races[~races.is_ai & races.driver.notna()].copy()
+    hum = races[races.driver.notna() & (~races.is_ai if policy == 'humans_only' else True)].copy()
     hum["rank"] = hum["human_rank" if policy == "humans_only" else "finish"].astype(int)
     hum["pts"] = [(table[r - 1] if (r <= len(table) and st in eligible) else 0.0) for r, st in zip(hum["rank"], hum.status)]
     if cfg.fastest_lap_bonus:
@@ -726,10 +780,10 @@ def season_cars_and_style(con, cfg: SeasonConfig) -> dict:
         st = json.loads(x["stats"] or "{}")
         rows.append({"car": x["car"], "is_ai": bool(x["is_ai"]), "display": x["display"], "finish": x["finish"], "sid": x["sid"],
                      **{k: st.get(k) for k in ("median_clean", "best_lap", "top_speed_kph", "brake_consistency",
-                                               "throttle_consistency", "track_usage", "apex_gap_m",
+                                               "throttle_consistency", "track_usage", "apex_gap_m", "exit_gap_m",
                                                "apex_delta_slow", "apex_delta_medium", "apex_delta_fast")}})
     df = pd.DataFrame(rows)
-    for col in ("median_clean", "best_lap", "top_speed_kph", "brake_consistency", "throttle_consistency", "track_usage", "apex_gap_m",
+    for col in ("median_clean", "best_lap", "top_speed_kph", "brake_consistency", "throttle_consistency", "track_usage", "apex_gap_m", "exit_gap_m",
                 "apex_delta_slow", "apex_delta_medium", "apex_delta_fast"):
         df[col] = pd.to_numeric(df[col], errors="coerce")
     df["rel"] = (df.median_clean / df.groupby("sid").median_clean.transform("median") - 1) * 100
@@ -741,13 +795,13 @@ def season_cars_and_style(con, cfg: SeasonConfig) -> dict:
                      "top_speed": round(float(g.top_speed_kph.max())) if g.top_speed_kph.notna().any() else None,
                      **{k: (round(float(g[k].mean()), 1) if g[k].notna().any() else None)
                         for k in ("apex_delta_slow", "apex_delta_medium", "apex_delta_fast")},
-                     "humans": sorted({d for d in g.display.dropna()})})
+                     "humans": sorted({d for d in g.loc[~g.is_ai, 'display'].dropna()})})
     cars.sort(key=lambda c: (c["pace_vs_field"] is None, c["pace_vs_field"] if c["pace_vs_field"] is not None else 0))
     style = []
     for who, g in df[df.display.notna()].groupby("display"):
-        style.append({"driver": who, "races": int(g.sid.nunique()),
-                      **{k: (round(float(g[k].mean()), 2 if k == "apex_gap_m" else 0) if g[k].notna().any() else None)
-                         for k in ("brake_consistency", "throttle_consistency", "track_usage", "apex_gap_m")}})
+        style.append({"driver": who, "is_ai": bool(g.is_ai.iat[0]), "races": int(g.sid.nunique()),
+                      **{k: (round(float(g[k].mean()), 2 if k in ("apex_gap_m", "exit_gap_m") else 0) if g[k].notna().any() else None)
+                         for k in ("brake_consistency", "throttle_consistency", "track_usage", "apex_gap_m", "exit_gap_m")}})
     style.sort(key=lambda r: -(r["track_usage"] or 0))
     field = {"races": int(df.sid.nunique()), "entries": int(len(df)),
              "pace_by_race": [round(float(v), 3) for v in df.groupby("sid").median_clean.median().dropna()],

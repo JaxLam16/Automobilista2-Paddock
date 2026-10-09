@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import shm as S
-from .derive import (Session, _last_valid, add_distance, detect_corners, effective_track_length, load_session)
+from .derive import (Session, _last_valid, add_distance, completed_lap_time, detect_corners, effective_track_length, load_session)
 from .race import _norm, find_ghosts
 from .replay import BODY_TYPES, body_type, heading_calibration, row_heading
 from .report import HUMAN_COLORS, _clean
@@ -42,7 +42,7 @@ class QualiAnalysis:
 
 
 def session_laps(g: pd.DataFrame, L: float) -> pd.DataFrame:
-    """Every complete lap (line to line) for one car, with validity and the game's lap time."""
+    """Every recorded complete lap; missing telemetry cannot supply line crossings."""
     t, d = g.t.to_numpy(), g.dist.to_numpy()
     if len(t) < 10:
         return pd.DataFrame()
@@ -56,12 +56,17 @@ def session_laps(g: pd.DataFrame, L: float) -> pd.DataFrame:
     T = np.interp(ks * L, dx, tx)
     last_lap, inv, pit = g.last_lap.to_numpy(float), g.lap_invalid.to_numpy(bool), g.pit_mode.to_numpy()
     s1v, s2v = g.cur_s1.to_numpy(float), g.cur_s2.to_numpy(float)
+    gaps = np.flatnonzero(np.diff(t) > 2.0)
     rows = []
     for i in range(len(ks) - 1):
         t0, t1 = T[i], T[i + 1]
+        # Distance reconstruction continues across gaps, but its predicted whole
+        # laps are not recorded laps. Do not interpolate timing or speed traces
+        # through a pause/disconnection, including laps with zero samples.
+        if ((t[gaps] < t1) & (t[gaps + 1] > t0)).any():
+            continue
         own = t1 - t0
-        win = (t > t1 - 0.5) & (t <= t1 + 5) & (last_lap > 0) & (np.abs(last_lap - own) < max(0.5, 0.02 * own))
-        lap_time = float(last_lap[win][0]) if win.any() else own
+        lap_time, _ = completed_lap_time(t, last_lap, t1, own)
         in_lap = (t > t0 + 0.5) & (t <= t1)
         s1 = _last_valid(t, s1v, t0 + 0.5, t1 - 0.02)
         s2 = _last_valid(t, s2v, t0 + 0.5, t1 - 0.02)
@@ -151,6 +156,10 @@ def analyze_qualifying(path_or_session, humans: set[str] | None = None, extra_re
                        track_samples=None, track_width=None) -> QualiAnalysis:
     sess = path_or_session if isinstance(path_or_session, Session) else load_session(path_or_session)
     warnings = []
+    ticks = np.sort(sess.frames.t.unique())
+    gap_count = int((np.diff(ticks) > 2.0).sum())
+    if gap_count:
+        warnings.append(f"recording has {gap_count} gaps over 2 seconds; laps crossing missing telemetry are excluded")
     hum = {_norm(h) for h in humans} if humans else set()
     L, why = effective_track_length(sess.frames, sess.L)
     if why:
@@ -182,9 +191,12 @@ def analyze_qualifying(path_or_session, humans: set[str] | None = None, extra_re
         game_best = g.loc[g.fastest_lap > 0, "fastest_lap"]
         choice = None
         if len(game_best):  # the game's own fastest lap is authoritative for validity
-            match = lp[(lp.time - float(game_best.iat[-1])).abs() < 0.02]
+            error = (lp.time - float(game_best.iat[-1])).abs()
+            match = lp[error < 0.02]
             if len(match):
-                choice = match.iloc[0]
+                # Several consistent laps can fall within the timing tolerance.
+                # Prefer the closest recorded time, rather than an earlier slower lap.
+                choice = match.loc[error.loc[match.index].idxmin()]
         if choice is None and lp.valid.any():
             choice = lp[lp.valid].sort_values("time").iloc[0]
         if choice is None:
@@ -213,10 +225,11 @@ def analyze_qualifying(path_or_session, humans: set[str] | None = None, extra_re
         ef = add_distance(es.frames[es.frames.name == en], eL, None)
         elp = session_laps(ef, eL)
         target = next(r for r in rows if r["name"] == en)["best"]
-        match = elp[(elp.time - target).abs() < 0.02] if len(elp) else elp
+        error = (elp.time - target).abs() if len(elp) else pd.Series(dtype=float)
+        match = elp[error < 0.02] if len(elp) else elp
         if not len(match):
             continue
-        lap = match.iloc[0]
+        lap = match.loc[error.loc[match.index].idxmin()]
         sl = ef[(ef.t >= lap.t0 - 1.5) & (ef.t <= lap.t1 + 1.5)]
         ex = _lap_grid(sl, lap, eL, None, grid * (eL / L), elo)
         if "thr" in ex:
@@ -243,7 +256,7 @@ def _assemble(sess, fr, L, grid, grid_m, best, rows, laps, warnings, extra_recor
     if best:
         V = np.vstack([b["v"] for b in best.values()]) / 3.6
         med = np.nanmedian(V, axis=0)
-        nb = max(int(L / 10), 1)
+        nb = max(int(np.ceil(L / 10)), 1)
         prof = np.interp(np.arange(nb) * 10 + 5, grid, med)
         pole = best[cls.name.iat[0]]
         from .derive import curvature_profile

@@ -115,7 +115,9 @@ def replay_data(ra: RaceAnalysis, dt: float | None = None, colors: dict | None =
     humans = [n for n in cls.name if not st.loc[n, "is_ai"]]
     color = {n: HUMAN_COLORS[i % len(HUMAN_COLORS)] for i, n in enumerate(humans)}
     if colors:
-        color.update({n: c for n, c in colors.items() if n in color})
+        color.update({n: c for n, c in colors.items() if n in set(cls.name)})
+    appearance = sess.meta.get('_livery_appearance', {})
+    color.update({n: a['color'] for n, a in appearance.items() if a.get('color')})
 
     cars, drivers = {}, []
     groups = fr.groupby("name")
@@ -134,6 +136,7 @@ def replay_data(ra: RaceAnalysis, dt: float | None = None, colors: dict | None =
             "d": _ints(np.interp(T, t, g.dist.to_numpy(float)), present, 1),
             "v": _ints(np.interp(T, t, g.speed.to_numpy(float)) * 3.6, present, 1),
             "h": _ints(np.degrees(np.mod(headings.get(r.name, np.zeros(len(T))), 2 * np.pi)), present, 1),
+            "p": _ints(g.race_pos.to_numpy()[nearest], present, 1),
         }
         rs = g.race_state.to_numpy()
         fin = t[rs == S.RACESTATE_FINISHED]
@@ -143,9 +146,11 @@ def replay_data(ra: RaceAnalysis, dt: float | None = None, colors: dict | None =
             "name": r.name, "car": r.car, "car_class": r.car_class, "body": btype,
             "length": ((icons or {}).get(r.car) or {}).get("length") or BODY_TYPES[btype][0], "width": BODY_TYPES[btype][1],
             "icon": ((icons or {}).get(r.car) or {}).get("url"),
+            "livery": appearance.get(r.name),
             "is_ai": bool(st.loc[r.name, "is_ai"]), "color": color.get(r.name),
             "pos": r.pos, "grid": r.grid, "status": r.status,
             "finish_t": float(fin[0]) if len(fin) else None,
+            "distance_ready_t": float(t[np.flatnonzero(g.lap_dist.to_numpy() != 0)[0]]) if (g.lap_dist != 0).any() else None,
             "out_t": float(out[0]) if len(out) else (float(t[-1]) if r.status == "disconnected" else None),
         })
 

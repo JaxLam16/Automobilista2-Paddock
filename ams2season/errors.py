@@ -33,11 +33,14 @@ def _braking_point(d: np.ndarray, t: np.ndarray, v: np.ndarray, apex: float) -> 
 
 
 def race_errors(ra) -> dict:
+    from .race import COUNTED
     fr = ra.frames
     laps = ra.laps
     corners = ra.corners or []
     L = float(ra.session.L)
     passes = ra.passes if ra.passes is not None else pd.DataFrame(columns=["t", "passer", "passed"])
+    if 'kind' in passes:
+        passes = passes[passes.kind.isin(COUNTED)]
     by_car = {n: g.sort_values("t") for n, g in fr.groupby("name")}
     # every car's distance against time, to tell a mistake from being held up
     tracks = {n: (g.t.to_numpy(float), g.dist.to_numpy(float)) for n, g in by_car.items()}
@@ -72,7 +75,7 @@ def race_errors(ra) -> dict:
         mine_err = []
         for z in zones.values():
             bz = base.get(z["corner"])
-            if not bz or z["lap"] in pit:
+            if not bz or z["lap"] in pit or z['lap'] <= 1:
                 continue
             loss = z["time"] - bz["time"]
             if loss < MIN_LOSS:

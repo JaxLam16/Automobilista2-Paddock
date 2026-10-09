@@ -1,0 +1,6 @@
+# Versions used for alpha 1. Install in an isolated Windows x64 build environment.
+pyinstaller==6.13.0
+numpy==2.5.3
+pandas==3.0.6
+pyarrow==25.0.1
+pillow==12.3.0

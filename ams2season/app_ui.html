@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AMS2 Season</title>
 <link rel="stylesheet" href="/livery-editor.css">
+<link rel="stylesheet" href="/bop-editor.css">
+<link rel="stylesheet" href="/development-ui.css">
 <link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,6 +89,7 @@ th{font:600 .8rem/1.2 var(--sans);color:var(--muted);text-align:left;padding:10p
 td{padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 tbody tr:last-child td{border-bottom:0}
 td.num,th.num{text-align:right}
+td.pace-notes{white-space:normal;min-width:220px;max-width:440px}
 tr.click{cursor:pointer} tr.click:hover{background:var(--row)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
 .muted{color:var(--muted)} .faint{color:var(--faint)}
@@ -180,6 +183,7 @@ svg text{font-family:var(--sans);fill:var(--ink)}
 .tw:hover{background:var(--row)} .tw.on{background:var(--panel);box-shadow:0 0 0 1px var(--line)}
 .tw .p{font:600 1rem/1 var(--cond);text-align:right} .tw .bar{height:16px;border-radius:2px;background:var(--ai)}
 .tw .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .tw .n.ai{color:var(--muted)}
+.tw .n img{width:44px !important;height:25px !important;margin-right:5px !important}
 .tw .g{color:var(--muted);font-size:.85rem;white-space:nowrap}
 .tw .g.flag{color:var(--amber);font-weight:600} .tw .g.out{color:var(--red)}
 .feed{display:flex;flex-direction:column}
@@ -225,6 +229,11 @@ svg text{font-family:var(--sans);fill:var(--ink)}
 .tele-note{font-size:.88rem;line-height:1.35}
 .tele-top select{width:auto;flex:none}
 .tele-chart canvas{width:100%;flex:1;min-height:0;display:block}
+.rp-delta{flex:none;height:142px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:18px;padding:8px 16px;border-top:1px solid var(--line);background:var(--paper)}
+.rp-delta[hidden]{display:none}
+.delta-read{overflow:auto;font-size:.8rem}.delta-read b{font:600 1.3rem var(--cond)}
+.delta-chart{min-width:0;min-height:0;display:flex;flex-direction:column}.delta-chart canvas{width:100%;flex:1;min-height:0}
+@media(max-width:900px){.rp-delta{grid-template-columns:180px minmax(0,1fr)}}
 .tw{grid-template-columns:16px 24px 4px minmax(0,1fr) auto !important}
 .tw input{margin:0;cursor:pointer}
 .tw.off{opacity:.42}
@@ -407,6 +416,8 @@ td.gain{color:var(--green)} td.lose{color:var(--red)}
 .turncanvas{width:100%;height:100%;display:block;touch-action:none}
 .turnlist{display:flex;flex-direction:column;gap:4px;max-height:420px;overflow:auto;margin:10px 0}
 .turnrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:4px 6px;border-radius:8px;cursor:pointer}
+.turnrow select{grid-column:1/-1;grid-row:2;max-width:100%;font-size:.85rem}
+.turnrow button{grid-column:3;grid-row:1}
 .turnrow.on{background:var(--paper);outline:1px solid var(--ink)}
 .turnrow input{width:100%;max-width:120px}
 .btn.on{background:var(--ink);color:#fff}
@@ -516,6 +527,8 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border
       <a href="#/trackmap" data-nav="trackmap">Track maps</a>
       <a href="#/caricons" data-nav="caricons">Car icons</a>
       <a href="#/liveries" data-nav="liveries">Livery editor</a>
+      <a href="#/bop" data-nav="bop">Balance of Performance</a>
+      <a href="#/conversion" data-nav="conversion">Car Conversion</a>
       <a href="#/settings" data-nav="settings">Settings</a>
     </nav>
     <div class="rec" id="rec" aria-live="polite"></div>
@@ -526,6 +539,10 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border
 <div id="toasts" aria-live="polite"></div>
 
 <script src="/livery-editor.js"></script>
+<script src="/bop-editor.js"></script>
+<script src="/replay-timing.js"></script>
+<script src="/development-ui.js"></script>
+<script src="/identity-ui.js"></script>
 <script>
 "use strict";
 var COLORS = ["#E4572E", "#2E86DE", "#E0A100", "#13A3A3", "#D6336C", "#A0522D", "#3F51B5", "#6D7F2A"];
@@ -723,6 +740,8 @@ function markNav() {
   var key = hash === "#/" ? "home" : hash.indexOf("#/recordings") === 0 ? "recordings" : hash.indexOf("#/settings") === 0 ? "settings"
     : hash.indexOf("#/trackmap") === 0 ? "trackmap" : hash.indexOf("#/practice") === 0 ? "practice" : hash.indexOf("#/caricons") === 0 ? "caricons" : hash.indexOf("#/engineer") === 0 ? "engineer"
     : hash.indexOf("#/liveries") === 0 ? "liveries"
+    : hash.indexOf("#/bop") === 0 ? "bop"
+    : hash.indexOf("#/conversion") === 0 ? "conversion"
     : (hash.match(/^#\/champ\/([\w-]+)/) || [])[1] ? "champ-" + hash.match(/^#\/champ\/([\w-]+)/)[1] : "";
   document.querySelectorAll("#nav [data-nav]").forEach(function (a) { a.classList.toggle("active", a.dataset.nav === key); });
 }
@@ -907,6 +926,7 @@ function viewRecordings() {
 }
 
 // ------------------------------------------------------------------ views: championship
+var campaignUI = window.AMS2CampaignUI({h:h, svg:svg, api:api, fail:fail, toast:toast, render:render, dialog:dialog, state:state, fmtDate:fmtDate, lapTime:lapTime, refreshNav:refreshNav});
 function viewChamp(id, tab) {
   tab = tab || "standings";
   return api("/api/championships/" + id).then(function (d) {
@@ -920,10 +940,11 @@ function viewChamp(id, tab) {
           (cfg.fastest_lap_bonus ? " +" + cfg.fastest_lap_bonus + " for fastest lap." : "") +
           (cfg.practice_points && (d.practice || []).length ? " Practice awards: " + cfg.practice_points + " point" + (cfg.practice_points === 1 ? "" : "s") + " each." : ""))),
       h("div", {class: "actions"}, h("button", {class: "btn", onclick: function () { addRaceDialog({champ: id}); }}, "Add race")));
-    var tabs = h("div", {class: "tabs", role: "tablist"}, [["standings", "Standings"], ["rounds", "Rounds"], ["drivers", "Drivers"], ["cars", "Cars"], ["penalties", "Penalties"], ["settings", "Settings"]]
+    var tabs = h("div", {class: "tabs campaign-tabs", role: "tablist"}, [["standings", "Standings"], ["rounds", "Weekends"], ["development", "R&D"], ["trends", "Trends"], ["drivers", "Drivers"], ["cars", "Cars"], ["penalties", "Penalties"], ["settings", "Settings"]]
       .map(function (t) { return h("a", {href: "#/champ/" + id + "/" + t[0], class: tab === t[0] ? "active" : null, role: "tab", "aria-selected": String(tab === t[0])}, t[1]); }));
-    var body = ({standings: champStandings, rounds: champRounds, drivers: champDrivers, cars: function (d) { return seasonCars(d) || h("div", {class: "panel", style: {marginTop: "20px"}}, emptyState("No car comparison yet", "Once races with at least two different car models are filed, every model is compared here.")); }, penalties: champPenalties, settings: champSettings}[tab] || champStandings)(d, id);
-    setView(head, tabs, body);
+    var body = ({standings: champStandings, rounds: function(d,id){return [campaignUI.weekends(d,id),champRounds(d,id)];}, development: campaignUI.development, trends: campaignUI.trends, drivers: champDrivers, cars: function (d) { return seasonCars(d) || h("div", {class: "panel", style: {marginTop: "20px"}}, emptyState("No car comparison yet", "Once races with at least two different car models are filed, every model is compared here.")); }, penalties: champPenalties, settings: champSettings}[tab] || champStandings)(d, id);
+    setView(head, tabs, (d.analysis_problems || []).length ? h("div", {class: "panel pad", style: {marginTop: "14px"}},
+      h("b", null, "Some stored analyses could not be refreshed"), d.analysis_problems.map(function (s) { return h("p", {class: "muted"}, s); })) : null, body);
   });
 }
 
@@ -959,13 +980,17 @@ function champStandings(d, id) {
   if (!d.rounds.length) return [needsRoster(d, id), h("div", {class: "panel", style: {marginTop: "20px"}}, emptyState("No races yet",
     "File a race recording to start the standings.", h("button", {class: "btn", onclick: function () { addRaceDialog({champ: id}); }}, "Add race")))];
   var st0 = d.standings[d.config.ai_policy];  // the championship's own setting decides what opens first
+  var initialPolicy = d.config.ai_policy;
+  if ((!st0 || !st0.rows.length) && d.standings.full_field && d.standings.full_field.rows.length) {
+    st0 = d.standings.full_field; initialPolicy = 'full_field';
+  }
   var hasRoster = (d.config.drivers || []).some(function (x) { return x.display; });
   if ((!st0 || !st0.rows || !st0.rows.length) && !hasRoster) return [needsRoster(d, id)];
   if (!st0 || !st0.rows || !st0.rows.length) return [h("div", {class: "panel", style: {marginTop: "20px"}},
     emptyState("No one in your roster has raced yet",
       "Races are filed, but none of their drivers match this championship's drivers. Add yourself and your friends in Settings, with every in-game name you race under; the standings fill in straight away.",
       h("a", {class: "btn", href: "#/champ/" + id + "/settings"}, "Set up drivers")))];
-  var pol = d.config.ai_policy;  // toggling below only changes this visit; the setting stays the default
+  var pol = initialPolicy, friendsOnly = false;  // toggling changes this visit only
   var wrap = h("div");
   function draw() {
     var st = d.standings[pol], labels = st.columns.filter(function (c) { return /^R\d/.test(c); });
@@ -974,27 +999,37 @@ function champStandings(d, id) {
     var seg = h("div", {class: "seg"}, ["humans_only", "full_field"].map(function (p) {
       return h("button", {"aria-pressed": String(pol === p), onclick: function () { pol = p; draw(); }}, POLICY[p]);
     }));
+    var friends = h('label', {class: 'check'}, h('input', {type: 'checkbox', checked: friendsOnly,
+      onchange: function (e) { friendsOnly = e.target.checked; draw(); }}), 'Show human friends only');
     var table = h("div", {class: "panel scroll"}, h("table", null,
       h("thead", null, h("tr", null, h("th", null, "Pos"), h("th", null, "Driver"), h("th", {class: "num"}, "Points"),
         labels.map(function (l) { var r = roundFor[l]; return h("th", {class: "num", title: r ? trackName(r) : ""}, l); }),
         hasPrac ? h("th", {class: "num", title: "Points from practice awards"}, "Practice") : null,
         h("th", {class: "num"}, "Wins"), h("th", {class: "num"}, "Podiums"))),
-      h("tbody", null, st.rows.map(function (r) {
-        return h("tr", null, h("td", {class: "pos"}, r.pos),
-          h("td", null, h("span", {class: "dot", style: {background: driverColor(d.config, r.driver)}}), teamBadge(d, r.driver), h("b", null, r.driver)),
+      h("tbody", null, st.rows.filter(function (r) { return !friendsOnly || !r.is_ai; }).map(function (r) {
+        return h("tr", {class: r.is_ai ? 'ai' : null}, h("td", {class: "pos"}, r.pos),
+          h("td", null, IdentityUI.rosterThumbnail(d.config, r.driver), h("span", {class: "dot", style: {background: driverColor(d.config, r.driver)}}), teamBadge(d, r.driver), h("b", null, r.driver), r.is_ai ? ' · AI' : null),
           h("td", {class: "num"}, h("b", null, num(r.points))),
           labels.map(function (l) { return h("td", {class: "num muted"}, r[l] == null ? "" : num(r[l])); }),
           hasPrac ? h("td", {class: "num muted"}, r.practice ? num(r.practice) : "") : null,
           h("td", {class: "num"}, r.wins), h("td", {class: "num"}, r.podiums));
       }))));
     var note = pol === "humans_only" ? "Points go by finishing order among you. AI are traffic."
-      : "Points go by overall finishing position. AI take places, and their points are thrown away.";
+      : "Points go by overall finishing position. Registered fictional AI earn points; unassigned AI take places without a season score. Filtering friends keeps the overall points and positions.";
+    var chartData = d;
+    if (friendsOnly) {
+      chartData = Object.assign({}, d, {progression: Object.assign({}, d.progression)});
+      var humanNames = d.config.drivers.filter(function (dr) { return dr.role !== 'ai'; }).map(function (dr) { return dr.display; });
+      var pr = d.progression[pol], series = {};
+      Object.keys(pr.series || {}).forEach(function (name) { if (humanNames.indexOf(name) >= 0) series[name] = pr.series[name]; });
+      chartData.progression[pol] = Object.assign({}, pr, {series: series});
+    }
     if (pol !== d.config.ai_policy) note += " (Comparison only: this championship officially uses " + POLICY[d.config.ai_policy].toLowerCase() + ".)";
     fill(wrap, 
       h("section", {class: "grid2 standgrid", style: {marginTop: "24px"}},
-        h("div", null, h("div", {class: "headrow", style: {marginBottom: "12px"}}, h("p", {class: "explain", style: {margin: 0}}, note), seg), table,
+        h("div", null, h("div", {class: "headrow", style: {marginBottom: "12px"}}, h("p", {class: "explain", style: {margin: 0}}, note), seg), friends, table,
           d.team_standings ? teamTable(d, pol, labels, roundFor) : null,
-          fsable(h("div", {class: "panel pad", style: {marginTop: "20px"}}, h("h3", null, "Points after each race"), progressionChart(d, pol)))),
+          fsable(h("div", {class: "panel pad", style: {marginTop: "20px"}}, h("h3", null, "Points after each race"), progressionChart(chartData, pol)))),
         h("div", null, h("h2", null, "Season talking points"), awardList(d.awards || [], d.talking_points || 6))));
   }
   draw();
@@ -1100,9 +1135,10 @@ function champDrivers(d, id) {
   var stats = h("div", {class: "panel scroll"}, h("table", {class: "compact"},
     h("thead", null, h("tr", null, h("th", null, "Driver"), cols.map(function (c) { return h("th", {class: "num"}, c[1]); }))),
     h("tbody", null, d.drivers.map(function (r) {
-      return h("tr", null, h("td", null, h("span", {class: "dot", style: {background: driverColor(d.config, r.driver)}}), teamBadge(d, r.driver), h("b", null, r.driver)),
+      return h("tr", {'data-ai': r.is_ai ? '1' : '0', class: r.is_ai ? 'ai' : null}, h("td", null, IdentityUI.rosterThumbnail(d.config, r.driver), h("span", {class: "dot", style: {background: driverColor(d.config, r.driver)}}), teamBadge(d, r.driver), h("b", null, r.driver), r.is_ai ? ' · AI' : null),
         cols.map(function (c) { return h("td", {class: "num"}, cell(r[c[0]], c[2])); }));
     }))));
+  var drivingStyle = seasonStyle(d);
   function matrix(title, explain, m) {
     var names = d.h2h.names;
     return h("div", null, h("h3", null, title), h("p", {class: "explain"}, explain), fsable(h("div", {class: "panel scroll", style: {paddingTop: "40px"}}, h("table", {class: "matrix"},
@@ -1117,8 +1153,12 @@ function champDrivers(d, id) {
       }))))));
   }
   return [profilesSection(id), h("section", {style: {marginTop: "24px"}}, h("h2", null, "Season stats"), h("p", {class: "explain"},
-      "\"vs AI\" is your median clean lap divided by the AI's median that race, averaged over the season: below 1.000 is quicker than the AI."), stats),
-    tyreCare(d), seasonStyle(d), teammates(d),
+      "\"vs AI\" is your median clean lap divided by the AI's median that race, averaged over the season: below 1.000 is quicker than the AI."),
+      h('label', {class: 'check'}, h('input', {type: 'checkbox', onchange: function (e) {
+        stats.querySelectorAll('tr[data-ai]').forEach(function (row) { row.hidden = e.target.checked && row.dataset.ai === '1'; });
+        if (drivingStyle) drivingStyle.querySelectorAll('tr[data-ai]').forEach(function (row) { row.hidden = e.target.checked && row.dataset.ai === '1'; });
+      }}), 'Show human friends only'), stats),
+    tyreCare(d), drivingStyle, teammates(d),
     d.h2h ? h("section", {class: "grid2", style: {gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)"}},
       matrix("Finished ahead", "Read across: how often the row driver beat the column driver.", d.h2h.ahead),
       matrix("On-track passes", "Read across: passes the row driver made on the column driver.", d.h2h.passes)) : null];
@@ -1147,13 +1187,14 @@ function seasonStyle(d) {
   var rows = d.season_style || [];
   if (!rows.length) return null;
   return h("section", null, h("h2", null, "Driving style"),
-    h("p", {class: "explain"}, "Averaged over every race. Braking points and throttle pickup: how much the spot where you brake, or get back on the power, moves from lap to lap (100 = the same every lap). Track usage: how close you get to the inside edge at the apex and the outside edge at turn-in and exit (100 = edge to edge). Worked out from speed and position, so it covers everyone."),
+    h("p", {class: "explain"}, "Averaged over every race. Player throttle ratings use recorded pedals, filter brief shift transients, and allow modest continuous modulation; other drivers use an acceleration proxy. Track usage measures sustained wheel clearance at entry, apex and exit. Linked turns and configured narrow exits can deliberately use less width, so their exit clearance is shown without a wide-exit deduction. Edges are mapped where available and estimated otherwise."),
     h("div", {class: "panel scroll"}, h("table", null,
-      h("thead", null, h("tr", null, ["Driver", "Races", "Braking points", "Throttle pickup", "Track usage", "At the apex"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
+      h("thead", null, h("tr", null, ["Driver", "Races", "Braking points", "Throttle", "Track usage", "At the apex", "At exit"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
       h("tbody", null, rows.map(function (r) {
-        return h("tr", null, h("td", null, h("span", {class: "dot", style: {background: driverColor(d.config, r.driver)}}), teamBadge(d, r.driver), h("b", null, r.driver)),
+        return h("tr", {'data-ai': r.is_ai ? '1' : '0', class: r.is_ai ? 'ai' : null}, h("td", null, h("span", {class: "dot", style: {background: driverColor(d.config, r.driver)}}), teamBadge(d, r.driver), h("b", null, r.driver), r.is_ai ? ' · AI' : null),
           h("td", {class: "num"}, r.races), scoreTd(r.brake_consistency), scoreTd(r.throttle_consistency), scoreTd(r.track_usage),
-          h("td", {class: "num"}, r.apex_gap_m == null ? "-" : r.apex_gap_m.toFixed(2) + " m"));
+          h("td", {class: "num"}, r.apex_gap_m == null ? "-" : r.apex_gap_m.toFixed(2) + " m"),
+          h("td", {class: "num"}, r.exit_gap_m == null ? "-" : r.exit_gap_m.toFixed(2) + " m"));
       })))));
 }
 function seasonCars(d) {
@@ -1239,13 +1280,14 @@ function champSettings(d, id) {
   var drivers = h("div");
   function drawDrivers() {
     fill(drivers, cfg.drivers.length ? null : h("p", {class: "hint"}, "No drivers yet."),
-      cfg.drivers.map(function (dr, i) {
+      cfg.drivers.filter(function (dr) { return dr.role !== 'ai'; }).map(function (dr, i) {
         return h("div", {class: "driverrow"}, h("span", {class: "dot", style: {background: COLORS[i % COLORS.length], margin: 0}}),
-          h("input", {type: "text", value: dr.display, placeholder: "Name", "aria-label": "Driver name", oninput: function (e) { dr.display = e.target.value; }}),
+          h("input", {type: "text", value: dr.display, placeholder: "Name", "aria-label": "Driver name", oninput: function (e) { dr.display = e.target.value; }, onchange: function () { if (identityEditor) identityEditor.refresh(); }}),
           h("input", {type: "text", value: (dr.aliases || []).join(", "), placeholder: "Other in-game names, comma separated", "aria-label": "Other names",
             oninput: function (e) { dr.aliases = e.target.value.split(","); }}),
-          h("button", {class: "btn ghost small", onclick: function () { cfg.drivers.splice(i, 1); drawDrivers(); }}, "Remove"));
+          h("button", {class: "btn ghost small", onclick: function () { cfg.drivers.splice(cfg.drivers.indexOf(dr), 1); drawDrivers(); }}, "Remove"));
       }));
+    if (identityEditor) identityEditor.refresh();
   }
   drawDrivers();
   var sugg = h("div");
@@ -1288,7 +1330,7 @@ function champSettings(d, id) {
     if (cfg.drivers.some(function (x) { return !String(x.display || "").trim(); })) { toast("Every driver needs a name.", {error: true}); return; }
     saveBtn.disabled = true; saveBtn.textContent = "Saving...";
     api("/api/championships/" + id, "PUT", {name: name.value, drivers: cfg.drivers, points: pts, default_points: pointsSel.value,
-      ai_policy: policy, fastest_lap_bonus: Number(fl.value) || 0, drop_rounds: Number(drop.value) || 0, points_for_dnf: dnf.checked,
+      ai_policy: policy, livery_ai: !!cfg.livery_ai, car_class: cfg.car_class || '', fastest_lap_bonus: Number(fl.value) || 0, drop_rounds: Number(drop.value) || 0, points_for_dnf: dnf.checked,
       teams: cfg.teams || [], team_count: cfg.team_count || 0, team_colors_for_drivers: !!cfg.team_colors_for_drivers,
       practice_points: Number(pracPts.value) || 0, practice_awards: Object.keys(pracOn).filter(function (k) { return pracOn[k].checked; })})
       .then(function (r) {
@@ -1308,10 +1350,11 @@ function champSettings(d, id) {
       pracOn[a.key] = cb;
       return h("label", {class: "check small"}, cb, h("span", null, h("b", null, a.label), " · " + a.about));
     }))));
+  var identityEditor = IdentityUI.editor(cfg);
   var out = [h("section", {class: "grid2", style: {marginTop: "24px"}},
     h("div", null,
       h("div", {class: "panel pad"}, h("label", {class: "field"}, h("span", null, "Championship name"), name)),
-      h("div", {class: "panel pad", style: {marginTop: "20px"}}, h("h3", null, "Drivers"),
+      h("div", {class: "panel pad", style: {marginTop: "20px"}}, h("h3", null, "Human friends"),
         h("p", {class: "explain"}, "You and your friends, with every name you might race under. Anyone not listed counts as AI. Changing this re-analyses every race."),
         drivers, h("div", {style: {marginTop: "12px"}}, h("button", {class: "btn ghost small", onclick: function () { cfg.drivers.push({display: "", aliases: []}); drawDrivers();
           var inputs = drivers.querySelectorAll("input[aria-label='Driver name']"); inputs[inputs.length - 1].focus(); }}, "Add driver")), sugg)),
@@ -1322,7 +1365,7 @@ function champSettings(d, id) {
           h("label", {class: "field"}, h("span", null, "Drop worst rounds"), drop)),
         h("label", {class: "check"}, dnf, "Award points to drivers who didn't finish")),
       h("div", {class: "panel pad", style: {marginTop: "20px"}}, h("h3", null, "AI drivers"), radios))),
-    practiceSettings,
+    identityEditor, practiceSettings,
     teamsEditor(cfg),
     h("div", {class: "actions", style: {marginTop: "20px"}}, saveBtn),
     h("section", null, h("div", {class: "panel pad danger-zone"}, h("h3", null, "Delete championship"),
@@ -1391,6 +1434,11 @@ function viewRace(recording, query) {
     var rec = res[0].recordings.find(function (r) { return r.id === recording; });
     if (!rec) throw new Error("That recording doesn't exist any more.");
     var d = res[1];
+    if (!champ && rec.assigned.length === 1) {
+      return IdentityUI.ensure(recording, rec.assigned[0].champ).then(function () {
+        return viewRace(recording, Object.assign({}, query, {champ: rec.assigned[0].champ}));
+      });
+    }
     var round = d ? d.rounds.find(function (r) { return r.recording === recording; }) : null;
     var back = d ? h("a", {class: "link", href: "#/champ/" + champ + "/rounds"}, "Back to " + d.config.name) : h("a", {class: "link", href: "#/recordings"}, "Back to recordings");
     var drawer = h("div", {class: "drawer", hidden: true});
@@ -1410,7 +1458,10 @@ function viewRace(recording, query) {
     state.currentRace = {recording: recording, champ: champ};
     var replayHref = "#/replay/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : "");
     var cq = champ ? "?champ=" + champ : "";
-    right = [h("a", {class: "btn small", href: replayHref}, "Watch replay"),
+    right = [d ? h("button", {class: "btn ghost small", onclick: function () {
+               IdentityUI.ensure(recording, champ, true).then(function () { render(true, champ); }).catch(fail);
+             }}, "Edit livery assignments") : null,
+             h("a", {class: "btn small", href: replayHref}, "Watch replay"),
              rec.quali ? h("a", {class: "btn ghost small", href: "#/quali/" + encodeURIComponent(rec.quali) + cq}, "Qualifying") : null]
       .concat(RACE_PAGES.slice(1).map(function (t) { return h("a", {class: "btn ghost small", href: "#/" + t[0] + "/" + encodeURIComponent(recording) + cq}, t[1]); }))
       .concat(right);
@@ -1644,7 +1695,7 @@ function viewReplay(recording, query) {
     var IN = R.inputs, vmax = 50;
     var cars = R.drivers.map(function (d) {
       var c = R.cars[d.name] || {};
-      var o = {d: d, x: arr(c.x, 10), z: arr(c.z, 10), dist: arr(c.d, 1), v: arr(c.v, 1), h: arr(c.h, 1 / DEG),
+      var o = {d: d, x: arr(c.x, 10), z: arr(c.z, 10), dist: arr(c.d, 1), rank: arr(c.p, 1), v: arr(c.v, 1), h: arr(c.h, 1 / DEG),
         pits: R.pits[d.name] || [], label: d.is_ai ? d.name.split(" ").slice(-1)[0] : d.name, img: null};
       var dm = new Float32Array(N), m = -Infinity, i;
       for (i = 0; i < N; i++) { if (!isNaN(o.dist[i]) && o.dist[i] > m) m = o.dist[i]; dm[i] = m; if (o.v[i] > vmax) vmax = o.v[i]; }
@@ -1692,8 +1743,7 @@ function viewReplay(recording, query) {
       return lo;
     }
     function timeAt(c, dist, iMax) {
-      var j = firstIndexAt(c, dist, iMax); if (j < 0) return null; if (j === 0) return t0;
-      var a = c.dmax[j - 1], b = c.dmax[j]; return t0 + (j - 1 + (b > a ? (dist - a) / (b - a) : 0)) * dt;
+      return AMS2ReplayTiming.timeAt(c, dist, iMax, {t0: t0, dt: dt});
     }
 
     // ---------------------------------------------------------------- state
@@ -1735,6 +1785,10 @@ function viewReplay(recording, query) {
     }));
     var teleHint = h("div", {class: "tele-hint"}, "Pick a driver (click their car or name) to see their speed trace, braking and throttle. Click more drivers to compare them all.");
     var tele = h("div", {class: "rp-tele"}, teleHint, teleRead, h("div", {class: "tele-chart"}, h("div", {class: "tele-top"}, teleNote, cmpSel), teleCanvas));
+    var deltaRead = h("div", {class: "delta-read", "data-testid": "replay-delta-readout"});
+    var deltaCanvas = h("canvas", {role: "img", "aria-label": "Time gap between compared cars over the last 120 seconds", "data-testid": "replay-delta-trace"});
+    var deltaPanel = h("div", {class: "rp-delta", hidden: true}, deltaRead,
+      h("div", {class: "delta-chart"}, h("small", {class: "muted"}, "Time gap · last 120 s · positive = behind the followed car"), deltaCanvas));
     // tower with show/hide checkboxes (rows persist so checkboxes keep their state)
     var towerList = h("div");
     var rows = {};
@@ -1742,7 +1796,7 @@ function viewReplay(recording, query) {
       var cb = eyeButton(d.name, function (on) { if (on) hidden.delete(d.name); else hidden.add(d.name); rows[d.name].el.classList.toggle("off", !on); });
       var p = h("span", {class: "p"}), g = h("span", {class: "g"});
       var el = h("div", {class: "tw", title: "Click to add to or remove from the comparison", onclick: function (e) { clickDriver(d.name, e); }},
-        cb, p, h("span", {class: "bar", style: d.is_ai ? null : {background: d.color}}), h("span", {class: "n" + (d.is_ai ? " ai" : "")}, d.name), g);
+        cb, p, h("span", {class: "bar", style: d.color ? {background: d.color} : null}), h("span", {class: "n" + (d.is_ai ? " ai" : ""), title: d.name}, IdentityUI.thumbnail(d.livery), d.name), g);
       var l3 = h("span", {class: "l3", title: "Average of the last 3 completed laps"});
       el.insertBefore(l3, g);
       rows[d.name] = {el: el, p: p, g: g, cb: cb, l3: l3};
@@ -1818,7 +1872,7 @@ function viewReplay(recording, query) {
       h("button", {class: "btn ghost small", onclick: function () { seek(t - 10); }, title: "Back 10 s (left arrow)"}, "-10s"),
       h("button", {class: "btn ghost small", onclick: function () { seek(t + 10); }, title: "Forward 10 s (right arrow)"}, "+10s"),
       timeLbl, scrub, speedSeg);
-    var root = h("div", {class: "rp"}, bar, h("div", {class: "rp-main"}, h("div", {class: "rp-left"}, stage, tele), side), controls);
+    var root = h("div", {class: "rp"}, bar, h("div", {class: "rp-main"}, h("div", {class: "rp-left"}, stage, tele, deltaPanel), side), controls);
     fill(v, root);
 
     fsBtn.addEventListener("click", function () {
@@ -1933,8 +1987,8 @@ function viewReplay(recording, query) {
       var q = proj(p.x, p.z), a = screenAngle(p.h);
       ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(a); ctx.globalAlpha = pit ? 0.5 : 1;
       ctx.lineWidth = Math.max(1, len * 0.035);
-      var src = c.img && c.img.naturalWidth ? (human ? tintedIcon(c.img, d.color) : c.img)
-        : genericCar(d.body, human ? d.color : colors["--ai"], "rgba(10,14,22,.65)", d.length, d.width);
+      var src = c.img && c.img.naturalWidth ? (d.color ? tintedIcon(c.img, d.color) : c.img)
+        : genericCar(d.body, d.color || colors["--ai"], "rgba(10,14,22,.65)", d.length, d.width);
       ctx.rotate(Math.PI / 2); ctx.drawImage(src, -wid / 2, -len / 2, wid, len);
       if (d.name === follow || group.indexOf(d.name) >= 0) {  // traced outline instead of a ring
         var base = c.img && c.img.naturalWidth ? c.img : src, imgH = base.naturalHeight || base.height;
@@ -1964,12 +2018,12 @@ function viewReplay(recording, query) {
         var a = c.acc[i]; if (isNaN(a)) return null;
         return ribbonRGB(a < -1.5 ? Math.min(1, (-a - 1.5) / 8) : 0, a > 0.3 ? Math.min(1, (a - 0.3) / 2.5) : 0);
       });
-      drawRibbon(ctx, pts, rgbs, c.d.is_ai ? colors["--ink"] : c.d.color, Math.max(6, Math.min(18, 2.2 * k())));
+      drawRibbon(ctx, pts, rgbs, c.d.color || colors["--ink"], Math.max(6, Math.min(18, 2.2 * k())));
       if (trailMarks) drawTrailMarkers(c, ids);
     }
     function drawTrailMarkers(c, ids) {  // braking points and back-on-throttle points, only along the trail
       if (ids.length < 3) return;
-      var need = Math.max(2, Math.ceil(0.3 / dt)), sz = Math.max(5, Math.min(13, 1.5 * k())), col = c.d.is_ai ? colors["--ai"] : c.d.color;
+      var need = Math.max(2, Math.ceil(0.3 / dt)), sz = Math.max(5, Math.min(13, 1.5 * k())), col = c.d.color || colors["--ai"];
       var lastBrake = -1e9;
       for (var n = 1; n < ids.length; n++) {
         var i = ids[n], prev = ids[n - 1];
@@ -2093,14 +2147,55 @@ function viewReplay(recording, query) {
       var j = order.indexOf(follow); if (j < 0) return null;
       var o = order[compare === "ahead" ? j - 1 : j + 1]; return o ? byName[o] : null;
     }
+    function drawDelta(sel, cmp) {
+      var others = group.length > 1 ? group.filter(function (n) { return n !== follow; }).map(function (n) { return byName[n]; }).filter(Boolean) : cmp ? [cmp] : [];
+      deltaPanel.hidden = !sel || !others.length;
+      if (deltaPanel.hidden) return;
+      var timing = {t0: t0, dt: dt}, start = Math.max(t0, R.green_t, t - 120), finish = Math.max(start + dt, t);
+      var palette = ["--amber", "--red", "--green"], bound = 0.25;
+      var series = others.map(function (c, i) {
+        var col = c.d.color || colors[palette[i % palette.length]], values = [];
+        for (var tt = start; tt <= t + 1e-6; tt += Math.max(dt, 0.5)) {
+          var gap = AMS2ReplayTiming.gapAt(sel, c, tt, timing);
+          if (gap != null) bound = Math.max(bound, Math.abs(gap));
+          values.push([tt, gap]);
+        }
+        return {c: c, col: col, values: values, gap: AMS2ReplayTiming.gapAt(sel, c, t, timing)};
+      });
+      fill(deltaRead, h("small", {class: "muted"}, "Reference: " + sel.d.name), series.map(function (s) {
+        var gap = s.gap, sign = gap == null ? "" : gap < 0 ? "−" : "+", whole = gap == null ? "—" : sign + Math.round(Math.abs(gap)) + " s";
+        return h("div", null, h("span", {class: "dot", style: {background: s.col}}), s.c.d.name, " ", h("b", null, whole),
+          h("small", {class: "muted", style: {display: "block"}}, gap == null ? "Waiting for shared race distance" : sign + Math.abs(gap).toFixed(3) + " s · " + (gap < 0 ? "ahead" : gap > 0 ? "behind" : "level")));
+      }));
+      var cw = deltaCanvas.clientWidth, ch = deltaCanvas.clientHeight;
+      if (cw < 1 || ch < 1) return;
+      if (deltaCanvas.width !== Math.round(cw * dpr) || deltaCanvas.height !== Math.round(ch * dpr)) { deltaCanvas.width = Math.round(cw * dpr); deltaCanvas.height = Math.round(ch * dpr); }
+      var dc = deltaCanvas.getContext("2d"), pl = 48, pr = 10, pt = 5, pb = 20;
+      bound *= 1.1;
+      var X = function (tt) { return pl + (tt - start) / (finish - start) * (cw - pl - pr); };
+      var Y = function (g) { return pt + (bound - g) / (2 * bound) * (ch - pt - pb); };
+      dc.setTransform(dpr, 0, 0, dpr, 0, 0); dc.clearRect(0, 0, cw, ch); dc.font = "11px " + font;
+      [-bound, 0, bound].forEach(function (g) {
+        dc.beginPath(); dc.moveTo(pl, Y(g)); dc.lineTo(cw - pr, Y(g)); dc.strokeStyle = g === 0 ? colors["--muted"] : colors["--line"]; dc.lineWidth = 1; dc.stroke();
+        dc.fillStyle = colors["--muted"]; dc.textAlign = "right"; dc.fillText((g > 0 ? "+" : "") + g.toFixed(bound < 10 ? 1 : 0) + "s", pl - 5, Math.max(11, Math.min(ch - pb, Y(g) + 4)));
+      });
+      dc.textAlign = "left"; dc.fillText(Math.round(start - R.green_t) + "s", pl, ch - 3); dc.textAlign = "right"; dc.fillText(Math.round(t - R.green_t) + "s", cw - pr, ch - 3);
+      series.forEach(function (s) {
+        dc.beginPath(); var open = false;
+        s.values.forEach(function (v) { if (v[1] == null) { open = false; return; } if (open) dc.lineTo(X(v[0]), Y(v[1])); else dc.moveTo(X(v[0]), Y(v[1])); open = true; });
+        dc.strokeStyle = s.col; dc.lineWidth = 2; dc.stroke();
+        if (s.gap != null) { dc.beginPath(); dc.arc(X(t), Y(s.gap), 3, 0, Math.PI * 2); dc.fillStyle = s.col; dc.fill(); }
+      });
+    }
     function drawTele() {
       var sel = follow ? byName[follow] : null;
       teleHint.hidden = !!sel; teleRead.hidden = !sel; teleCanvas.parentNode.hidden = !sel;
       if (tele.classList.contains("empty") === !!sel) { tele.classList.toggle("empty", !sel); resize(); }
-      if (!sel) return;
+      if (!sel) { deltaPanel.hidden = true; return; }
       var iNow = idx(t), dNow = lin(sel.dist, t);
-      if (isNaN(dNow)) { fill(teleRead, h("b", null, sel.d.name), h("div", {class: "muted"}, "No data at this moment.")); return; }
+      if (isNaN(dNow)) { deltaPanel.hidden = true; fill(teleRead, h("b", null, sel.d.name), h("div", {class: "muted"}, "No data at this moment.")); return; }
       var lap = Math.max(0, Math.floor(dNow / L)), cmp = compareCar(iNow);
+      drawDelta(sel, cmp);
       var vNow = lin(sel.v, t), aNow = sel.acc[iNow], ph = sel.ph[iNow];
       var phase = ph === 1 ? ["Braking", "brake"] : ph === 2 ? ["On throttle", "throttle"] : ph === 0 ? ["Coasting", "coast"] : ["-", ""];
       var bars = sel.thr ? h("div", {class: "inputs"},
@@ -2193,10 +2288,17 @@ function viewReplay(recording, query) {
         list.push({c: c, dist: lin(c.dist, t), out: out, fin: fin, pit: inPit(c, t)});
       });
       var pre = t < R.green_t;
+      var starting = list.some(function (r) { return !r.out && !r.fin && (r.c.d.distance_ready_t == null || t < r.c.d.distance_ready_t); });
       list.sort(function (a, b) {
         if (pre) return (a.c.d.grid || 99) - (b.c.d.grid || 99);
         var ka = a.out ? 2 : a.fin ? 0 : 1, kb = b.out ? 2 : b.fin ? 0 : 1;
-        if (ka !== kb) return ka - kb; return ka === 1 ? b.dist - a.dist : a.c.d.pos - b.c.d.pos;
+        if (ka !== kb) return ka - kb;
+        if (ka === 1 && starting) {
+          var pa = a.c.rank[iNow] > 0 ? a.c.rank[iNow] : a.c.d.grid || 99;
+          var pb = b.c.rank[iNow] > 0 ? b.c.rank[iNow] : b.c.d.grid || 99;
+          if (pa !== pb) return pa - pb;
+        }
+        return ka === 1 ? b.dist - a.dist : a.c.d.pos - b.c.d.pos;
       });
       order = list.map(function (r) { return r.c.d.name; });
       var leaderLap = 0;
@@ -2207,7 +2309,7 @@ function viewReplay(recording, query) {
         else if (i === 0) { leaderLap = Math.min(R.laps, Math.floor(r.dist / L) + 1); g = "Lap " + Math.max(1, leaderLap); }
         else { var ahead = list[i - 1]; if (!ahead.out) {
           if (ahead.dist - r.dist > L) g = "+" + Math.floor((ahead.dist - r.dist) / L) + " lap" + (ahead.dist - r.dist >= 2 * L ? "s" : "");
-          else { var ta = timeAt(ahead.c, r.dist, iNow + 1); g = "+" + (ta == null ? 0 : Math.max(0, t - ta)).toFixed(1); } } }
+          else { var ta = timeAt(ahead.c, r.dist, iNow + 1); g = ta == null ? "—" : "+" + Math.max(0, t - ta).toFixed(1); } } }
         if (r.pit && !r.out) { g = "Pit"; cls += " flag"; }
         var row = rows[r.c.d.name];
         row.p.textContent = pre ? r.c.d.grid : i + 1; row.g.textContent = g; row.g.className = cls;
@@ -3079,7 +3181,7 @@ function viewPractice() {
 function viewTechnique(recording, query) {
   var champ = query.champ || "";
   setView(h("div", {class: "spinner"}, "Analysing pedal inputs..."));
-  return api("/api/technique?recording=" + encodeURIComponent(recording) + (champ ? "&champ=" + champ : "")).then(function (TQ) {
+  return api("/api/technique?recording=" + encodeURIComponent(recording) + (champ ? "&champ=" + champ : "") + (query.pace_reference ? "&pace_reference=" + encodeURIComponent(query.pace_reference) : "")).then(function (TQ) {
     var drivers = TQ.drivers.filter(function (x) { return x.available; });
     var greys = ["#2E86DE", "#E4572E", "#13A3A3", "#D6336C"];
     drivers.forEach(function (x, i) { x.color = TQ.colors[x.driver] || greys[i % greys.length]; });
@@ -3114,8 +3216,49 @@ function viewTechnique(recording, query) {
       if (S.best) sv.appendChild(svg("path", {d: path(S.best), fill: "none", stroke: "var(--ink)", "stroke-width": 1.6, "stroke-dasharray": "5 4"}));
       if (other) { var oc = other.corners.find(function (o) { return o.corner === c.corner; }); if (oc) sv.appendChild(svg("path", {d: path(oc[key].mean), fill: "none", stroke: other.color, "stroke-width": 2.5, "stroke-dasharray": "8 4"})); }
       sv.appendChild(svg("path", {d: path(S.mean), fill: "none", stroke: color, "stroke-width": 3}));
+      if (key === "throttle" && S.analysis_mean) sv.appendChild(svg("path", {d: path(S.analysis_mean), fill: "none", stroke: color, "stroke-width": 2, "stroke-dasharray": "2 4"}));
       return fsable(h("div", {class: "panel pad", style: {paddingTop: "40px"}}, h("h3", null, label), sv,
-        h("p", {class: "hint"}, "Thin grey: each lap. Shaded: the middle half of your laps. Bold: your average. Dashed black: your fastest lap" + (other ? ". Dashed " + other.driver + ": their average." : "."))));
+        h("p", {class: "hint"}, "Thin grey: each lap. Shaded: the middle half of your laps. Bold: your recorded average. Dashed black: your fastest lap" + (other ? ". Dashed " + other.driver + ": their average." : ".") +
+          (key === "throttle" && S.analysis_mean ? " Dotted green: the trace used for scoring. " + (S.analysis_note || "") + " " + (S.shift_transients || 0) + " brief shift transients filtered." : ""))));
+    }
+    function paceSection(D) {
+      var P = D.pace_comparison || {}, signedS = function (v) { return v == null ? "-" : (v > 0 ? "+" : "") + v.toFixed(3) + " s"; };
+      var refControl = h("label", {class: "field", style: {maxWidth: "280px"}}, h("span", null, "Pace reference"),
+        h("select", {"aria-label": "Pace reference", onchange: function (e) {
+          var select = e.target; select.disabled = true;
+          api("/api/technique?recording=" + encodeURIComponent(recording) + (champ ? "&champ=" + champ : "") + "&pace_reference=" + encodeURIComponent(select.value)).then(function (next) {
+            drivers.forEach(function (d) { var fresh = next.drivers.find(function (x) { return x.driver === d.driver; }); d.pace_comparison = fresh ? fresh.pace_comparison : null; });
+            TQ.pace_reference = next.pace_reference; draw();
+          }).catch(function (error) { select.disabled = false; fail(error); });
+        }}, (TQ.pace_references || []).map(function (r) { return h("option", {value: r.key, selected: r.key === TQ.pace_reference}, r.label); })));
+      var head = h("div", {class: "headrow"}, h("h2", null, "Where the lap time goes"), refControl);
+      if (!P.available) return h("section", {id: "pace-comparison"}, head, h("p", {class: "explain"}, P.reason || "A complete clean lap is needed for this comparison."));
+      var reference = P.reference, cards = h("div", {class: "statcards"},
+        h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Measured lap gap"), h("div", {class: "big"}, signedS(P.gap_s)), h("div", {class: "hint"}, "Your lap " + P.lap + " versus " + reference.driver + " lap " + reference.lap)),
+        h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Reference lap"), h("div", {class: "big"}, lapTime(reference.time_s)), h("div", {class: "hint"}, reference.car)),
+        h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Extra-path estimate"), h("div", {class: "big"}, P.extra_path_estimate_s == null ? "Unavailable" : "~" + P.extra_path_estimate_s.toFixed(2) + " s"),
+          h("div", {class: "hint"}, P.extra_path_estimate_s == null ? P.line_estimate_reason : "Low confidence · additional distance only")));
+      var trace = P.trace, W = 850, H = 170, pl = 48, pr = 12, pt = 16, pb = 25;
+      var lo = Math.min(0, Math.min.apply(null, trace.gap_s)), hi = Math.max(0.1, Math.max.apply(null, trace.gap_s));
+      var X = function (x) { return pl + x / trace.distance_m[trace.distance_m.length - 1] * (W - pl - pr); };
+      var Y = function (y) { return pt + (hi - y) / Math.max(0.1, hi - lo) * (H - pt - pb); };
+      var chart = svg("svg", {viewBox: "0 0 " + W + " " + H, width: "100%", role: "img", "aria-label": "Cumulative time gap around the lap"});
+      [lo, 0, hi].forEach(function (y) { chart.appendChild(svg("line", {x1: pl, x2: W - pr, y1: Y(y), y2: Y(y), stroke: "var(--line)"})); chart.appendChild(svg("text", {x: pl - 6, y: Y(y) + 4, "text-anchor": "end", fill: "var(--faint)", "font-size": 11}, y.toFixed(2) + "s")); });
+      chart.appendChild(svg("polyline", {points: trace.distance_m.map(function (x, i) { return X(x).toFixed(1) + "," + Y(trace.gap_s[i]).toFixed(1); }).join(" "), fill: "none", stroke: "var(--focus)", "stroke-width": 2.5}));
+      P.corners.forEach(function (r) { chart.appendChild(svg("text", {x: X(r.apex), y: H - 6, "text-anchor": "middle", fill: "var(--faint)", "font-size": 11}, r.corner)); });
+      var table = h("div", {class: "panel scroll"}, h("table", null,
+        h("thead", null, h("tr", null, ["Corner section", "Approach", "Corner", "Exit / straight", "Total gap", "At exit", "Observations"].map(function (s, i) { return h("th", {class: i > 0 && i < 6 ? "num" : null}, s); }))),
+        h("tbody", null, P.corners.map(function (r) {
+          var U = r.track_usage || {}, exempt = U.exit_treatment === "linked_corner" || U.exit_treatment === "configured_compromise";
+          return h("tr", null, h("td", null, h("button", {class: "link", onclick: function () { var idx = D.corners.findIndex(function (c) { return c.corner === r.corner; }); if (idx >= 0) { ci = idx; draw(); } }}, r.corner)),
+            [r.phase_gap_s.approach, r.phase_gap_s.corner, r.phase_gap_s.exit, r.gap_s].map(function (v) { return h("td", {class: "num " + (v > 0.02 ? "lose" : v < -0.02 ? "gain" : "")}, signedS(v)); }),
+            h("td", {class: "num", title: U.exit_reason || "Sustained wheel clearance to the outside edge. " + (U.edge_source || "estimated") + " edges."}, U.exit_gap_m == null ? "-" : U.exit_gap_m.toFixed(2) + " m", exempt ? h("small", {class: "muted"}, " intended line") : null),
+            h("td", {class: "pace-notes"}, r.observations.length ? r.observations.join(" ") : "No clear marker difference.",
+              r.line_estimate_reason ? h("small", {class: "muted", style: {display: "block"}}, r.line_estimate_reason) : r.extra_path_estimate_s > 0.005 ? h("small", {class: "muted", style: {display: "block"}}, "Extra-path estimate ~" + r.extra_path_estimate_s.toFixed(2) + " s (low confidence).") : null));
+        }))));
+      return h("section", {id: "pace-comparison"}, head, h("p", {class: "explain"}, P.context), cards,
+        h("div", {class: "panel pad", style: {marginTop: "16px"}}, chart, h("p", {class: "hint"}, "Rising trace: time lost. Falling trace: time recovered. Sections cover the whole lap without overlap.")),
+        h("p", {class: "hint"}, P.method + " " + (reference.pedals_available ? "Reference markers use recorded pedals where available." : "Reference pedals are unavailable; braking comparisons use estimated deceleration markers. No reference throttle input is invented.")), table);
     }
     var rmode = TQ.racing_mode || "reduced";
     function draw() {
@@ -3135,11 +3278,12 @@ function viewTechnique(recording, query) {
       })) : null;
       var sum = D.summary || {};
       var cards = h("div", {class: "statcards"},
-        h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Overall consistency"), h("div", {class: "big " + scoreClass(sum.overall)}, sum.overall), h("div", {class: "hint"}, D.laps.filter(function (l) { return l.valid; }).length + " clean laps analysed")),
+        h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Overall consistency"), h("div", {class: "big " + scoreClass(sum.overall)}, sum.overall == null ? "-" : sum.overall), h("div", {class: "hint"}, D.laps.filter(function (l) { return l.valid; }).length + " clean laps analysed")),
         h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Most consistent"), h("div", {class: "big"}, sum.most_consistent || "-"), h("div", {class: "hint"}, "score " + (sum.most_consistent_score || "-"))),
         h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Work on"), h("div", {class: "big"}, sum.least_consistent || "-"), h("div", {class: "hint"}, "score " + (sum.least_consistent_score || "-"))),
         h("div", {class: "panel pad stat"}, h("div", {class: "minfo"}, "Best lap"), h("div", {class: "big"}, lapTime(D.best)), h("div", {class: "hint"}, D.car || "")));
       var tips = sum.tips && sum.tips.length ? h("ul", {class: "hl tips"}, sum.tips.map(function (t) { return h("li", null, t); })) : null;
+      if (!c) { fill(body, chips, cards, h("p", {class: "explain"}, "Two usable laps at a corner are needed to rate repeatability."), paceSection(D)); return; }
       var grid = h("div", {class: "cornergrid"}, C.map(function (cc, i) {
         var t = cc.typical;
         return h("button", {class: "cornercard" + (i === ci ? " on" : ""), onclick: function () { ci = i; draw(); }},
@@ -3160,11 +3304,14 @@ function viewTechnique(recording, query) {
           h("td", {class: "num"}, l.onset == null ? "-" : Math.round(-l.onset) + " m"), h("td", {class: "num"}, l.peak == null ? "-" : Math.round(l.peak) + "%"),
           h("td", {class: "num"}, l.attack == null ? "-" : Math.round(l.attack) + " m"), h("td", {class: "num"}, l.trail == null ? "-" : Math.round(l.trail) + " m"),
           h("td", {class: "num"}, l.min_speed == null ? "-" : Math.round(l.min_speed) + " km/h"),
-          h("td", {class: "num"}, l.pickup == null ? "-" : (l.pickup >= 0 ? "+" : "") + Math.round(l.pickup) + " m"), h("td", {class: "num"}, l.full == null ? "-" : "+" + Math.round(l.full) + " m"),
+          h("td", {class: "num"}, l.pickup == null ? (l.throttle_kind === "modulated" ? "Modulated" : l.throttle_kind === "flat_out" ? "Already flat" : "-") : (l.pickup >= 0 ? "+" : "") + Math.round(l.pickup) + " m"), h("td", {class: "num"}, l.full == null ? "-" : "+" + Math.round(l.full) + " m"),
           h("td", {class: "num"}, l.hesitations || 0));
       });
       var detail = h("section", null,
-        h("div", {class: "headrow"}, h("div", null, h("h2", null, c.corner + ": consistency " + c.scores.overall), h("p", {class: "explain"}, c.describe + " Brake shape " + (c.scores.brake == null ? "n/a" : c.scores.brake) + ", throttle " + c.scores.throttle + ". Braking point scatter \u00b1" + c.scatter.onset_sd + " m, throttle pickup scatter \u00b1" + c.scatter.pickup_sd + " m.")), cmpSel),
+        h("div", {class: "headrow"}, h("div", null, h("h2", null, c.corner + ": consistency " + c.scores.overall), h("p", {class: "explain"}, c.describe + " Brake shape " + (c.scores.brake == null ? "n/a" : c.scores.brake) + ", throttle " + c.scores.throttle + ". " +
+          (c.scores.brake == null ? "Braking point not rated for this corner. " : "Braking point scatter \u00b1" + c.scatter.onset_sd + " m. ") +
+          (c.laps.filter(function (l) { return l.pickup != null; }).length < 2 ? "No repeatable exit-onset marker here; modulated and already-flat laps are assessed by their throttle shape." : "Throttle pickup scatter \u00b1" + c.scatter.pickup_sd + " m.") +
+          (c.scatter.throttle_hesitation_penalty != null ? " Commitment penalty " + c.scatter.throttle_hesitation_penalty.toFixed(1) + " points; small corrections carry a small cost." : ""))), cmpSel),
         h("div", {class: "grid2", style: {gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)"}},
           shapeChart(c, "brake", "Brake pressure", "var(--red)", other), shapeChart(c, "throttle", "Throttle", "var(--green)", other)),
         h("div", {class: "panel scroll", style: {marginTop: "16px"}}, h("table", null,
@@ -3174,9 +3321,9 @@ function viewTechnique(recording, query) {
               h("td", {class: "num"}, t.attack == null ? "-" : Math.round(t.attack) + " m"), h("td", {class: "num"}, t.trail == null ? "-" : Math.round(t.trail) + " m"), h("td", {class: "num"}, t.min_speed == null ? "-" : Math.round(t.min_speed) + " km/h"),
               h("td", {class: "num"}, t.pickup == null ? "-" : (t.pickup >= 0 ? "+" : "") + Math.round(t.pickup) + " m"), h("td", {class: "num"}, t.full == null ? "-" : "+" + Math.round(t.full) + " m"), h("td", {class: "num"}, t.hesitations || 0))))));
       var tmap = turnMap(D.map, c.corner, function (name) { var i = C.findIndex(function (x) { return x.corner === name; }); if (i >= 0) { ci = i; draw(); } });
-      fill(body, chips, racingBox, cards, tips, h("section", null, h("h2", null, "Every corner"), h("p", {class: "explain"}, "Consistency out of 100 for each corner: how much your brake and throttle shapes vary lap to lap, and how much your braking and pickup points move. Red line brake, green throttle, dashed line the apex. Click a corner, or a turn on the map, for detail."),
+      fill(body, chips, racingBox, cards, tips, h("section", null, h("h2", null, "Every corner"), h("p", {class: "explain"}, "Consistency out of 100 for each corner. Braking starts at the sustained main application. Throttle scoring filters brief gear-backed interruptions and tiny sample jitter; deep or sustained lifts still cost more. Continuously modulated fast corners and already-flat corners have no invented pickup marker. Small shape changes and pickup scatter have bounded penalties. Standing-start and cooldown laps are excluded. Full recorded traces remain visible. Click a corner for detail."),
           tmap ? h("div", {class: "cornerwrap"}, h("div", {class: "panel pad mapcard"}, tmap), grid) : grid),
-        detail);
+        detail, paceSection(D));
     }
     function tyreSection(D) {
       var ty = D.tyres;
@@ -3308,18 +3455,18 @@ function viewPace(recording, query) {
     var D = P.drivers.slice().sort(function (a, b) { return (order[a.name] == null ? 99 : order[a.name]) - (order[b.name] == null ? 99 : order[b.name]); });
     var nameCell = function (d) { return h("td", null, d.is_ai ? null : h("span", {class: "dot", style: {background: d.color || "var(--ink)"}}), h(d.is_ai ? "span" : "b", {class: d.is_ai ? "muted" : null}, d.name)); };
     var sgn = function (v, dp) { return v == null ? "-" : (v > 0 ? "+" : "") + v.toFixed(dp == null ? 3 : dp); };
-    // 1. race vs qualifying
-    var withQ = D.filter(function (d) { return d.quali_best && d.median; });
-    var qSec = h("section", null, h("h2", null, "Race against qualifying"),
-      h("p", {class: "explain"}, "Each driver's qualifying best against their race pace. A typical race lap is the median of their representative laps (no lap 1, pit or invalid laps, nothing over 107% of their best), so the gap shows how much fuel, tyres and traffic cost."),
-      withQ.length ? h("div", {class: "panel scroll"}, h("table", null,
-        h("thead", null, h("tr", null, ["Driver", "Qualifying best", "Race best", "Typical race lap", "Typical vs qualifying"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
-        h("tbody", null, withQ.map(function (d) {
-          var gap = d.median - d.quali_best;
-          return h("tr", {class: d.is_ai ? "ai" : null}, nameCell(d), h("td", {class: "num"}, lapTime(d.quali_best)), h("td", {class: "num"}, d.best ? lapTime(d.best) : "-"),
-            h("td", {class: "num"}, lapTime(d.median)), h("td", {class: "num"}, sgn(gap) + " s (" + sgn(gap / d.quali_best * 100, 1) + "%)"));
-        }))))
-      : h("div", {class: "panel"}, emptyState("No qualifying to compare with", "Record the qualifying session before the race (same track, shortly before) and it's matched up automatically.")));
+    // 1. race summary remains available when qualifying was not recorded
+    var qSec = h("section", {"data-testid": "pace-summary"}, h("h2", null, "Race pace"),
+      h("p", {class: "explain"}, "Average is the arithmetic mean of representative race laps; typical pace is their median. These exclude lap 1, pit and invalid laps, and laps over 107% of the best. Qualifying is matched when available; your race average does not need it."),
+      h("div", {class: "panel scroll"}, h("table", null,
+        h("thead", null, h("tr", null, ["Driver", "Laps analysed", "Average lap", "Typical lap", "Race best", "Qualifying best", "Typical vs qualifying"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
+        h("tbody", null, D.map(function (d) {
+          var gap = d.median != null && d.quali_best != null ? d.median - d.quali_best : null;
+          return h("tr", {class: d.is_ai ? "ai" : null}, nameCell(d), h("td", {class: "num"}, d.representative_laps || 0),
+            h("td", {class: "num"}, d.average != null ? lapTime(d.average) : "No representative laps"), h("td", {class: "num"}, d.median != null ? lapTime(d.median) : "—"),
+            h("td", {class: "num"}, d.best != null ? lapTime(d.best) : "—"), h("td", {class: "num"}, d.quali_best != null ? lapTime(d.quali_best) : "Not recorded"),
+            h("td", {class: "num"}, gap == null ? "—" : sgn(gap) + " s (" + sgn(gap / d.quali_best * 100, 1) + "%)"));
+        })))));
     // 2. pace through the race: chart + thirds
     var humans = D.filter(function (d) { return !d.is_ai; });
     var W = 900, Hh = 300, pl = 64, pr = 16, pt = 14, pb = 34;
@@ -3347,23 +3494,24 @@ function viewPace(recording, query) {
     }
     var trendTxt = function (v) { return v == null ? "-" : Math.abs(v) < 0.01 ? "steady" : Math.abs(v).toFixed(2) + " s " + (v < 0 ? "quicker" : "slower") + " per lap"; };
     var paceSec = h("section", null, h("h2", null, "Pace through the race"),
-      h("p", {class: "explain"}, "Dots are each of your representative laps; the line is a rolling 3-lap average. The dashed line is the whole field's median lap. Below, each driver's typical lap in each third of the race and the overall trend (lower = quicker)."),
-      chart, h("div", {class: "panel scroll", style: {marginTop: "14px"}}, h("table", null,
+      h("p", {class: "explain"}, "Dots are each of your representative laps; the line is a rolling 3-lap average. The dashed line is the whole field's median lap. Thirds need at least six representative laps; trend needs four. Short recordings still show the overall average above."),
+      chart || h("p", {class: "muted"}, "More representative laps are needed to draw a pace trend."), h("div", {class: "panel scroll", style: {marginTop: "14px"}}, h("table", null,
         h("thead", null, h("tr", null, ["Driver", "First third", "Middle third", "Last third", "Trend"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
-        h("tbody", null, D.filter(function (d) { return d.thirds || d.trend != null; }).map(function (d) {
-          return h("tr", {class: d.is_ai ? "ai" : null}, nameCell(d), (d.thirds || [null, null, null]).map(function (v) { return h("td", {class: "num"}, v ? lapTime(v) : "-"); }),
-            h("td", {class: "num " + (d.trend < -0.01 ? "gain" : d.trend > 0.01 ? "lose" : "")}, trendTxt(d.trend)));
+        h("tbody", null, D.map(function (d) {
+          return h("tr", {class: d.is_ai ? "ai" : null}, nameCell(d), (d.thirds || [null, null, null]).map(function (v) { return h("td", {class: "num"}, v != null ? lapTime(v) : "Needs 6 laps"); }),
+            h("td", {class: "num " + (d.trend < -0.01 ? "gain" : d.trend > 0.01 ? "lose" : "")}, d.trend == null ? "Needs 4 laps" : trendTxt(d.trend)));
         })))));
     // 3. clean air vs traffic
     var airSec = h("section", null, h("h2", null, "Clean air and traffic"),
-      h("p", {class: "explain"}, "Each lap is classed by the gap to the car directly ahead, at the line, at both ends of the lap: clean air (over 2 s both times) or traffic (under 1.5 s both times); anything in between doesn't count either way. The cost of traffic is how much slower a typical traffic lap was."),
+      h("p", {class: "explain"}, "Each representative lap is classed by the gap to the car directly ahead at both ends: clean air (over 2 s both times), traffic (under 1.5 s both times), or mixed/unknown. Traffic cost needs at least two laps in both clean air and traffic. No laps in a category means that comparison is unavailable."),
       h("div", {class: "panel scroll"}, h("table", null,
-        h("thead", null, h("tr", null, ["Driver", "Clean air", "Laps", "In traffic", "Laps", "Cost of traffic"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
-        h("tbody", null, D.filter(function (d) { return d.clean_air.laps || d.traffic.laps; }).map(function (d) {
+        h("thead", null, h("tr", null, ["Driver", "Clean air", "Laps", "In traffic", "Laps", "Mixed/unknown", "Laps", "Cost of traffic"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
+        h("tbody", null, D.map(function (d) {
           return h("tr", {class: d.is_ai ? "ai" : null}, nameCell(d),
-            h("td", {class: "num"}, d.clean_air.median ? lapTime(d.clean_air.median) : "-"), h("td", {class: "num muted"}, d.clean_air.laps),
-            h("td", {class: "num"}, d.traffic.median ? lapTime(d.traffic.median) : "-"), h("td", {class: "num muted"}, d.traffic.laps),
-            h("td", {class: "num " + (d.traffic_cost > 0.05 ? "lose" : d.traffic_cost < -0.05 ? "gain" : "")}, d.traffic_cost == null ? "-" : sgn(d.traffic_cost) + " s"));
+            h("td", {class: "num"}, d.clean_air.median != null ? lapTime(d.clean_air.median) : "No laps"), h("td", {class: "num muted"}, d.clean_air.laps),
+            h("td", {class: "num"}, d.traffic.median != null ? lapTime(d.traffic.median) : "No laps"), h("td", {class: "num muted"}, d.traffic.laps),
+            h("td", {class: "num"}, d.mixed && d.mixed.median != null ? lapTime(d.mixed.median) : "No laps"), h("td", {class: "num muted"}, d.mixed ? d.mixed.laps : 0),
+            h("td", {class: "num " + (d.traffic_cost > 0.05 ? "lose" : d.traffic_cost < -0.05 ? "gain" : "")}, d.traffic_cost == null ? "Needs 2 laps in each" : sgn(d.traffic_cost) + " s"));
         })))));
     setView(raceSubHead("Pace", P.meta, recording, champ, "pace"), pageAwards(P.awards, recording, champ), qSec, paceSec, airSec);
   });
@@ -3428,7 +3576,7 @@ function viewRaceCars(recording, query) {
 function viewTrackTurns(key) {
   setView(h("div", {class: "spinner"}, "Loading track map..."));
   return api("/api/tracks/turns?key=" + encodeURIComponent(key)).then(function (T) {
-    var C = T.corners.map(function (c) { return {name: c.name, apex: c.apex}; });
+    var C = T.corners.map(function (c) { return {name: c.name, apex: c.apex, exit_policy: c.exit_policy || "auto"}; });
     var sel = -1, adding = false, drag = -1, dirty = false;
     var cen = T.centre, Lt = T.length;
     var all = T.left.concat(T.right);
@@ -3507,6 +3655,9 @@ function viewTrackTurns(key) {
         var nm = h("input", {value: c.name, maxlength: 12, "aria-label": "Turn name", onchange: function (e) { c.name = e.target.value.trim() || c.name; dirty = true; draw(); }});
         list.appendChild(h("div", {class: "turnrow" + (k === sel ? " on" : ""), onclick: function () { sel = k; draw(); syncList(); }},
           nm, h("span", {class: "muted"}, Math.round(c.apex) + " m"),
+          h("select", {"aria-label": "Exit scoring for " + c.name, onclick: function (e) { e.stopPropagation(); }, onchange: function (e) { c.exit_policy = e.target.value; dirty = true; status.textContent = "Your turns (not saved yet)"; }},
+            h("option", {value: "auto", selected: c.exit_policy !== "compromise"}, "Exit: automatic"),
+            h("option", {value: "compromise", selected: c.exit_policy === "compromise"}, "Exit: intended narrow line")),
           h("button", {class: "link", "aria-label": "Delete " + c.name, onclick: function (e) { e.stopPropagation(); C.splice(k, 1); sel = -1; dirty = true; refresh(); }}, "Delete")));
       });
       status.textContent = (T.custom || dirty ? "Your turns" : "Suggested automatically") + (dirty ? " (not saved yet)" : "");
@@ -3520,10 +3671,10 @@ function viewTrackTurns(key) {
         if (!confirm("Go back to automatically detected turns for this track?")) return;
         api("/api/tracks/turns", "POST", {key: key, corners: null}).then(function () { toast("Back to automatic turns."); render(); }).catch(fail); }}, "Use automatic"),
       h("button", {class: "btn small", onclick: function () {
-        api("/api/tracks/turns", "POST", {key: key, corners: C.map(function (c) { return {name: c.name, apex: c.apex}; })})
+        api("/api/tracks/turns", "POST", {key: key, corners: C.map(function (c) { return {name: c.name, apex: c.apex, exit_policy: c.exit_policy || "auto"}; })})
           .then(function () { dirty = false; T.custom = true; syncList(); toast("Turns saved. Races, qualifying and practice at this track use them from now on."); }).catch(fail); }}, "Save turns"));
     setView(h("div", {class: "headrow"}, h("div", null, h("p", {class: "kicker"}, "Track maps"), h("h1", null, "Turns: " + T.track + " " + T.layout),
-        h("p", {class: "sub"}, "Drag a turn to move it along the track, or use Add turn and click where it goes. Scroll to zoom, drag the map to pan, double-click to see the whole track. Saved turns replace the automatic ones in every replay, report and analysis at this track.")),
+        h("p", {class: "sub"}, "Drag a turn to move it along the track, or use Add turn and click where it goes. Scroll to zoom, drag the map to pan. Set Exit: intended narrow line where the preferred line deliberately stays away from the outside edge; its clearance remains visible but carries no wide-exit penalty. Saved turns apply to every analysis at this track.")),
         h("div", {class: "actions"}, h("a", {class: "btn ghost small", href: "#/trackmap"}, "Back to track maps"))),
       h("div", {class: "turnwrap"}, h("div", {class: "panel turnstage"}, canvas), h("div", {class: "panel pad"}, h("div", {class: "row"}, status), list, actions)));
     requestAnimationFrame(function () { fit(); refresh(); });
@@ -3963,6 +4114,7 @@ function radarChart(dims, a, b, colA) {  // a, b: {dim: 0-100}; draws b (legend)
   have.forEach(function (x) { var p = pt(x[1], a[x[0].key]); s.appendChild(svg("circle", {cx: p[0], cy: p[1], r: 3.5, fill: colA})); });
   return s;
 }
+function pScope(P) { return P.scope || "Race results"; }
 function profilesSection(id) {
   var box = h("section", null, h("h2", null, "Driver profiles"), h("div", {class: "spinner"}, "Measuring everyone's driving style..."));
   api("/api/championships/" + id + "/profiles").then(function (P) {
@@ -3989,9 +4141,11 @@ function profilesSection(id) {
     var cur = {p: P.profiles[0], lg: null};
     var card = h("div");
     function draw() {
+      if (!cur.p) { fill(card, h('p', {class: 'hint'}, 'No human friend profiles in this championship yet.')); return; }
       var p = cur.p, ms = p.matches;
       card.innerHTML = "";
-      if (!ms.length) { card.appendChild(h("div", {class: "panel"}, emptyState("Not enough data yet for " + p.driver, "A style match needs at least six of the twelve measurements; a few more races will fill them in."))); return; }
+      card.appendChild(campaignUI.metricTable(P, p));
+      if (!ms.length) { card.appendChild(h("p", {class: "muted"}, "A legend comparison needs six measured dimensions. Your available season metrics are shown above.")); return; }
       var m = ms.find(function (x) { return x.key === cur.lg; }) || ms[0], L = LG[m.key], col = p.color || "#E4572E";
       var legendScores = {}; dims.forEach(function (d) { legendScores[d.key] = L.style[d.key] * 10; });
       var pick = h("select", {"aria-label": "Compare with a legend", onchange: function (e) { cur.lg = e.target.value; draw(); }},
@@ -4027,8 +4181,15 @@ function profilesSection(id) {
       var c = v >= 70 ? "var(--green)" : v >= 40 ? "var(--amber)" : "var(--red)";
       return h("td", {class: "num"}, h("span", {class: "scorebar"}, h("i", {style: {width: v + "%", background: c}})), h("b", null, v));
     }
-    var seg = h("div", {class: "seg"}, P.profiles.map(function (p, i) { return h("button", {"aria-pressed": String(i === 0), onclick: function (e) {
-      cur.p = p; cur.lg = null; e.target.parentNode.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b === e.target)); }); draw(); }}, p.driver); }));
+    var seg = h("div", {class: "seg"}, P.profiles.map(function (p, i) { return h("button", {'data-ai': p.is_ai ? '1' : '0', "aria-pressed": String(i === 0), onclick: function (e) {
+      cur.p = p; cur.lg = null; e.target.parentNode.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b === e.target)); }); draw(); }}, p.driver + (p.is_ai ? ' · AI' : '')); }));
+    var friends = h('label', {class: 'check'}, h('input', {type: 'checkbox', onchange: function (e) {
+      seg.querySelectorAll('button[data-ai]').forEach(function (b) { b.hidden = e.target.checked && b.dataset.ai === '1'; });
+      if (e.target.checked && cur.p && cur.p.is_ai) {
+        cur.p = P.profiles.find(function (p) { return !p.is_ai; }); cur.lg = null;
+        seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(!!cur.p && b.textContent === cur.p.driver)); }); draw();
+      } else if (!cur.p && !e.target.checked) { cur.p = P.profiles[0]; draw(); }
+    }}), 'Show human friends only');
     var all = h("details", {class: "panel pad", style: {marginTop: "14px"}}, h("summary", null, h("b", null, "Every legend's fingerprint")),
       h("p", {class: "hint"}, "0-10 per dimension; 10 = a defining trait. Click a column to sort."),
       h("div", {class: "scroll"}, h("table", {class: "compact"},
@@ -4037,7 +4198,9 @@ function profilesSection(id) {
     draw();
     fill(box, h("h2", null, "Driver profiles"),
       h("p", {class: "explain"}, "Each of you measured across every race in this championship on twelve dimensions (0-100, where 50 is roughly typical), matched against 20 F1 legends. The legends aren't measured: there's no telemetry for Fangio or Senna, so each has a fingerprint of their well-known strengths on the same dimensions. The match compares the shape of two styles (what stands out for you against what stood out for them), not raw speed."),
-      h("div", {class: "headrow"}, seg), card, all);
+      h("p", {class: "hint"}, "Profile analysis v" + P.version + " · " + pScope(P)),
+      (P.problems || []).map(function(x){return h("p", {class:"muted"}, x);}),
+      friends, h("div", {class: "headrow"}, seg, h("a", {class:"btn ghost small",href:"#/champ/"+id+"/trends"},"Season trends")), card, all);
   }).catch(function (e) { box.innerHTML = ""; box.appendChild(h("h2", null, "Driver profiles")); box.appendChild(h("p", {class: "muted"}, "Couldn't build profiles: " + (e.message || e))); });
   return box;
 }
@@ -4397,12 +4560,13 @@ function viewStyle(recording, query) {
     function draw() {
       box.innerHTML = "";
       box.appendChild(h("div", {class: "panel scroll"}, h("table", null,
-        h("thead", null, h("tr", null, ["Pos", "Driver", "Braking points", "Throttle pickup", "Track usage", "At the apex", "Racing corners"].map(function (x, i) { return h("th", {class: i > 1 ? "num" : null}, x); }))),
+        h("thead", null, h("tr", null, ["Pos", "Driver", "Braking points", "Throttle", "Track usage", "At the apex", "At exit", "Racing corners"].map(function (x, i) { return h("th", {class: i > 1 ? "num" : null}, x); }))),
         h("tbody", null, S.drivers.map(function (d) {
           var b = d["brake_consistency_" + mode.v], t = d["throttle_consistency_" + mode.v], same = mode.v === S.racing_mode;
           return h("tr", {class: d.is_ai ? "ai" : null}, h("td", {class: "pos"}, d.pos || "-"), driverCell(d),
             score(b != null ? b : d.brake_consistency, same ? d.brake_point_sd : null), score(t != null ? t : d.throttle_consistency, same ? d.throttle_point_sd : null),
             score(d.track_usage, null), h("td", {class: "num"}, d.apex_gap_m == null ? "-" : d.apex_gap_m.toFixed(2) + " m"),
+            h("td", {class: "num", title: "Sustained outside-edge clearance; " + (d.track_edge_source || "estimated") + " edges. An intended narrow exit need not be an error."}, d.exit_gap_m == null ? "-" : d.exit_gap_m.toFixed(2) + " m"),
             h("td", {class: "num muted"}, d.racing_share == null ? "-" : Math.round(d.racing_share) + "%"));
         })))));
     }
@@ -4412,7 +4576,7 @@ function viewStyle(recording, query) {
     draw();
     setView(raceSubHead("Driving style", S.meta, recording, champ, "style"), pageAwards(S.awards, recording, champ),
       h("section", null, h("div", {class: "headrow"}, h("h2", null, "Every driver"), h("div", {class: "racingbox", style: {margin: 0}}, h("span", {class: "muted"}, "Corners spent racing another car count:"), seg)),
-        h("p", {class: "explain"}, "Worked out for every car from speed and position. Braking points and throttle pickup: how close to the same spot each lap (100 is identical every time; the ± is the spread in metres). Track usage: how much of the road they use, kerb at the apex and edge on the way in and out. At the apex: median distance from the apex. Racing corners: corners spent within 1 s ahead or 0.7 s behind another car, where markers move for good reasons; the switch sets how much those count."),
+        h("p", {class: "explain"}, "Braking and throttle measure repeatability. Recorded player throttle uses pedal shape with shift filtering and a modest commitment penalty; other cars use an acceleration-based pickup proxy. ± is pickup scatter in metres, not the pedal rating scale. Track usage measures sustained wheel proximity to the edges, scaled to road width. Within 40 cm earns full credit. Supported linked-corner compromises and configured intended narrow exits carry no wide-exit penalty. Apex and exit show actual wheel clearance, with mapped or estimated edges. Racing-corner weighting adjusts for nearby cars."),
         box));
   });
 }
@@ -4479,7 +4643,7 @@ function viewSettings() {
 }
 
 // ------------------------------------------------------------------ router
-function render() {
+function render(skipIdentity, identityChamp) {
   var hash = location.hash || "#/";
   markNav();
   if (state.cleanup) { state.cleanup(); state.cleanup = null; }
@@ -4489,7 +4653,11 @@ function render() {
   var q = {};
   var qs = hash.split("?")[1];
   if (qs) qs.split("&").forEach(function (kv) { var a = kv.split("="); q[decodeURIComponent(a[0])] = decodeURIComponent(a[1] || ""); });
+  if (identityChamp && !q.champ) q.champ = identityChamp;
   var path = hash.split("?")[0];
+  if (skipIdentity !== true && (m = path.match(/^#\/(?:race|replay|pace|errors|style|overtakes|cars)\/(.+)$/))) {
+    return IdentityUI.ensure(decodeURIComponent(m[1]), q.champ).then(function (cid) { if (location.hash === hash) return render(true, cid); }).catch(fail);
+  }
   if (path === "#/" || path === "") p = viewHome();
   else if (path === "#/recordings") p = viewRecordings();
   else if (path === "#/settings") p = viewSettings();
@@ -4503,6 +4671,8 @@ function render() {
   else if (path === "#/practice") p = viewPractice();
   else if (path === "#/caricons") p = viewCarIcons(q);
   else if (path === "#/liveries") p = viewLiveries();
+  else if (path === "#/bop") p = viewBop();
+  else if (path === "#/conversion") p = viewConversion();
   else if (path === "#/engineer") p = viewEngineer();
   else if ((m = path.match(/^#\/engineer\/(.+)$/))) p = viewEngineerSession(decodeURIComponent(m[1]));
   else if ((m = path.match(/^#\/pace\/(.+)$/))) p = viewPace(decodeURIComponent(m[1]), q);

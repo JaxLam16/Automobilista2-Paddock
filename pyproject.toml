@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ams2season"
-version = "0.1.0"
+version = "0.1.0a3"
 description = "Record AMS2 multiplayer races (humans + AI) and turn them into championship standings and debrief stats"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,10 +17,10 @@ test = ["pytest>=7"]
 ams2season = "ams2season.cli:main"
 
 [tool.setuptools]
-packages = ["ams2season"]
+packages = ["ams2season", "ams2season.engineer"]
 
 [tool.setuptools.package-data]
-ams2season = ["app_ui.html", "assets/*", "assets/car_icons/*", "livery_editor.js", "livery_editor.css", "LIVERY_EDITOR_NOTICES.txt"]
+ams2season = ["app_ui.html", "assets/*", "assets/car_icons/*", "livery_editor.js", "livery_editor.css", "LIVERY_EDITOR_NOTICES.txt", "bop_editor.js", "bop_editor.css", "replay_timing.js", "development_ui.js", "development_ui.css", "identity_ui.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

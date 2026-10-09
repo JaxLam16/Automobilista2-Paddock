@@ -210,6 +210,17 @@ def add_distance(frames: pd.DataFrame, L: float, green_t: float | None = None, g
                 k = _mode((lc[a:b] - wraps)[ok].astype(int), default=int(max(lc[a], 0)))
                 base = k * L
             d = _despike(t[a:b], raw + base)
+            if n_seg == 0 and green_t is not None and t[a] <= green_t + 5 and ld[a] == 0:
+                # AMS2 reports exactly zero for grid cars until they reach the line. Filling
+                # that prefix with their first positive reading put every grid slot *ahead*
+                # of the line, in an arbitrary order. Work backwards from the first real
+                # reading using travelled distance, retaining the negative grid distances.
+                known = np.flatnonzero(ld[a:b] != 0)
+                if len(known) and t[a + known[0]] <= green_t + 30:
+                    first = int(known[0])
+                    travel = np.r_[0.0, np.cumsum(np.maximum(0.0, (v[a:a + first] + v[a + 1:a + first + 1]) / 2)
+                                                 * np.diff(t[a:a + first + 1]))]
+                    d[:first] = d[first] - (travel[-1] - travel[:first])
             out[a:b] = d
             prev_end = (t[b - 1], d[-1], v[b - 1])
         dist[idx] = out
@@ -222,6 +233,18 @@ def add_distance(frames: pd.DataFrame, L: float, green_t: float | None = None, g
 def _last_valid(t: np.ndarray, v: np.ndarray, lo: float, hi: float) -> float:
     m = (t > lo) & (t <= hi) & (v > 0)
     return float(v[m][-1]) if m.any() else np.nan
+
+
+def completed_lap_time(t: np.ndarray, last_lap: np.ndarray, t1: float, own: float) -> tuple[float, bool]:
+    """Read the completed lap *after* its crossing, when the game's timing has updated.
+
+    The previous lap is often close enough to pass the tolerance check. Taking the first
+    value in a window starting before the crossing silently assigned it to the new lap.
+    Keep the latest plausible updated value; interpolated crossing time is the fallback.
+    """
+    win = (t >= t1) & (t <= t1 + 5.0) & np.isfinite(last_lap) & (last_lap > 0) \
+        & (np.abs(last_lap - own) < max(0.5, 0.02 * own))
+    return (float(last_lap[win][-1]), True) if win.any() else (float(own), False)
 
 
 def entrant_laps(g: pd.DataFrame, L: float, green_t: float) -> pd.DataFrame:
@@ -268,8 +291,7 @@ def entrant_laps(g: pd.DataFrame, L: float, green_t: float) -> pd.DataFrame:
     for n in k:
         t0, t1 = T[n - 1], T[n]
         own = t1 - t0
-        win = (t > t1 - 0.5) & (t <= t1 + 5.0) & (last_lap > 0) & (np.abs(last_lap - own) < max(0.5, 0.02 * own))
-        lap_time = float(last_lap[win][0]) if win.any() else own
+        lap_time, game_time = completed_lap_time(t, last_lap, t1, own)
         s1 = _last_valid(t, s1v, t0 + 0.5, t1 - 0.02)
         s2 = _last_valid(t, s2v, t0 + 0.5, t1 - 0.02)
         if not (s1 > 0 and s2 > 0 and s1 + s2 < lap_time - 0.5):
@@ -286,7 +308,7 @@ def entrant_laps(g: pd.DataFrame, L: float, green_t: float) -> pd.DataFrame:
         j = min(int(np.searchsorted(t, t1 + 1.0)), len(t) - 1)
         rows.append({
             "lap": int(n), "t_end": float(t1), "time": lap_time, "time_own": own,
-            "game_time": bool(win.any()), "s1": s1, "s2": s2, "s3": s3,
+            "game_time": game_time, "s1": s1, "s2": s2, "s3": s3,
             "valid": not bool(inv[in_lap].any()),
             "pit": bool(np.isin(pit[(t >= t0) & (t <= t1)], PIT_LANE).any()),
             "position": int(pos[j]) if pos[j] > 0 else np.nan,
@@ -431,7 +453,7 @@ def curvature_profile(ld, x, z, L: float, bin_m: float = 10.0) -> np.ndarray | N
     ld, x, z = ld[o], x[o], z[o]
     keep = np.r_[True, np.diff(ld) > 0.05]
     ld, x, z = ld[keep], x[keep], z[keep]
-    nb = max(int(L / bin_m), 10)
+    nb = max(int(np.ceil(L / bin_m)), 10)
     c = (np.arange(nb) + 0.5) * bin_m
     if ld.max() - ld.min() < 0.8 * L:
         return None
@@ -570,5 +592,6 @@ def custom_corners(custom: list, profile: np.ndarray, curvature: np.ndarray | No
         out.append({"name": (c.get("name") or f"T{n + 1}").strip()[:12], "apex": round(float(c["apex"]), 1),
                     "apex_kph": round(float(v) * 3.6, 1) if v == v else None,
                     "dir": ("left" if k > 0 else "right") if abs(k) > 1e-5 else None,
-                    "radius": round(1 / abs(k)) if abs(k) > 1e-5 else None, "custom": True})
+                    "radius": round(1 / abs(k)) if abs(k) > 1e-5 else None, "custom": True,
+                    "exit_policy": 'compromise' if c.get('exit_policy') == 'compromise' else 'auto'})
     return out

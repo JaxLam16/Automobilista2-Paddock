@@ -248,7 +248,7 @@ class Library:
                                                               and not (path / "analysis" / "no_race.flag").exists()),
                 "out_of_range": sorted((m.get("out_of_range") or {}).keys()),
                 "names": [p["name"] for p in m.get("final") or []],
-                "driver": (m.get("local") or {}).get("name"),
+                "driver": (m.get("local") or {}).get("name"), "car": (m.get("local") or {}).get("car"),
                 "imported_from": (json.loads((path / "import.json").read_text(encoding="utf-8")).get("from") if (path / "import.json").exists() else None)}
 
     def recordings(self) -> list[dict]:
@@ -268,6 +268,9 @@ class Library:
                 cands = [q for q in qualis if q["track"] == r["track"] and q["layout"] == r["layout"]
                          and 0 <= (t_r - _dt.fromisoformat(q["started_at"])).total_seconds() <= 4 * 3600]
                 r["quali"] = max(cands, key=lambda q: q["started_at"])["id"] if cands else None
+                pair = next((a for a in r['assigned'] if a.get('slot') == 'race'), None)
+                if pair is not None:
+                    r['quali'] = pair.get('qualify')
         return out
 
     def assignments(self) -> dict[str, list]:
@@ -282,6 +285,17 @@ class Library:
                     m[str(Path(r["path"]).resolve())].append(
                         {"champ": db.stem, "name": cfg.name if cfg else db.stem, "round": r["round"],
                          "race_no": r["race_no"]})
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='weekend'").fetchone():
+                    for w in con.execute('SELECT * FROM weekend'):
+                        for slot in ('practice1', 'practice2', 'qualify', 'race'):
+                            if w[slot]:
+                                key = str((self.recordings_dir / w[slot]).resolve())
+                                same = next((a for a in m[key] if a['champ'] == db.stem and a['round'] == w['round']), None)
+                                if same is not None:
+                                    same.update(slot=slot, qualify=w['qualify'])
+                                else:
+                                    m[key].append({'champ': db.stem, 'name': cfg.name if cfg else db.stem,
+                                                   'round': w['round'], 'race_no': 1, 'slot': slot, 'qualify': w['qualify']})
             finally:
                 con.close()
         return m
@@ -378,15 +392,21 @@ class Library:
         raw = json.loads(old.to_json())
         for k in ("name", "drivers", "points", "default_points", "ai_policy", "fastest_lap_bonus",
                   "drop_rounds", "points_for_dnf", "corners", "pass_detection", "teams", "team_count", "team_colors_for_drivers",
-                  "practice_points", "practice_awards"):
+                  "practice_points", "practice_awards", "livery_ai", "car_class"):
             if k in body:
                 raw[k] = body[k]
         raw["drivers"] = _clean_drivers(raw.get("drivers") or [])
+        if not isinstance(raw.get('car_class', ''), str):
+            raise ValueError('Championship car class must be a class name.')
+        raw['car_class'] = raw.get('car_class', '').strip()
+        from .identities import validate_roster
+        validate_roster(raw['drivers'])
         raw["teams"] = _clean_teams(raw.get("teams") or [], {d["key"] for d in raw["drivers"]})
         raw["team_count"] = max(0, int(raw.get("team_count") or 0))
         cfg = SeasonConfig(**raw)
         needs_reanalysis = (json.dumps(cfg.drivers, sort_keys=True) != json.dumps(old.drivers, sort_keys=True)
-                            or cfg.corners != old.corners or cfg.pass_detection != old.pass_detection)
+                            or cfg.corners != old.corners or cfg.pass_detection != old.pass_detection
+                            or cfg.livery_ai != old.livery_ai)
         practice_changed = (cfg.practice_points != old.practice_points or sorted(cfg.practice_awards) != sorted(old.practice_awards))
         with self.lock:
             problems = reingest_all(db, cfg) if needs_reanalysis else (save_config(db, cfg) or [])
@@ -400,10 +420,25 @@ class Library:
         db = self._db(champ_id)
         db.rename(db.with_name(f".deleted-{datetime.now():%Y%m%d-%H%M%S}-{db.name}"))
 
+    def _refresh_champ_analysis(self, champ_id: str) -> list[str]:
+        from .season import refresh_analysis
+        db = self._db(champ_id)
+        with self.lock:
+            key = ("analysis-refresh", str(db), db.stat().st_mtime_ns)
+            if key in self._report_cache:
+                return self._report_cache[key]
+            before = db.stat().st_mtime_ns
+            problems = refresh_analysis(db, self.champ_config(champ_id))
+            if db.stat().st_mtime_ns != before:
+                self._report_cache.clear()
+            self._report_cache[("analysis-refresh", str(db), db.stat().st_mtime_ns)] = problems
+            return problems
+
     def champ_detail(self, champ_id: str) -> dict:
         from .awards import season_awards
         from .season import (connect, driver_colors, driver_stats, head_to_head, progression, rounds_summary,
                              season_cars_and_style, standings, team_standings, teammate_battles)
+        analysis_problems = self._refresh_champ_analysis(champ_id)
         db = self._db(champ_id)
         con = connect(db)
         try:
@@ -411,7 +446,7 @@ class Library:
             rounds = rounds_summary(con, cfg)
             from .practice_points import AWARDS as _PA
             from .season import practice_sessions
-            data = {"id": champ_id, "config": json.loads(cfg.to_json()), "rounds": rounds,
+            data = {"id": champ_id, "config": json.loads(cfg.to_json()), "rounds": rounds, "analysis_problems": analysis_problems,
                     "practice": practice_sessions(con), "practice_catalog": [{"key": k, "label": l, "about": a} for k, l, a in _PA],
                     "standings": {}, "progression": {}, "drivers": [], "h2h": None, "awards": [],
                     "talking_points": int(self.settings.talking_points or 6),
@@ -422,7 +457,7 @@ class Library:
                     st = standings(con, cfg, policy=pol)
                     data["standings"][pol] = {"columns": list(st.columns), "rows": st.where(st.notna(), None).to_dict("records")}
                     data["progression"][pol] = progression(con, cfg, policy=pol) if rounds else {}
-                ds = driver_stats(con, cfg)
+                ds = driver_stats(con, cfg, include_ai=True)
                 data["drivers"] = ds.to_dict("records")
                 ahead, passes = head_to_head(con, cfg)
                 data["h2h"] = {"names": list(ahead.index), "ahead": ahead.values.tolist(),
@@ -437,6 +472,8 @@ class Library:
             data["colors"] = {d.get("display", d["key"]): dc[d["key"]] for d in cfg.drivers}
             tm = {k: t for t in cfg.teams for k in t.get("members", [])}
             data["driver_team"] = {d.get("display", d["key"]): tm[d["key"]]["key"] for d in cfg.drivers if d["key"] in tm}
+            from .weekends import weekends
+            data["weekends"] = weekends(self, champ_id)
             return _clean(data)
         finally:
             con.close()
@@ -468,6 +505,7 @@ class Library:
         from .season import remove_round
         with self.lock:
             remove_round(self._db(champ_id), round_no, race_no)
+        self._report_cache.clear()
 
     def add_correction(self, champ_id: str, body: dict) -> None:
         from .season import add_correction
@@ -494,7 +532,9 @@ class Library:
         frames = path / "frames.parquet"
         stamp = frames.stat().st_mtime if frames.exists() else 0
         cfg = self.champ_config(champ_id) if champ_id else self._fallback_config()
-        key = (str(path), stamp, cfg.to_json() if cfg else None, self.settings.racing_corners)
+        from .identities import project_session, revision
+        key = (str(path), champ_id, stamp, cfg.to_json() if cfg else None, self.settings.racing_corners,
+               revision(path, cfg if champ_id else None))
         hit = self._report_cache.get(("analysis",) + key)
         if hit:
             return hit
@@ -506,7 +546,12 @@ class Library:
             params = cfg.pass_params()
         corners = self.track_corners(meta["track_location"], meta["track_variation"]) or corners  # your own turns win
         try:
-            ra = analyze_race(path, humans=humans, corners_override=corners, params=params, racing_mode=self.settings.racing_corners)
+            # Standalone reports borrow human aliases only; fictional identity is championship-scoped.
+            session = project_session(path, cfg if champ_id else None)
+            ra = analyze_race(session, humans=humans, corners_override=corners, params=params, racing_mode=self.settings.racing_corners)
+            original = session.meta.get('_recorded_names', {})
+            ra.entrants['recorded_name'] = ra.entrants.name.map(lambda name: original.get(name, name))
+            ra.classification['recorded_name'] = ra.classification.name.map(lambda name: original.get(name, name))
         except ValueError as exc:
             from .race import NO_RACE
             if str(exc) == NO_RACE:   # remember it, so the home page stops offering this recording
@@ -585,7 +630,7 @@ class Library:
                             "cars": [c["car"] for c in cars if c["icon"] == info["file"]]})
         return {"icons": sorted(listing, key=lambda x: x["file"].lower()), "cars": cars}
 
-    IMPORT_FILES = ("session.json", "frames.parquet", "local.parquet", "events.jsonl")
+    IMPORT_FILES = ("session.json", "frames.parquet", "local.parquet", "events.jsonl", "livery_assignments.json")
 
     def import_recording(self, body: dict) -> dict:
         """A friend's recording, sent as a zip or as a folder's files: copied into your recordings so their car's
@@ -622,6 +667,9 @@ class Library:
                 raise ValueError("That recording's session.json can't be read.")
             if not meta.get("session_type") or not meta.get("track_location") or "frames.parquet" not in mine:
                 raise ValueError("That doesn't look like a complete recording (session details or positions are missing).")
+            if 'livery_assignments.json' in mine:
+                from .identities import validate_facts
+                validate_facts(json.loads(mine['livery_assignments.json'].decode('utf-8')))
             who = (meta.get("local") or {}).get("name") or meta.get("label") or "friend"
             base = root.rsplit("/", 1)[-1] if root else ""
             if not _re.fullmatch(r"[\w.-]+", base or "-"):
@@ -695,7 +743,7 @@ class Library:
                     best = x["fastest_lap"] if best is None else min(best, x["fastest_lap"])
         return best
 
-    TECHNIQUE_VERSION = 6  # bump when the report's shape changes (re-analyses cached recordings)
+    TECHNIQUE_VERSION = 8  # shift-aware throttle shapes and modulated/flat-out corners
 
     def technique_cached(self, path: Path) -> dict:
         from .report import _clean
@@ -720,7 +768,12 @@ class Library:
             pass
         return rep
 
-    def technique(self, recording: str, champ_id: str | None) -> dict:
+    def technique(self, recording: str, champ_id: str | None, pace_reference: str = 'fastest') -> dict:
+        from .derive import load_session
+        from .pace_compare import VERSION as PACE_VERSION, lap_catalog, pace_comparison
+        from .report import _clean
+        if pace_reference not in ('fastest', 'same_car', 'leader', 'pole'):
+            raise ValueError('Unknown pace reference.')
         path = self.recording_path(recording)
         meta = self.recording_summary(path)
         reports = [self.technique_cached(path)]
@@ -740,16 +793,80 @@ class Library:
             race = {"id": recording, "champ": champ_id}
         elif meta["type"] == "qualify":
             race = self.race_for_quali(recording)
+        t_samples, t_width, t_stamp = self.track_file(meta['track_raw'], meta['layout_raw'])
+        references = [{'key': 'fastest', 'label': 'Fastest recorded lap'},
+                      {'key': 'same_car', 'label': 'Fastest in the same car'}]
+        paired_quali = None
+        if meta['type'] == 'race':
+            references.append({'key': 'leader', 'label': "Race winner's best lap"})
+            rec = next((r for r in self.recordings() if r['id'] == recording), {})
+            paired_quali = rec.get('quali')
+            if paired_quali:
+                references.append({'key': 'pole', 'label': 'Recorded qualifying pole'})
+        enriched = []
+        for rep in reports:
+            report = dict(rep)
+            if rep.get('available'):
+                src = self.recording_path(rep.get('folder') or recording)
+                stamp = tuple((src / f).stat().st_mtime_ns if (src / f).exists() else 0 for f in ('frames.parquet', 'local.parquet', 'session.json'))
+                qpath = self.recording_path(paired_quali) if paired_quali else None
+                qstamp = tuple((qpath / f).stat().st_mtime_ns if (qpath / f).exists() else 0
+                               for f in ('frames.parquet', 'local.parquet', 'session.json')) if qpath else None
+                from .identities import revision
+                key = ('pace-comparison', PACE_VERSION, str(src), stamp, t_stamp, paired_quali, qstamp, pace_reference,
+                       revision(path, cfg if champ_id else None),
+                       json.dumps(self.track_corners(meta['track_raw'], meta['layout_raw'])), self.TECHNIQUE_VERSION,
+                       cfg.to_json() if cfg else None)
+                comparison = self._report_cache.get(key)
+                if comparison is None:
+                    session = load_session(src)
+                    L, catalog = lap_catalog(session)
+                    corners = [{'name': c['corner'], 'apex': c['apex']} for c in rep.get('corners', [])]
+                    # Direction/radius come from the same measured track shape.
+                    from .technique import corners_from_laps, recording_laps
+                    _, driving_laps, _ = recording_laps(session)
+                    mine = catalog.get(rep.get('driver'))
+                    if mine:
+                        corners = corners_from_laps(driving_laps, L, (mine['grid'], mine['x'], mine['z']),
+                                                    self.track_corners(meta['track_raw'], meta['layout_raw']))
+                    reference_session, reference_name = None, None
+                    if pace_reference == 'pole':
+                        if paired_quali:
+                            try:
+                                reference_session = load_session(qpath)
+                            except (OSError, ValueError, KeyError) as exc:
+                                comparison = {'available': False, 'reason': f'Paired qualifying telemetry is unavailable: {exc}'}
+                        else:
+                            comparison = {'available': False, 'reason': 'No qualifying recording is paired with this race.'}
+                    elif pace_reference == 'leader':
+                        if meta['type'] == 'race':
+                            leader = self._analysis(recording, champ_id)[0]
+                            winner = str(leader.classification.iloc[0]['name'])
+                            reference_name = leader.session.meta.get('_recorded_names', {}).get(winner, winner)
+                        else:
+                            comparison = {'available': False, 'reason': 'A race-winner reference requires a race recording.'}
+                    if comparison is None:
+                        try:
+                            comparison = _clean(pace_comparison(session, rep.get('driver'), corners, reference_session, reference_name,
+                                                               pace_reference, t_samples, t_width, catalogs=(L, catalog)), digits=None)
+                        except (OSError, ValueError, KeyError, IndexError) as exc:
+                            comparison = {'available': False, 'reason': f'Pace comparison unavailable: {exc}'}
+                    self._report_cache[key] = comparison
+                report['pace_comparison'] = comparison
+            enriched.append(report)
         return {"recording": recording, "type": meta["type"], "track": meta["track"], "layout": meta["layout"],
-                "started_at": meta["started_at"], "drivers": reports, "colors": colors, "race": race}
+                "started_at": meta["started_at"], "drivers": enriched, "colors": colors, "race": race,
+                'pace_reference': pace_reference, 'pace_references': references}
 
-    def tyre_care(self, con, cfg) -> list[dict]:
+    def tyre_care(self, con, cfg, only_round=None, only_race=None) -> list[dict]:
         """Season tyre care for every human who recorded their own races (wear relative to the others
         in the same race, plus lock-ups and wheelspin per lap)."""
         from .race import _norm
         amap, disp = cfg.alias_map(), {d["key"]: d.get("display", d["key"]) for d in cfg.drivers}
         rows = []
         for r in con.execute("SELECT s.path, ev.round, s.race_no FROM session s JOIN event ev ON ev.id=s.event_id WHERE s.type='race'"):
+            if only_round is not None and (r['round'], r['race_no']) != (only_round, only_race):
+                continue
             p = Path(r["path"])
             if not p.exists():
                 continue
@@ -804,7 +921,7 @@ class Library:
         self._report_cache[key] = data
         return data
 
-    TYRES_VERSION = 4
+    TYRES_VERSION = 5  # corrected lap timing and race cooldown exclusion
 
     def tyres(self, recording: str) -> dict:
         """Full tyre analysis for the recording car, cached beside the recording."""
@@ -895,7 +1012,7 @@ class Library:
         ra, colors = self._analysis(recording, champ_id)
         cols = self._colors_for(ra, colors)
         st = ra.stats
-        keep = ["name", "is_ai", "brake_consistency", "brake_point_sd", "throttle_consistency", "throttle_point_sd", "track_usage", "apex_gap_m", "racing_share",
+        keep = ["name", "is_ai", "brake_consistency", "brake_point_sd", "throttle_consistency", "throttle_point_sd", "throttle_rating_source", "track_usage", "apex_gap_m", "exit_gap_m", "track_edge_source", "racing_share",
                 *[f"{k}_consistency_{m}" for k in ("brake", "throttle") for m in ("equal", "reduced", "excluded")]]
         order = {r.name: i + 1 for i, r in enumerate(ra.classification.itertuples())}
         rows = []
@@ -936,92 +1053,15 @@ class Library:
         return data
 
     def driver_profiles(self, cid: str) -> dict:
-        """Each human's driving style measured across the championship's races, on the twelve dimensions of the
-        legends comparison, with every legend ranked by how similar the style is."""
-        from .errors import race_errors
-        from .legends import DIMENSIONS, LEGENDS, match, scores_from_raw
-        from .metrics import race_pace
-        from .overtakes import overtaking
-        from .race import _norm
-        from .season import connect, driver_colors, rounds_summary
+        from .profiles import build, VERSION
         db = self._db(cid)
-        key = ("profiles", str(db), db.stat().st_mtime if db.exists() else 0)
+        self._refresh_champ_analysis(cid)
+        key = ("profiles", VERSION, str(db), db.stat().st_mtime_ns)
         if key in self._report_cache:
             return self._report_cache[key]
-        con = connect(db)
-        try:
-            cfg = self._cfg(con)
-            rounds = rounds_summary(con, cfg)
-            tyre = {r["driver"]: r.get("score") for r in (self.tyre_care(con, cfg) or [])}
-            dcol = driver_colors(cfg)
-        finally:
-            con.close()
-        amap = cfg.alias_map()
-        display = {d["key"]: d["display"] for d in cfg.drivers}
-        acc = {}
-        for r in rounds:
-            if not r.get("recording_exists"):
-                continue
-            try:
-                ra, colors = self._analysis(r["recording"], cid)
-            except Exception:
-                continue
-            st = ra.stats.set_index("name")
-            field_med = float(st.median_clean.median())
-            ov = {d["name"]: d for d in overtaking(ra)["drivers"]}
-            er = {d["name"]: d for d in race_errors(ra)["drivers"]}
-            rp = {d["name"]: d for d in race_pace(ra.laps, dict(zip(ra.entrants.name, ra.entrants.is_ai.astype(bool))))["drivers"]}
-            for n in st.index:
-                k = amap.get(_norm(n))
-                if not k:
-                    continue
-                s_ = st.loc[n]
-                a = acc.setdefault(k, {"races": 0, "grid_pct": [], "pace_rel_pct": [], "lap_cv_pct": [], "brake_consistency": [], "throttle_consistency": [],
-                                       "track_usage": [], "pass_laps": 0, "attack_laps": 0, "lost_laps": 0, "defend_laps": 0, "lap1_gain": [],
-                                       "clean_share": [], "trend_pct": [], "errors": 0, "spins": 0, "passes": 0})
-                a["races"] += 1
-                fs, gr = s_.get("field_size"), s_.get("grid")
-                if fs and fs > 1 and gr == gr and gr:
-                    a["grid_pct"].append((fs - gr) / (fs - 1))
-                if s_.median_clean == s_.median_clean and field_med:
-                    a["pace_rel_pct"].append((s_.median_clean / field_med - 1) * 100)
-                    if s_.consistency_s == s_.consistency_s:
-                        a["lap_cv_pct"].append(s_.consistency_s / s_.median_clean * 100)
-                for f in ("brake_consistency", "throttle_consistency", "track_usage"):
-                    if f in s_ and s_[f] == s_[f]:
-                        a[f].append(float(s_[f]))
-                if s_.get("lap1_gain") == s_.get("lap1_gain"):
-                    a["lap1_gain"].append(float(s_.lap1_gain))
-                o = ov.get(n, {})
-                a["pass_laps"] += o.get("pass_laps", 0); a["attack_laps"] += o.get("attack_laps", 0)
-                a["lost_laps"] += o.get("lost_laps", 0); a["defend_laps"] += o.get("defend_laps", 0)
-                a["passes"] += o.get("made", 0)
-                e = er.get(n, {})
-                if e.get("clean_lap_share") is not None:
-                    a["clean_share"].append(e["clean_lap_share"])
-                a["errors"] += e.get("errors", 0); a["spins"] += e.get("spin", 0)
-                p_ = rp.get(n, {})
-                if p_.get("trend") is not None and p_.get("median"):
-                    a["trend_pct"].append(p_["trend"] / p_["median"] * 100)
-        mean = lambda v: float(np.mean(v)) if v else None
-        profiles = []
-        for k, a in acc.items():
-            who = display.get(k, k)
-            raw = {"grid_pct": mean(a["grid_pct"]), "pace_rel_pct": mean(a["pace_rel_pct"]), "lap_cv_pct": mean(a["lap_cv_pct"]),
-                   "brake_consistency": mean(a["brake_consistency"]), "throttle_consistency": mean(a["throttle_consistency"]),
-                   "track_usage": mean(a["track_usage"]), "lap1_gain": mean(a["lap1_gain"]), "clean_share": mean(a["clean_share"]),
-                   "trend_pct": mean(a["trend_pct"]), "tyre_score": tyre.get(who),
-                   "pass_rate": 100 * a["pass_laps"] / a["attack_laps"] if a["attack_laps"] else None,
-                   "hold_rate": 100 * (1 - a["lost_laps"] / a["defend_laps"]) if a["defend_laps"] else None}
-            sc = scores_from_raw(raw)
-            ms = match(sc)
-            profiles.append({"driver": who, "key": k, "color": dcol.get(k) or dcol.get(who), "races": a["races"],
-                             "raw": {kk: (None if v is None else round(v, 3)) for kk, v in raw.items()},
-                             "totals": {"errors": a["errors"], "spins": a["spins"], "passes": a["passes"]},
-                             "scores": {kk: (None if v is None else round(v)) for kk, v in sc.items()}, "matches": ms})
-        profiles.sort(key=lambda p: p["driver"].lower())
-        out = {"dimensions": [{"key": k, "label": l, "about": d} for k, l, d in DIMENSIONS], "legends": LEGENDS, "profiles": profiles}
-        self._report_cache[key] = out
+        with self.lock:
+            out = build(self, cid)
+        self._report_cache[("profiles", VERSION, str(db), db.stat().st_mtime_ns)] = out
         return out
 
     def race_cars_page(self, recording: str, champ_id: str | None) -> dict:
@@ -1197,7 +1237,15 @@ def _clean_drivers(drivers: list[dict]) -> list[dict]:
         if isinstance(aliases, str):
             aliases = aliases.split(",")
         aliases = [a.strip() for a in aliases if a and a.strip()]
-        out.append({"key": key, "display": display, "aliases": aliases})
+        role = d.get('role', 'human')
+        if role not in ('human', 'ai'):
+            raise ValueError('Driver role must be human or AI.')
+        entry = {"key": key, "display": display, "aliases": aliases, 'role': role}
+        if role == 'ai':
+            entry['aliases'] = []
+        if d.get('livery'):
+            entry['livery'] = dict(d['livery'])
+        out.append(entry)
     return out
 
 
@@ -1210,6 +1258,12 @@ class App:
         self.closing_at: float | None = None
         self.port = None
         self._livery_editor = None
+        self._bop_editor = None
+        self._development = None
+        if (self.lib.root / 'balance_of_performance' / 'development_receipts.db').exists():
+            from .development import Development
+            self._development = Development(self)
+            self._development.start_worker()
 
     CLOSE_GRACE_S = 15          # a reload sends "closing" then heartbeats again straight away
     SILENT_LIMIT_S = 3 * 3600   # fallback if the close signal never arrives (crash, killed browser)
@@ -1309,8 +1363,147 @@ class App:
             self._livery_editor = LiveryEditor(self.lib.root)
         return self._livery_editor
 
+    def identity_catalog(self):
+        editor = self.liveries
+        problem = None
+        if not editor.cars and editor.config.get('game_path'):
+            try:
+                editor.scan()
+            except (ValueError, OSError) as exc:
+                problem = str(exc)  # historical snapshots remain usable without this installation
+        models = set()
+        for path in self.lib.recordings_dir.iterdir():
+            if not (path / 'session.json').is_file():
+                continue
+            try:
+                meta = json.loads((path / 'session.json').read_text(encoding='utf-8'))
+            except (OSError, ValueError):
+                continue
+            models.update(p['car'] for p in meta.get('final', []) if p.get('car'))
+        return {'cars': [c.public() for c in editor.cars.values()], 'recorded_models': sorted(models), 'problem': problem}
+
+    def identity_review(self, recording, champ=None, detail=False):
+        from .identities import entrant_id, read
+        path = self.lib.recording_path(recording)
+        choices = []
+        if not champ:
+            assigned = {a['champ'] for a in self.lib.assignments().get(str(path.resolve()), [])}
+            if len(assigned) == 1:
+                champ = next(iter(assigned))
+            else:
+                for db in self.lib._champ_files():
+                    cfg = self.lib.champ_config(db.stem)
+                    if cfg and cfg.livery_ai and any(d.get('livery') for d in cfg.drivers) and (not assigned or db.stem in assigned):
+                        choices.append({'id': db.stem, 'name': cfg.name})
+                if len(choices) == 1:
+                    champ = choices[0]['id']
+        cfg = self.lib.champ_config(champ) if champ else None
+        facts = read(path)
+        enabled = bool(cfg and cfg.livery_ai and any(d.get('livery') for d in cfg.drivers))
+        result = {'enabled': enabled, 'champ': champ, **facts}
+        if cfg and not enabled:
+            result['setup_required'] = True
+        if not champ and len(choices) > 1:
+            result['choices'] = choices
+        summary = self.lib.recording_summary(path)
+        if summary['type'] != 'race' or summary['status'] != 'complete':
+            result['enabled'] = False
+            result.pop('setup_required', None)
+            result['unavailable_reason'] = 'Livery assignments are available after a race recording is complete.'
+            result.pop('choices', None)
+            return result
+        if not enabled or (facts['reviewed'] and not detail):
+            return result
+        from .race import analyze_race
+        # Classification is deliberately read under raw identities, including DNFs.
+        frames = path / 'frames.parquet'
+        stamp = frames.stat().st_mtime_ns if frames.exists() else 0
+        key = ('identity-entrants', str(path), stamp, tuple(sorted(cfg.human_names())))
+        entrants = self.lib._report_cache.get(key)
+        if entrants is None:
+            ra = analyze_race(path, humans=cfg.human_names())
+            roles = dict(zip(ra.entrants.name, ra.entrants.is_ai))
+            entrants = [{'id': entrant_id(r.name, r.car), 'name': r.name, 'car': r.car,
+                         'finish': int(r.pos), 'status': r.status, 'is_ai': bool(roles[r.name])}
+                        for r in ra.classification.itertuples()]
+            self.lib._report_cache[key] = entrants
+        result.update({'entrants': entrants, 'drivers': cfg.drivers, 'champ_name': cfg.name, 'car_class': cfg.car_class})
+        return result
+
+    def save_identity_review(self, body):
+        from .identities import save
+        from .season import connect, ingest
+        recording, champ = body['recording'], body['champ']
+        with self.lib.lock:
+            review = self.identity_review(recording, champ, detail=True)
+            if not review['enabled']:
+                raise ValueError('Enable livery AI identities in this championship first.')
+            self.identity_catalog()
+            path = self.lib.recording_path(recording)
+            data = save(path, body.get('assignments', {}), review['entrants'], self.liveries,
+                        self.lib.champ_config(champ), body.get('revision'))
+            self.lib._report_cache.clear()
+            problems = []
+            # Facts belong to the recording. Refresh every championship using it.
+            for db in self.lib._champ_files():
+                con = connect(db)
+                try:
+                    cfg = self.lib._cfg(con)
+                    rows = con.execute('SELECT ev.round,s.race_no,s.path FROM session s JOIN event ev ON ev.id=s.event_id WHERE s.type=\'race\'').fetchall()
+                finally:
+                    con.close()
+                for row in rows:
+                    if Path(row['path']).resolve() != path.resolve():
+                        continue
+                    try:
+                        ingest(db, cfg, path, round_no=row['round'], race_no=row['race_no'])
+                    except Exception as exc:
+                        problems.append(f'{cfg.name}, round {row["round"]}: {exc}')
+            return {'ok': True, 'revision': data['revision'], 'problems': problems}
+
     def route(self, method: str, path: str, query: dict, body: dict):
         lib = self.lib
+        if path == '/api/identities/catalog' and method == 'GET':
+            return self.identity_catalog()
+        if path == '/api/identities' and method == 'GET':
+            return self.identity_review(query['recording'], query.get('champ'), query.get('detail') == '1')
+        if path == '/api/identities' and method == 'POST':
+            return self.save_identity_review(body)
+        if method == 'PUT' and re.fullmatch(r'/api/championships/[\w-]+', path) and 'drivers' in body:
+            from .identities import snapshot, color_override
+            if any(d.get('livery') for d in body['drivers']):
+                self.identity_catalog()
+                old = lib.champ_config(path.rsplit('/', 1)[1])
+                previous = {d['key']: d.get('livery') for d in old.drivers}
+                for driver in body['drivers']:
+                    if not driver.get('livery'):
+                        continue
+                    binding = driver.get('livery') or {}
+                    snap = snapshot(self.liveries, binding.get('car_id'), binding.get('livery_id'), previous.get(driver.get('key')))
+                    snap['recorded_car'] = str(binding.get('recorded_car') or '').strip()
+                    snap.pop('color_override', None)
+                    override = color_override(binding.get('color_override'))
+                    if override:
+                        snap['color_override'] = override
+                    driver['livery'] = snap
+        weekend_route = re.fullmatch(r"/api/championships/([\w-]+)/weekends", path)
+        if weekend_route:
+            from .weekends import weekends, assign
+            cid = weekend_route.group(1)
+            if method == "GET": return {"weekends": weekends(lib, cid)}
+            if method == "POST":
+                with lib.lock: return assign(lib, cid, body)
+        dev_route = re.fullmatch(r"/api/championships/([\w-]+)/development(?:/([\w-]+))?", path)
+        if dev_route:
+            if self._development is None:
+                from .development import Development
+                self._development = Development(self)
+            return self._development.route(dev_route.group(1), method, dev_route.group(2) or "", body)
+        if path.startswith("/api/bop"):
+            if self._bop_editor is None:
+                from .bop import BopEditor
+                self._bop_editor = BopEditor(self.lib.root, self.lib)
+            return self._bop_editor.route(method, path, query, body)
         if path.startswith("/api/liveries"):
             return self.liveries.route(method, path, query, body)
         if method == "GET" and path == "/api/ping":
@@ -1340,7 +1533,8 @@ class App:
         if method == "GET" and path == "/api/recordings":
             return {"recordings": lib.recordings()}
         if method == "GET" and path == "/api/settings":
-            return {"settings": asdict(lib.settings), "root": str(lib.root),
+            from .profiles import VERSION as PROFILE_VERSION
+            return {"build": "telemetry-technique-20261008", "profile_version": PROFILE_VERSION, "settings": asdict(lib.settings), "root": str(lib.root),
                     "recordings_dir": str(lib.recordings_dir), "champs_dir": str(lib.champs_dir),
                     "windows": sys.platform == "win32", "version": __version__}
         if method == "GET" and path == "/api/car-icons":
@@ -1416,7 +1610,7 @@ class App:
             st["last_recording"] = recs[0]["id"] if recs else None
             return st
         if method == "GET" and path == "/api/technique":
-            return lib.technique(query["recording"], query.get("champ") or None)
+            return lib.technique(query["recording"], query.get("champ") or None, query.get('pace_reference', 'fastest'))
         if method == "POST" and path == "/api/trackmap/start":
             self.recorder.start_mapping()
             return {"ok": True, "available": self.recorder.available}
@@ -1604,7 +1798,11 @@ def make_handler(app: App):
             self.wfile.write(body)
 
         def _json(self, code: int, obj):
-            self._send(code, json.dumps(_clean(obj)).encode("utf-8"), "application/json")
+            # Editable physics and percentage baselines must round-trip exactly:
+            # four-place report rounding can erase small aero-coefficient edits.
+            path = urlparse(self.path).path
+            digits = None if path in ('/api/bop', '/api/technique') or path.startswith('/api/bop/') else 4
+            self._send(code, json.dumps(_clean(obj, digits), allow_nan=False).encode("utf-8"), "application/json")
 
         def _dispatch(self, method: str):
             if not self._host_ok():
@@ -1614,6 +1812,32 @@ def make_handler(app: App):
             try:
                 if method == "GET" and url.path in ("/", "/index.html"):
                     return self._send(200, ui_file.read_bytes(), "text/html; charset=utf-8")
+                if method == "GET" and url.path == "/replay-timing.js":
+                    return self._send(200, ui_file.with_name("replay_timing.js").read_bytes(), "text/javascript; charset=utf-8")
+                if method == 'GET' and url.path == '/identity-ui.js':
+                    return self._send(200, ui_file.with_name('identity_ui.js').read_bytes(), 'text/javascript; charset=utf-8')
+                if method == 'POST' and url.path == '/api/identities':
+                    origin = self.headers.get('Origin')
+                    if origin and origin != 'http://' + self.headers.get('Host', ''):
+                        return self._json(403, {'error': 'Assignments must come from this app window.'})
+                    if self.headers.get('Content-Type', '').split(';')[0].strip() != 'application/json':
+                        return self._json(415, {'error': 'Assignments require JSON.'})
+                campaign_assets = {"/development-ui.js": ("development_ui.js", "text/javascript; charset=utf-8"),
+                                   "/development-ui.css": ("development_ui.css", "text/css; charset=utf-8")}
+                if method == "GET" and url.path in campaign_assets:
+                    filename, ctype = campaign_assets[url.path]
+                    return self._send(200, ui_file.with_name(filename).read_bytes(), ctype)
+                bop_assets = {"/bop-editor.js": ("bop_editor.js", "text/javascript; charset=utf-8"),
+                              "/bop-editor.css": ("bop_editor.css", "text/css; charset=utf-8")}
+                if method == "GET" and url.path in bop_assets:
+                    filename, ctype = bop_assets[url.path]
+                    return self._send(200, ui_file.with_name(filename).read_bytes(), ctype)
+                if method in ("POST", "PUT", "DELETE") and (url.path.startswith("/api/bop") or re.fullmatch(r"/api/championships/[\w-]+/development(?:/[\w-]+)?", url.path)):
+                    origin = self.headers.get("Origin")
+                    if origin and origin != "http://" + self.headers.get("Host", ""):
+                        return self._json(403, {"error": "BOP changes must come from this app window."})
+                    if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
+                        return self._json(415, {"error": "BOP requests require JSON."})
                 livery_assets = {"/livery-editor.js": ("livery_editor.js", "text/javascript; charset=utf-8"),
                                  "/livery-editor.css": ("livery_editor.css", "text/css; charset=utf-8")}
                 if method == "GET" and url.path in livery_assets:
@@ -1741,15 +1965,15 @@ def create_shortcut(root: Path) -> str:
     """Desktop shortcut that starts the app with no console window (Windows)."""
     if sys.platform != "win32":
         raise ValueError("desktop shortcuts are only created on Windows")
-    pyw = Path(sys.executable).with_name("pythonw.exe")
-    target = pyw if pyw.exists() else Path(sys.executable)
+    from .desktop import shortcut_command
+    target, arguments = shortcut_command(root)
     desktop = Path(os.environ.get("USERPROFILE", str(Path.home()))) / "Desktop"
     lnk = desktop / "AMS2 Season.lnk"
     icon = ASSETS / "icon.ico"
     ps = ("$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}');"
-          "$s.TargetPath='{target}';$s.Arguments='-m ams2season app';$s.WorkingDirectory='{root}';"
+          "$s.TargetPath='{target}';$s.Arguments='{arguments}';$s.WorkingDirectory='{root}';"
           "$s.IconLocation='{icon}';$s.Description='AMS2 Season';$s.Save()").format(
-        lnk=str(lnk).replace("'", "''"), target=str(target).replace("'", "''"),
+        lnk=str(lnk).replace("'", "''"), target=str(target).replace("'", "''"), arguments=arguments.replace("'", "''"),
         root=str(root).replace("'", "''"), icon=str(icon).replace("'", "''"))
     subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps], check=True,
                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))

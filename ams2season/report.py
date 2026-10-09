@@ -17,17 +17,17 @@ from .race import COUNTED, RaceAnalysis, fmt_time
 HUMAN_COLORS = ["#E4572E", "#2E86DE", "#E0A100", "#13A3A3", "#D6336C", "#A0522D", "#3F51B5", "#6D7F2A"]
 
 
-def _clean(o):
-    """JSON-safe: NaN/inf -> None, numpy scalars -> Python."""
+def _clean(o, digits=4):
+    """JSON-safe scalars; digits=None preserves precision for editable physics."""
     if isinstance(o, dict):
-        return {str(k): _clean(v) for k, v in o.items()}
+        return {str(k): _clean(v, digits) for k, v in o.items()}
     if isinstance(o, (list, tuple)):
-        return [_clean(v) for v in o]
+        return [_clean(v, digits) for v in o]
     if isinstance(o, (np.integer,)):
         return int(o)
     if isinstance(o, (np.floating, float)):
         f = float(o)
-        return None if (math.isnan(f) or math.isinf(f)) else round(f, 4)
+        return None if (math.isnan(f) or math.isinf(f)) else (f if digits is None else round(f, digits))
     if isinstance(o, (np.bool_,)):
         return bool(o)
     return o
@@ -133,12 +133,13 @@ def report_data(ra: RaceAnalysis, colors: dict | None = None, top_n: int = 6, pi
         else:
             res = {"dnf": "Retired", "dsq": "Disqualified", "disconnected": "Left", "running": "Running"}[r.status]
         d = {"name": r.name, "car": r.car, "is_ai": bool(s.is_ai), "color": color.get(r.name),
+             "livery": ra.session.meta.get('_livery_appearance', {}).get(r.name),
              "pos": r.pos, "grid": r.grid, "status": r.status, "laps": r.laps, "result": res}
         for k in ("positions_gained", "lap1_gain", "best_lap", "median_clean", "consistency_s", "passes_made",
                   "passes_clean", "passes_gifted", "passes_contact", "passed_by", "passes_on_humans",
                   "battles", "battles_won", "laps_led", "pit_stops", "field_pct", "ai_rel_pace",
                   "human_rank", "top_speed_kph", "invalid_laps", "contacts", "brake_point_sd", "brake_consistency",
-                  "throttle_point_sd", "throttle_consistency", "track_usage", "apex_gap_m",
+                  "throttle_point_sd", "throttle_consistency", "throttle_rating_source", "track_usage", "apex_gap_m", "exit_gap_m", "track_edge_source",
                   "apex_delta_slow", "apex_delta_medium", "apex_delta_fast", "s1_delta", "s2_delta", "s3_delta", "racing_share",
                   "brake_consistency_equal", "brake_consistency_reduced", "brake_consistency_excluded",
                   "throttle_consistency_equal", "throttle_consistency_reduced", "throttle_consistency_excluded"):
@@ -523,6 +524,11 @@ chips.appendChild(clr);
     var tr = el("tr"); rowFocus(tr, d.name);
     tr.appendChild(el("td", {"class": "pos"}, d.pos));
     var nm = el("td"); if (!d.is_ai) { var dot = el("span", {"class": "dot"}); dot.style.background = d.color; nm.appendChild(dot); }
+    if (d.livery && d.livery.image) {
+      var img = el('img', {src: d.livery.image, alt: (d.livery.car_name || d.car) + ' · ' + (d.livery.livery_name || 'Livery')});
+      img.style.cssText = 'width:64px;height:36px;object-fit:contain;vertical-align:middle;margin-right:8px';
+      img.addEventListener('error', function () { this.hidden = true; }); nm.appendChild(img);
+    }
     nm.appendChild(el("span", {"class": d.is_ai ? "ai-name" : null}, d.name)); tr.appendChild(nm);
     tr.appendChild(el("td", {"class": "ai-name"}, d.car));
     tr.appendChild(el("td", {"class": "num"}, d.grid == null ? "-" : d.grid));
@@ -756,7 +762,7 @@ function drawStyle(){
   $("style-sec").hidden = !rows.length;
   if (!rows.length) return;
   var head = el("thead"), hr = el("tr");
-  ["Pos", "Driver", "Braking points", "Throttle pickup", "Track usage", "At the apex", "Racing corners"].forEach(function(h, i){ hr.appendChild(el("th", {"class": i > 1 ? "num" : ""}, h)); });
+  ["Pos", "Driver", "Braking points", "Throttle pickup", "Track usage", "At the apex", "At exit", "Racing corners"].forEach(function(h, i){ hr.appendChild(el("th", {"class": i > 1 ? "num" : ""}, h)); });
   head.appendChild(hr); tb.appendChild(head);
   var body = el("tbody");
   rows.forEach(function(d){
@@ -768,6 +774,7 @@ function drawStyle(){
     tr.appendChild(scoreCell(tm != null ? tm : d.throttle_consistency, styleMode === D.racing_mode ? d.throttle_point_sd : null));
     tr.appendChild(scoreCell(d.track_usage, null));
     tr.appendChild(el("td", {"class": "num"}, d.apex_gap_m == null || d.apex_gap_m !== d.apex_gap_m ? "-" : d.apex_gap_m.toFixed(2) + " m"));
+    tr.appendChild(el("td", {"class": "num", "title": "Sustained wheel clearance to the outside edge at exit; linked-corner exits can intentionally stay narrower."}, d.exit_gap_m == null || d.exit_gap_m !== d.exit_gap_m ? "-" : d.exit_gap_m.toFixed(2) + " m"));
     tr.appendChild(el("td", {"class": "num muted"}, d.racing_share == null || d.racing_share !== d.racing_share ? "-" : Math.round(d.racing_share) + "%"));
     body.appendChild(tr);
   });

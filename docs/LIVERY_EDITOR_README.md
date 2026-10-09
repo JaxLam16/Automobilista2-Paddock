@@ -1,17 +1,14 @@
-# AMS2 Season — livery editor addition
+# Paddock livery editor
 
 The new **Livery editor** page appears in the existing sidebar. Existing race analysis, recordings, championships, practice, race engineer, settings, and car icons retain their original behavior.
 
-## Install this update
+## Open the editor
 
-1. Close AMS2 Season.
-2. Extract this ZIP into the folder containing your existing **AMS2 Season.bat**, **pyproject.toml**, and **ams2season** package folder.
-3. Double-click **Install Livery Editor.bat**.
-4. Open **AMS2 Season.bat** as usual and select **Livery editor**.
+The editor is included in the Windows alpha. Start **AMS2 Paddock.exe** and
+select **Livery editor**. No separate update installer is needed.
 
-The installer checks the three integration files against the version you supplied, backs up files it replaces, and adds the editor. It does not replace your recordings, championship databases, app settings, or launcher. If those integration files have changed since you supplied the app, installation stops before writing so your later development is preserved.
-
-No additional Python packages are required beyond the app's existing dependencies. The editor uses Python's standard library and the existing Pillow dependency.
+Read [Alpha limitations](ALPHA_NOTES.md) before editing game files. Your game
+backups and editor selections are stored in `livery_editor/` beside the app.
 
 ## Choose the league's liveries
 

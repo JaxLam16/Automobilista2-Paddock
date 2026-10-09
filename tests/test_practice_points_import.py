@@ -91,6 +91,12 @@ def _friend_zip(race: Path, shift_hours: int, extra=None) -> bytes:
     m["label"] = "masons"
     m["started_at"] = (datetime.fromisoformat(m["started_at"]) - timedelta(hours=shift_hours)).isoformat(timespec="seconds")
     (friend / "session.json").write_text(json.dumps(m))
+    # This synthetic import relabels the local driver rather than recording Mason's
+    # real pedals. Model an older recording without verified viewed-slot identity;
+    # modern Jax-slot telemetry must correctly be rejected when labelled Mason.
+    import pandas as pd
+    local = pd.read_parquet(friend / 'local.parquet').drop(columns=['viewed_slot'], errors='ignore')
+    local.to_parquet(friend / 'local.parquet', index=False)
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as z:
         for f in friend.iterdir():

@@ -1,0 +1,4206 @@
+{
+  "description": "Anonymized recorded grid snapshots and first-lap telemetry. One-second subsampling preserves start coverage; the last second at the line retains original 20 Hz sampling. No pedal or geometry inference.",
+  "cases": [
+    {
+      "source": "start-fixture-01",
+      "green_t": 11.6506,
+      "track_length": 4307.28,
+      "local": "Human02",
+      "green_event": {
+        "t": 11.6506,
+        "type": "green",
+        "grid": {
+          "Human02": 1,
+          "Driver014 (AI)": 23,
+          "Driver057 (AI)": 19,
+          "Driver007 (AI)": 7,
+          "Driver050 (AI)": 12,
+          "Driver051 (AI)": 4,
+          "Human01": 2,
+          "Driver045 (AI)": 26,
+          "Driver052 (AI)": 29,
+          "Driver011 (AI)": 21,
+          "Driver035 (AI)": 27,
+          "Driver048 (AI)": 17,
+          "Driver042 (AI)": 22,
+          "Driver029 (AI)": 14,
+          "Driver053 (AI)": 8,
+          "Driver012 (AI)": 3,
+          "Driver020 (AI)": 28,
+          "Driver017 (AI)": 32,
+          "Driver002 (AI)": 13,
+          "Driver046 (AI)": 10,
+          "Driver060 (AI)": 25,
+          "Driver018 (AI)": 20,
+          "Driver030 (AI)": 16,
+          "Driver010 (AI)": 15,
+          "Driver009 (AI)": 31,
+          "Driver040 (AI)": 18,
+          "Driver049 (AI)": 24,
+          "Driver004 (AI)": 11,
+          "Driver023 (AI)": 6,
+          "Driver027 (AI)": 30,
+          "Driver019 (AI)": 9,
+          "Driver061 (AI)": 5
+        },
+        "late": false
+      },
+      "lap": {
+        "lap": 1,
+        "t_end": 124.0659064788226,
+        "position": 26.0
+      },
+      "expected": {
+        "grid": 1,
+        "field_size": 32,
+        "lap1_pos": 26.0
+      },
+      "frames": [
+        {
+          "name": "Human01",
+          "t": 11.65060043334961,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 0.0,
+          "race_state": 2
+        },
+        {
+          "name": "Driver002 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 13,
+          "laps_completed": 0,
+          "speed": 0.06833476573228836,
+          "race_state": 2
+        },
+        {
+          "name": "Driver004 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 11,
+          "laps_completed": 0,
+          "speed": 0.06875301897525787,
+          "race_state": 2
+        },
+        {
+          "name": "Driver007 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 7,
+          "laps_completed": 0,
+          "speed": 0.06772327423095703,
+          "race_state": 2
+        },
+        {
+          "name": "Driver009 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 0.06876388192176819,
+          "race_state": 2
+        },
+        {
+          "name": "Driver010 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 15,
+          "laps_completed": 0,
+          "speed": 0.06875423341989517,
+          "race_state": 2
+        },
+        {
+          "name": "Driver011 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 21,
+          "laps_completed": 0,
+          "speed": 0.06826893240213394,
+          "race_state": 2
+        },
+        {
+          "name": "Driver012 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 3,
+          "laps_completed": 0,
+          "speed": 0.0678347572684288,
+          "race_state": 2
+        },
+        {
+          "name": "Driver014 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 23,
+          "laps_completed": 0,
+          "speed": 0.06772684305906296,
+          "race_state": 2
+        },
+        {
+          "name": "Driver017 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 0.0683373361825943,
+          "race_state": 2
+        },
+        {
+          "name": "Driver018 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 20,
+          "laps_completed": 0,
+          "speed": 0.06834159791469574,
+          "race_state": 2
+        },
+        {
+          "name": "Driver019 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 9,
+          "laps_completed": 0,
+          "speed": 0.0684996023774147,
+          "race_state": 2
+        },
+        {
+          "name": "Driver020 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 28,
+          "laps_completed": 0,
+          "speed": 0.06834021210670471,
+          "race_state": 2
+        },
+        {
+          "name": "Driver023 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 6,
+          "laps_completed": 0,
+          "speed": 0.0684981718659401,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 11.65060043334961,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 0.0,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 12.65060043334961,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 5.2509307861328125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 13.701000213623047,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 12.97838306427002,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 14.700200080871582,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 21.52158546447754,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 15.65060043334961,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 28.666078567504883,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 16.700300216674805,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 35.76921844482422,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 17.65060043334961,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 39.67705535888672,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 18.700199127197266,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 44.39083480834961,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 19.70009994506836,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 47.676612854003906,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 20.700199127197266,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 49.00739288330078,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 21.700300216674805,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 37.470760345458984,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 22.70009994506836,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 28.154953002929688,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 23.70009994506836,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 26.163818359375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 24.70009994506836,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 30.305185317993164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 25.70050048828125,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 28.643556594848633,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 26.70039939880371,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 22.800554275512695,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 27.70050048828125,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 18.111042022705078,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 28.70039939880371,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 16.273130416870117,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 29.70009994506836,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 14.788991928100586,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 30.661300659179688,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 17.158300399780273,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 31.661300659179688,
+          "race_pos": 4,
+          "laps_completed": 0,
+          "speed": 16.521011352539062,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 32.6614990234375,
+          "race_pos": 6,
+          "laps_completed": 0,
+          "speed": 16.731653213500977,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 33.66130065917969,
+          "race_pos": 9,
+          "laps_completed": 0,
+          "speed": 18.281042098999023,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 34.66170120239258,
+          "race_pos": 12,
+          "laps_completed": 0,
+          "speed": 18.909915924072266,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 35.66120147705078,
+          "race_pos": 14,
+          "laps_completed": 0,
+          "speed": 19.72924041748047,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 36.66120147705078,
+          "race_pos": 17,
+          "laps_completed": 0,
+          "speed": 22.87810516357422,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 37.661598205566406,
+          "race_pos": 20,
+          "laps_completed": 0,
+          "speed": 24.919313430786133,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 38.661598205566406,
+          "race_pos": 21,
+          "laps_completed": 0,
+          "speed": 23.3298397064209,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 39.66130065917969,
+          "race_pos": 23,
+          "laps_completed": 0,
+          "speed": 22.073471069335938,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 40.661399841308594,
+          "race_pos": 24,
+          "laps_completed": 0,
+          "speed": 20.97931671142578,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 41.661598205566406,
+          "race_pos": 25,
+          "laps_completed": 0,
+          "speed": 19.944793701171875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 42.661800384521484,
+          "race_pos": 25,
+          "laps_completed": 0,
+          "speed": 18.948440551757812,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 43.661399841308594,
+          "race_pos": 25,
+          "laps_completed": 0,
+          "speed": 18.112476348876953,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 44.6614990234375,
+          "race_pos": 28,
+          "laps_completed": 0,
+          "speed": 17.26222038269043,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 45.66189956665039,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 18.819826126098633,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 46.66120147705078,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 23.201683044433594,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 47.66130065917969,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 28.784849166870117,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 48.661399841308594,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 34.062416076660156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 49.661399841308594,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 38.52300262451172,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 50.66120147705078,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 43.15491485595703,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 51.66170120239258,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 46.39322280883789,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 52.66189956665039,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 49.458255767822266,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 53.66170120239258,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 51.88991165161133,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 54.661399841308594,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 50.212398529052734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 55.66130065917969,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 36.742393493652344,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 56.66189956665039,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 28.93230628967285,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 57.6614990234375,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 21.773818969726562,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 58.6614990234375,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 19.070255279541016,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 59.66130065917969,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 20.431978225708008,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 60.67570114135742,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 25.5772647857666,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 61.67559814453125,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 32.37491226196289,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 62.675498962402344,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 38.16120910644531,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 63.67580032348633,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 43.27803039550781,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 64.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 47.3929328918457,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 65.67569732666016,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 51.56887435913086,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 66.67569732666016,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 55.1432991027832,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 67.67569732666016,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 58.12046813964844,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 68.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 60.295928955078125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 69.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 62.500701904296875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 70.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 64.5965347290039,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 71.67559814453125,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 66.46807861328125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 72.67559814453125,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 61.3754997253418,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 73.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 45.65976333618164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 74.67539978027344,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 31.426361083984375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 75.67569732666016,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 27.247743606567383,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 76.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 25.592618942260742,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 77.67530059814453,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 26.606971740722656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 78.67569732666016,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 31.58147621154785,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 79.67579650878906,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 37.79153823852539,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 80.67559814453125,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 42.962608337402344,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 81.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 46.982948303222656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 82.67549896240234,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 50.2437744140625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 83.67579650878906,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 52.93760681152344,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 84.67569732666016,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 55.90123748779297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 85.67569732666016,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 49.964237213134766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 86.67539978027344,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 38.8632926940918,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 87.67579650878906,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 34.3243408203125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 88.67579650878906,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 35.59257507324219,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 89.67579650878906,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 36.18016052246094,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 90.68910217285156,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 35.96414566040039,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 91.68920135498047,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 37.52377700805664,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 92.68910217285156,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 42.594078063964844,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 93.68900299072266,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 47.520538330078125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 94.68910217285156,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 38.93710708618164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 95.68900299072266,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 36.946773529052734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 96.68900299072266,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 34.42876052856445,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 97.68920135498047,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 35.82874298095703,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 98.68890380859375,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 39.61152648925781,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 99.68920135498047,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 43.670780181884766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 100.68890380859375,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 47.26247024536133,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 101.68900299072266,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 47.98008346557617,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 102.68890380859375,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 51.37945556640625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 103.68900299072266,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 54.295257568359375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 104.68939971923828,
+          "race_pos": 29,
+          "laps_completed": 0,
+          "speed": 56.78236770629883,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 105.68930053710938,
+          "race_pos": 29,
+          "laps_completed": 0,
+          "speed": 58.80994415283203,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 106.68910217285156,
+          "race_pos": 28,
+          "laps_completed": 0,
+          "speed": 60.12458801269531,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 107.68890380859375,
+          "race_pos": 28,
+          "laps_completed": 0,
+          "speed": 62.05424499511719,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 108.68900299072266,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 62.511558532714844,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 109.689697265625,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 46.884910583496094,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 110.68930053710938,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 34.7601318359375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 111.68890380859375,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 33.16950225830078,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 112.68890380859375,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 32.8636360168457,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 113.68890380859375,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 36.68446731567383,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.68910217285156,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 42.18037796020508,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.68900299072266,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 43.18791961669922,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 116.68900299072266,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 37.54689407348633,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 117.68890380859375,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 34.45496368408203,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 118.68930053710938,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 38.735809326171875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 119.68900299072266,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 43.571754455566406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 120.69029998779297,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 47.71733474731445,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 121.69000244140625,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 51.45348358154297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 122.69059753417969,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 54.82612991333008,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 123.69010162353516,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 57.76424789428711,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.09030151367188,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 58.716041564941406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.14009857177734,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 58.77992248535156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.19029998779297,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 58.70071792602539,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.24030303955078,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 58.77803039550781,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.29029846191406,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 58.99723815917969,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.34010314941406,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.10948944091797,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.39029693603516,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.22129440307617,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.44029998779297,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.358089447021484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.49030303955078,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.532264709472656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.54010009765625,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.65553283691406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.59040069580078,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.764408111572266,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.64029693603516,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.88235092163086,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.69020080566406,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 59.994781494140625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.73999786376953,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 60.095787048339844,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.79000091552734,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 60.19865417480469,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.83999633789062,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 60.31391525268555,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.89009857177734,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 60.43077850341797,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.94020080566406,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 60.53117752075195,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.98999786376953,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 60.636566162109375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 125.03990173339844,
+          "race_pos": 26,
+          "laps_completed": 1,
+          "speed": 60.74695587158203,
+          "race_state": 2
+        },
+        {
+          "name": "Driver027 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 0.06850246340036392,
+          "race_state": 2
+        },
+        {
+          "name": "Driver029 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 14,
+          "laps_completed": 0,
+          "speed": 0.06783852726221085,
+          "race_state": 2
+        },
+        {
+          "name": "Driver030 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 16,
+          "laps_completed": 0,
+          "speed": 0.06833205372095108,
+          "race_state": 2
+        },
+        {
+          "name": "Driver035 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 0.06783902645111084,
+          "race_state": 2
+        },
+        {
+          "name": "Driver040 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 18,
+          "laps_completed": 0,
+          "speed": 0.06875050812959671,
+          "race_state": 2
+        },
+        {
+          "name": "Driver042 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 22,
+          "laps_completed": 0,
+          "speed": 0.06784365326166153,
+          "race_state": 2
+        },
+        {
+          "name": "Driver045 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 0.0682704821228981,
+          "race_state": 2
+        },
+        {
+          "name": "Driver046 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 10,
+          "laps_completed": 0,
+          "speed": 0.06833306699991226,
+          "race_state": 2
+        },
+        {
+          "name": "Driver048 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 17,
+          "laps_completed": 0,
+          "speed": 0.06783872842788696,
+          "race_state": 2
+        },
+        {
+          "name": "Driver049 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 24,
+          "laps_completed": 0,
+          "speed": 0.06876256316900253,
+          "race_state": 2
+        },
+        {
+          "name": "Driver050 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 12,
+          "laps_completed": 0,
+          "speed": 0.06772469729185104,
+          "race_state": 2
+        },
+        {
+          "name": "Driver051 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 4,
+          "laps_completed": 0,
+          "speed": 0.06772676855325699,
+          "race_state": 2
+        },
+        {
+          "name": "Driver052 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 29,
+          "laps_completed": 0,
+          "speed": 0.06827037036418915,
+          "race_state": 2
+        },
+        {
+          "name": "Driver053 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 8,
+          "laps_completed": 0,
+          "speed": 0.06783859431743622,
+          "race_state": 2
+        },
+        {
+          "name": "Driver057 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 19,
+          "laps_completed": 0,
+          "speed": 0.06772405654191971,
+          "race_state": 2
+        },
+        {
+          "name": "Driver060 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 25,
+          "laps_completed": 0,
+          "speed": 0.06833911687135696,
+          "race_state": 2
+        },
+        {
+          "name": "Driver061 (AI)",
+          "t": 11.65060043334961,
+          "race_pos": 5,
+          "laps_completed": 0,
+          "speed": 0.06849686056375504,
+          "race_state": 2
+        }
+      ]
+    },
+    {
+      "source": "start-fixture-02",
+      "green_t": 0.0,
+      "track_length": 5461.65,
+      "local": "Human02",
+      "green_event": {
+        "t": 0.0,
+        "type": "green",
+        "grid": {
+          "Human02": 1,
+          "Human01": 2,
+          "Driver056 (AI)": 17,
+          "Driver003 (AI)": 16,
+          "Driver034 (AI)": 4,
+          "Driver033 (AI)": 10,
+          "Driver047 (AI)": 9,
+          "Driver049 (AI)": 22,
+          "Driver036 (AI)": 15,
+          "Driver009 (AI)": 12,
+          "Driver021 (AI)": 18,
+          "Driver062 (AI)": 7,
+          "Driver054 (AI)": 21,
+          "Driver052 (AI)": 8,
+          "Driver013 (AI)": 14,
+          "Driver001 (AI)": 5,
+          "Driver038 (AI)": 6,
+          "Driver015 (AI)": 11,
+          "Driver031 (AI)": 13,
+          "Driver041 (AI)": 20,
+          "Driver037 (AI)": 19,
+          "Driver008 (AI)": 3
+        },
+        "late": true
+      },
+      "lap": {
+        "lap": 1,
+        "t_end": 114.69074768829768,
+        "position": 1.0
+      },
+      "expected": {
+        "grid": 1,
+        "field_size": 22,
+        "lap1_pos": 1.0
+      },
+      "frames": [
+        {
+          "name": "Human01",
+          "t": 0.0,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 0.007184914313256741,
+          "race_state": 2
+        },
+        {
+          "name": "Driver001 (AI)",
+          "t": 0.0,
+          "race_pos": 5,
+          "laps_completed": 0,
+          "speed": 0.7336666584014893,
+          "race_state": 2
+        },
+        {
+          "name": "Driver003 (AI)",
+          "t": 0.0,
+          "race_pos": 16,
+          "laps_completed": 0,
+          "speed": 0.5709643363952637,
+          "race_state": 2
+        },
+        {
+          "name": "Driver008 (AI)",
+          "t": 0.0,
+          "race_pos": 3,
+          "laps_completed": 0,
+          "speed": 0.7869901657104492,
+          "race_state": 2
+        },
+        {
+          "name": "Driver009 (AI)",
+          "t": 0.0,
+          "race_pos": 12,
+          "laps_completed": 0,
+          "speed": 0.9289085865020752,
+          "race_state": 2
+        },
+        {
+          "name": "Driver013 (AI)",
+          "t": 0.0,
+          "race_pos": 14,
+          "laps_completed": 0,
+          "speed": 0.9140747785568237,
+          "race_state": 2
+        },
+        {
+          "name": "Driver015 (AI)",
+          "t": 0.0,
+          "race_pos": 11,
+          "laps_completed": 0,
+          "speed": 0.6528807878494263,
+          "race_state": 2
+        },
+        {
+          "name": "Driver021 (AI)",
+          "t": 0.0,
+          "race_pos": 18,
+          "laps_completed": 0,
+          "speed": 0.8216099143028259,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 0.0,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 0.10465114563703537,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 1.020400047302246,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 5.176729679107666,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 2.0202999114990234,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 13.842272758483887,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 3.0202999114990234,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 23.070653915405273,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 4.020199775695801,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 30.320810317993164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 5.019899845123291,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 36.38718032836914,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 6.019899845123291,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 41.84516525268555,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 7.019999980926514,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 46.04730987548828,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 8.020000457763672,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 50.12359619140625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 9.020099639892578,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 48.991416931152344,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 10.0201997756958,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 39.173152923583984,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 11.0201997756958,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 35.39555740356445,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 12.01990032196045,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 34.80491638183594,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 13.01990032196045,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 37.466285705566406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 14.020299911499023,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 42.565364837646484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 15.020000457763672,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 46.793182373046875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 16.02050018310547,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 50.91667938232422,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 17.020200729370117,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 54.25870895385742,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 18.020000457763672,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 56.276947021484375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 19.020000457763672,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 58.290218353271484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 20.020299911499023,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 59.18307876586914,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 21.020200729370117,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 60.13636779785156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 22.020099639892578,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 59.72718811035156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 23.020299911499023,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 59.045188903808594,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 24.019899368286133,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 60.31334686279297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 25.020299911499023,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 61.94382095336914,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 26.020299911499023,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 63.69371795654297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 27.02039909362793,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 65.46099090576172,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 28.020299911499023,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 66.34272003173828,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 29.020000457763672,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 67.2693099975586,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 30.02039909362793,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 68.04476928710938,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 31.011600494384766,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 69.11231231689453,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 32.01179885864258,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 70.0841293334961,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 33.01150131225586,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 71.01786041259766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 34.01150131225586,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 71.822509765625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 35.01169967651367,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 72.06725311279297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 36.01150131225586,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 63.15775680541992,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 37.01179885864258,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 47.73644256591797,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 38.01169967651367,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 44.92333221435547,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 39.01150131225586,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 44.238651275634766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 40.01150131225586,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 40.84571838378906,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 41.012001037597656,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 41.81143569946289,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 42.01179885864258,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 44.24656295776367,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 43.011600494384766,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 46.99641418457031,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 44.01169967651367,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 46.23911666870117,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 45.01169967651367,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 46.75959396362305,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 46.011600494384766,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 45.32695007324219,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 47.01150131225586,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 44.50986862182617,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 48.01179885864258,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 45.548675537109375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 49.011600494384766,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 48.40603256225586,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 50.01150131225586,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 51.67640686035156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 51.011600494384766,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 54.63779067993164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 52.01169967651367,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 57.46601486206055,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 53.01190185546875,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 57.009281158447266,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 54.01169967651367,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 42.76499557495117,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 55.011600494384766,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 37.970458984375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 56.01190185546875,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 37.63794708251953,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 57.01169967651367,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 36.523677825927734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 58.01179885864258,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 38.42489242553711,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 59.01179885864258,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 41.41236114501953,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 60.01190185546875,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 45.4934196472168,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 61.0432014465332,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 49.91887283325195,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 62.04280090332031,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 53.64115524291992,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 63.0432014465332,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 56.6455078125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 64.04299926757812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 58.972904205322266,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 65.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 44.1223030090332,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 66.04299926757812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 34.35523223876953,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 67.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 31.79145622253418,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 68.04319763183594,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 30.354310989379883,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 69.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 32.70731735229492,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 70.04319763183594,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 36.567779541015625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 71.04290008544922,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 40.57252502441406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 72.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 44.0501823425293,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 73.04280090332031,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 47.60604476928711,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 74.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 50.89147186279297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 75.04350280761719,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 53.770599365234375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 76.04299926757812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 56.128761291503906,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 77.04290008544922,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 58.49531555175781,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 78.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 60.69170379638672,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 79.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 62.70646286010742,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 80.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 50.51572036743164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 81.04290008544922,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 36.01161575317383,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 82.04280090332031,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 36.011756896972656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 83.04290008544922,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 33.699886322021484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 84.04329681396484,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 32.61627197265625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 85.04309844970703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 35.831085205078125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 86.04299926757812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 41.237064361572266,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 87.04280090332031,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 45.45744705200195,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 88.04299926757812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 49.11477279663086,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 89.04290008544922,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 39.87271499633789,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 90.04319763183594,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 28.76927375793457,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 91.02189636230469,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 26.274335861206055,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 92.02179718017578,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 28.926362991333008,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 93.02189636230469,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 33.16230010986328,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 94.02169799804688,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 35.76503372192383,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 95.02210235595703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 40.9267578125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 96.02189636230469,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 45.19449996948242,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 97.02210235595703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 49.127315521240234,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 98.02179718017578,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 52.56660079956055,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 99.02169799804688,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 54.18318176269531,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 100.02159881591797,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 53.129127502441406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 101.02189636230469,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 51.82606887817383,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 102.02159881591797,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 51.372962951660156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 103.02189636230469,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 53.24854278564453,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 104.02189636230469,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 55.83163070678711,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 105.02200317382812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 45.27524185180664,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 106.02200317382812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 38.28160858154297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 107.02200317382812,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 40.46693801879883,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 108.02230072021484,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 43.825889587402344,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 109.02179718017578,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 47.51548767089844,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 110.02179718017578,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 50.95423126220703,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 111.02210235595703,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 54.22084426879883,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 112.02179718017578,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 56.962623596191406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 113.02189636230469,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 59.57186508178711,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.02179718017578,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 61.90544128417969,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.7219009399414,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 63.37724304199219,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.77200317382812,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 63.48137283325195,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.82160186767578,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 63.57463836669922,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.87169647216797,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 63.68231201171875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.9219970703125,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 63.774539947509766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.9718017578125,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 63.88460922241211,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.02200317382812,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 63.97551727294922,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.0719985961914,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.0711898803711,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.12169647216797,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.1562728881836,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.17169952392578,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.26262664794922,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.2218017578125,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.35232543945312,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.27189636230469,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.44771575927734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.32209777832031,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.5323257446289,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.37159729003906,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.635498046875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.42169952392578,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.7226333618164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.4718017578125,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.82383728027344,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.52189636230469,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 64.90888977050781,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.5718994140625,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 65.0064468383789,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.62200164794922,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 65.09166717529297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.6719970703125,
+          "race_pos": 1,
+          "laps_completed": 1,
+          "speed": 65.18242645263672,
+          "race_state": 2
+        },
+        {
+          "name": "Driver031 (AI)",
+          "t": 0.0,
+          "race_pos": 13,
+          "laps_completed": 0,
+          "speed": 0.3944337069988251,
+          "race_state": 2
+        },
+        {
+          "name": "Driver033 (AI)",
+          "t": 0.0,
+          "race_pos": 10,
+          "laps_completed": 0,
+          "speed": 0.7102418541908264,
+          "race_state": 2
+        },
+        {
+          "name": "Driver034 (AI)",
+          "t": 0.0,
+          "race_pos": 4,
+          "laps_completed": 0,
+          "speed": 0.743733823299408,
+          "race_state": 2
+        },
+        {
+          "name": "Driver036 (AI)",
+          "t": 0.0,
+          "race_pos": 15,
+          "laps_completed": 0,
+          "speed": 0.6551733613014221,
+          "race_state": 2
+        },
+        {
+          "name": "Driver037 (AI)",
+          "t": 0.0,
+          "race_pos": 19,
+          "laps_completed": 0,
+          "speed": 0.6038216352462769,
+          "race_state": 2
+        },
+        {
+          "name": "Driver038 (AI)",
+          "t": 0.0,
+          "race_pos": 6,
+          "laps_completed": 0,
+          "speed": 0.8127055764198303,
+          "race_state": 2
+        },
+        {
+          "name": "Driver041 (AI)",
+          "t": 0.0,
+          "race_pos": 20,
+          "laps_completed": 0,
+          "speed": 0.3854391872882843,
+          "race_state": 2
+        },
+        {
+          "name": "Driver047 (AI)",
+          "t": 0.0,
+          "race_pos": 9,
+          "laps_completed": 0,
+          "speed": 0.7279699444770813,
+          "race_state": 2
+        },
+        {
+          "name": "Driver049 (AI)",
+          "t": 0.0,
+          "race_pos": 22,
+          "laps_completed": 0,
+          "speed": 0.5577363967895508,
+          "race_state": 2
+        },
+        {
+          "name": "Driver052 (AI)",
+          "t": 0.0,
+          "race_pos": 8,
+          "laps_completed": 0,
+          "speed": 0.41562461853027344,
+          "race_state": 2
+        },
+        {
+          "name": "Driver054 (AI)",
+          "t": 0.0,
+          "race_pos": 21,
+          "laps_completed": 0,
+          "speed": 0.6717351675033569,
+          "race_state": 2
+        },
+        {
+          "name": "Driver056 (AI)",
+          "t": 0.0,
+          "race_pos": 17,
+          "laps_completed": 0,
+          "speed": 0.9965947270393372,
+          "race_state": 2
+        },
+        {
+          "name": "Driver062 (AI)",
+          "t": 0.0,
+          "race_pos": 7,
+          "laps_completed": 0,
+          "speed": 0.41946688294410706,
+          "race_state": 2
+        }
+      ]
+    },
+    {
+      "source": "start-fixture-03",
+      "green_t": 0.0,
+      "track_length": 5461.65,
+      "local": "Human02",
+      "green_event": {
+        "t": 0.0,
+        "type": "green",
+        "grid": {
+          "Human02": 32,
+          "Human01": 1,
+          "Driver056 (AI)": 26,
+          "Driver033 (AI)": 13,
+          "Driver024 (AI)": 7,
+          "Driver034 (AI)": 4,
+          "Driver028 (AI)": 14,
+          "Driver049 (AI)": 31,
+          "Driver006 (AI)": 23,
+          "Driver009 (AI)": 22,
+          "Driver047 (AI)": 17,
+          "Driver036 (AI)": 28,
+          "Driver037 (AI)": 29,
+          "Driver022 (AI)": 16,
+          "Driver008 (AI)": 6,
+          "Driver044 (AI)": 15,
+          "Driver059 (AI)": 21,
+          "Driver062 (AI)": 9,
+          "Driver054 (AI)": 27,
+          "Driver026 (AI)": 10,
+          "Driver039 (AI)": 5,
+          "Driver032 (AI)": 3,
+          "Driver001 (AI)": 8,
+          "Driver016 (AI)": 25,
+          "Driver058 (AI)": 18,
+          "Driver041 (AI)": 30,
+          "Driver031 (AI)": 20,
+          "Driver055 (AI)": 24,
+          "Driver025 (AI)": 19,
+          "Driver043 (AI)": 11,
+          "Driver013 (AI)": 12,
+          "Driver005 (AI)": 2
+        },
+        "late": true
+      },
+      "lap": {
+        "lap": 1,
+        "t_end": 133.43379855733585,
+        "position": 32.0
+      },
+      "expected": {
+        "grid": 32,
+        "field_size": 32,
+        "lap1_pos": 32.0
+      },
+      "frames": [
+        {
+          "name": "Human01",
+          "t": 0.0,
+          "race_pos": 1,
+          "laps_completed": 0,
+          "speed": 0.004502022173255682,
+          "race_state": 2
+        },
+        {
+          "name": "Driver001 (AI)",
+          "t": 0.0,
+          "race_pos": 8,
+          "laps_completed": 0,
+          "speed": 0.47237491607666016,
+          "race_state": 2
+        },
+        {
+          "name": "Driver005 (AI)",
+          "t": 0.0,
+          "race_pos": 2,
+          "laps_completed": 0,
+          "speed": 0.9125718474388123,
+          "race_state": 2
+        },
+        {
+          "name": "Driver006 (AI)",
+          "t": 0.0,
+          "race_pos": 23,
+          "laps_completed": 0,
+          "speed": 0.6413062214851379,
+          "race_state": 2
+        },
+        {
+          "name": "Driver008 (AI)",
+          "t": 0.0,
+          "race_pos": 6,
+          "laps_completed": 0,
+          "speed": 0.9451413750648499,
+          "race_state": 2
+        },
+        {
+          "name": "Driver009 (AI)",
+          "t": 0.0,
+          "race_pos": 22,
+          "laps_completed": 0,
+          "speed": 0.912547767162323,
+          "race_state": 2
+        },
+        {
+          "name": "Driver013 (AI)",
+          "t": 0.0,
+          "race_pos": 12,
+          "laps_completed": 0,
+          "speed": 1.0924984216690063,
+          "race_state": 2
+        },
+        {
+          "name": "Driver016 (AI)",
+          "t": 0.0,
+          "race_pos": 25,
+          "laps_completed": 0,
+          "speed": 0.6452662348747253,
+          "race_state": 2
+        },
+        {
+          "name": "Driver022 (AI)",
+          "t": 0.0,
+          "race_pos": 16,
+          "laps_completed": 0,
+          "speed": 0.43826794624328613,
+          "race_state": 2
+        },
+        {
+          "name": "Driver024 (AI)",
+          "t": 0.0,
+          "race_pos": 7,
+          "laps_completed": 0,
+          "speed": 0.8879520297050476,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 0.0,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 0.003138004569336772,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 1.0270999670028687,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 4.86994743347168,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 2.0272998809814453,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 5.404234886169434,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 3.0269999504089355,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 12.415810585021973,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 4.027100086212158,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 21.43358612060547,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 5.027200222015381,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 28.934232711791992,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 6.027299880981445,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 35.45922088623047,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 7.027200222015381,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 40.40196228027344,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 8.027299880981445,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 44.81324768066406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 9.027400016784668,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 48.89714431762695,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 10.027199745178223,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 52.505157470703125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 11.027199745178223,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 55.41022491455078,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 12.027299880981445,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 58.25309371948242,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 13.027199745178223,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 51.27811813354492,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 14.027199745178223,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 41.694236755371094,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 15.027299880981445,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 37.04130554199219,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 16.027299880981445,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 34.2164421081543,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 17.02750015258789,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 31.887563705444336,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 18.02720069885254,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 33.38722610473633,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 19.027299880981445,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 37.54138946533203,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 20.02750015258789,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 42.879276275634766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 21.02739906311035,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 46.625213623046875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 22.027799606323242,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 50.85269546508789,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 23.02720069885254,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 54.5627326965332,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 24.02739906311035,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 56.33474349975586,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 25.02720069885254,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 57.73550796508789,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 26.02750015258789,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 59.22816848754883,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 27.02739906311035,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 60.1942138671875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 28.027099609375,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 60.712059020996094,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 29.027099609375,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 60.475120544433594,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 30.027299880981445,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 61.694244384765625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 31.026199340820312,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 63.64021301269531,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 32.02640151977539,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 64.81200408935547,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 33.02640151977539,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 66.00066375732422,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 34.02619934082031,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 67.44509887695312,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 35.0265998840332,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 68.2878189086914,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 36.026100158691406,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 69.35140228271484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 37.0260009765625,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 70.53297424316406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 38.0260009765625,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 71.63311767578125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 39.0260009765625,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 72.65023040771484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 40.02619934082031,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 73.55064392089844,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 41.026100158691406,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 65.57527923583984,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 42.026100158691406,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 48.01696014404297,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 43.02629852294922,
+          "race_pos": 25,
+          "laps_completed": 0,
+          "speed": 40.00955581665039,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 44.02629852294922,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 30.81265640258789,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 45.0260009765625,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 26.52717399597168,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 46.02629852294922,
+          "race_pos": 25,
+          "laps_completed": 0,
+          "speed": 24.049768447875977,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 47.02629852294922,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 9.35362720489502,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 48.025901794433594,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 4.175527095794678,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 49.02640151977539,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 7.942663669586182,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 50.02640151977539,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 14.498795509338379,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 51.02629852294922,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 21.920087814331055,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 52.0260009765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 28.40690803527832,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 53.0260009765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 34.89204025268555,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 54.0260009765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 36.547523498535156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 55.02629852294922,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 42.0058708190918,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 56.0260009765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 43.82063293457031,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 57.02619934082031,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 45.25656509399414,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 58.0260009765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 43.31479263305664,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 59.026100158691406,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 46.494041442871094,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 60.0260009765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 49.48747253417969,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 61.037899017333984,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 52.431373596191406,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 62.03810119628906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 54.971534729003906,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 63.037601470947266,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 57.87529373168945,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 64.03759765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 60.644676208496094,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 65.03780364990234,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 48.9075813293457,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 66.03759765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 41.0988883972168,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 67.03759765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 37.398136138916016,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 68.0376968383789,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 37.09035110473633,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 69.0374984741211,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 36.06848907470703,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 70.03839874267578,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 38.028804779052734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 71.03800201416016,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 43.4251594543457,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 72.03810119628906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 47.76031494140625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 73.03790283203125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 52.02702331542969,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 74.0376968383789,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 55.206180572509766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 75.03759765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 55.05360412597656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 76.03810119628906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 51.49927520751953,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 77.03759765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 45.96670913696289,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 78.03790283203125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 40.9592399597168,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 79.03829956054688,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 36.637733459472656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 80.03780364990234,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 1.5278171300888062,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 81.03759765625,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 3.45174503326416,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 82.0374984741211,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 3.9655637741088867,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 83.03810119628906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 3.4185585975646973,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 84.0376968383789,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 2.9150900840759277,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 85.03790283203125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 5.849663734436035,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 86.04000091552734,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 9.41982364654541,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 87.0374984741211,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 16.777524948120117,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 88.03810119628906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 25.344327926635742,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 89.03829956054688,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 31.240127563476562,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 90.03780364990234,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 35.719871520996094,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 91.033203125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 40.70149612426758,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 92.03309631347656,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 44.23720932006836,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 93.03369903564453,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 48.001522064208984,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 94.03289794921875,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 51.32535171508789,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 95.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 54.21080017089844,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 96.03269958496094,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 56.607730865478516,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 97.03289794921875,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 59.01517868041992,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 98.03309631347656,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 61.07526779174805,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 99.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 47.75286865234375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 100.03269958496094,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 35.552616119384766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 101.03309631347656,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 32.686927795410156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 102.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 32.770668029785156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 103.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 35.26691818237305,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 104.03289794921875,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 39.45386505126953,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 105.03269958496094,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 43.922637939453125,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 106.03269958496094,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 47.86726760864258,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 107.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 50.1444206237793,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 108.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 38.78733825683594,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 109.03289794921875,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 32.988075256347656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 110.03289794921875,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 31.639965057373047,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 111.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 31.682207107543945,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 112.03309631347656,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 33.89491271972656,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 113.03309631347656,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 36.60274124145508,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 114.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 41.2320671081543,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 115.03309631347656,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 45.43244552612305,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 116.033203125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 49.333980560302734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 117.033203125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 52.69589614868164,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 118.03279876708984,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 54.336666107177734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 119.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 52.693870544433594,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 120.03299713134766,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 51.647945404052734,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 121.0250015258789,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 50.435970306396484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 122.02510070800781,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 52.552398681640625,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 123.02529907226562,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 55.199581146240234,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 124.02510070800781,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 46.48451232910156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 125.02510070800781,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 41.435237884521484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 126.02519989013672,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 41.593841552734375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 127.0250015258789,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 44.6100959777832,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 128.02490234375,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 47.9138069152832,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 129.02540588378906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 51.58839797973633,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 130.02540588378906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 54.53056335449219,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 131.02520751953125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 57.465423583984375,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 132.02540588378906,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 60.02839660644531,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.02520751953125,
+          "race_pos": 32,
+          "laps_completed": 0,
+          "speed": 62.307777404785156,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.47560119628906,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.26467514038086,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.52499389648438,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.34381866455078,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.5751953125,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.46122360229492,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.625,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.54215621948242,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.67529296875,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.66796112060547,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.72520446777344,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.7508544921875,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.77520751953125,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.86627960205078,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.8253936767578,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 63.94027328491211,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.87530517578125,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.05520629882812,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.92520141601562,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.13558197021484,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 133.97509765625,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.24923706054688,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.0251007080078,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.31327056884766,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.07530212402344,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.42938995361328,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.12530517578125,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.50487518310547,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.1750946044922,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.6242904663086,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.22560119628906,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.69486999511719,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.27529907226562,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.80826568603516,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.3251953125,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.87915802001953,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.37510681152344,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 64.98837280273438,
+          "race_state": 2
+        },
+        {
+          "name": "Human02",
+          "t": 134.4250946044922,
+          "race_pos": 32,
+          "laps_completed": 1,
+          "speed": 65.05958557128906,
+          "race_state": 2
+        },
+        {
+          "name": "Driver025 (AI)",
+          "t": 0.0,
+          "race_pos": 19,
+          "laps_completed": 0,
+          "speed": 0.5633952021598816,
+          "race_state": 2
+        },
+        {
+          "name": "Driver026 (AI)",
+          "t": 0.0,
+          "race_pos": 10,
+          "laps_completed": 0,
+          "speed": 0.519662082195282,
+          "race_state": 2
+        },
+        {
+          "name": "Driver028 (AI)",
+          "t": 0.0,
+          "race_pos": 14,
+          "laps_completed": 0,
+          "speed": 1.143206238746643,
+          "race_state": 2
+        },
+        {
+          "name": "Driver031 (AI)",
+          "t": 0.0,
+          "race_pos": 20,
+          "laps_completed": 0,
+          "speed": 0.7963359951972961,
+          "race_state": 2
+        },
+        {
+          "name": "Driver032 (AI)",
+          "t": 0.0,
+          "race_pos": 3,
+          "laps_completed": 0,
+          "speed": 0.468652606010437,
+          "race_state": 2
+        },
+        {
+          "name": "Driver033 (AI)",
+          "t": 0.0,
+          "race_pos": 13,
+          "laps_completed": 0,
+          "speed": 1.1055209636688232,
+          "race_state": 2
+        },
+        {
+          "name": "Driver034 (AI)",
+          "t": 0.0,
+          "race_pos": 4,
+          "laps_completed": 0,
+          "speed": 1.0446736812591553,
+          "race_state": 2
+        },
+        {
+          "name": "Driver036 (AI)",
+          "t": 0.0,
+          "race_pos": 28,
+          "laps_completed": 0,
+          "speed": 0.8663308620452881,
+          "race_state": 2
+        },
+        {
+          "name": "Driver037 (AI)",
+          "t": 0.0,
+          "race_pos": 29,
+          "laps_completed": 0,
+          "speed": 0.7604939341545105,
+          "race_state": 2
+        },
+        {
+          "name": "Driver039 (AI)",
+          "t": 0.0,
+          "race_pos": 5,
+          "laps_completed": 0,
+          "speed": 0.785923421382904,
+          "race_state": 2
+        },
+        {
+          "name": "Driver041 (AI)",
+          "t": 0.0,
+          "race_pos": 30,
+          "laps_completed": 0,
+          "speed": 0.7975961565971375,
+          "race_state": 2
+        },
+        {
+          "name": "Driver043 (AI)",
+          "t": 0.0,
+          "race_pos": 11,
+          "laps_completed": 0,
+          "speed": 0.8785607814788818,
+          "race_state": 2
+        },
+        {
+          "name": "Driver044 (AI)",
+          "t": 0.0,
+          "race_pos": 15,
+          "laps_completed": 0,
+          "speed": 0.4205227494239807,
+          "race_state": 2
+        },
+        {
+          "name": "Driver047 (AI)",
+          "t": 0.0,
+          "race_pos": 17,
+          "laps_completed": 0,
+          "speed": 0.6755205392837524,
+          "race_state": 2
+        },
+        {
+          "name": "Driver049 (AI)",
+          "t": 0.0,
+          "race_pos": 31,
+          "laps_completed": 0,
+          "speed": 0.885653018951416,
+          "race_state": 2
+        },
+        {
+          "name": "Driver054 (AI)",
+          "t": 0.0,
+          "race_pos": 27,
+          "laps_completed": 0,
+          "speed": 0.4279935956001282,
+          "race_state": 2
+        },
+        {
+          "name": "Driver055 (AI)",
+          "t": 0.0,
+          "race_pos": 24,
+          "laps_completed": 0,
+          "speed": 0.8545748591423035,
+          "race_state": 2
+        },
+        {
+          "name": "Driver056 (AI)",
+          "t": 0.0,
+          "race_pos": 26,
+          "laps_completed": 0,
+          "speed": 0.9081016182899475,
+          "race_state": 2
+        },
+        {
+          "name": "Driver058 (AI)",
+          "t": 0.0,
+          "race_pos": 18,
+          "laps_completed": 0,
+          "speed": 0.6706539392471313,
+          "race_state": 2
+        },
+        {
+          "name": "Driver059 (AI)",
+          "t": 0.0,
+          "race_pos": 21,
+          "laps_completed": 0,
+          "speed": 0.4242594838142395,
+          "race_state": 2
+        },
+        {
+          "name": "Driver062 (AI)",
+          "t": 0.0,
+          "race_pos": 9,
+          "laps_completed": 0,
+          "speed": 0.5139358639717102,
+          "race_state": 2
+        }
+      ]
+    }
+  ]
+}

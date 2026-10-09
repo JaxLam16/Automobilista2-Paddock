@@ -38,8 +38,8 @@ def test_matching_is_about_shape_not_level():
 def test_scores_from_raw_scales():
     s = scores_from_raw({"grid_pct": 0.8, "pace_rel_pct": -1.0, "lap_cv_pct": 0.5, "pass_rate": 30, "hold_rate": 75,
                          "lap1_gain": 1.0, "clean_share": 85, "trend_pct": -0.1, "brake_consistency": 120})
-    assert s["qualifying"] == 80 and s["race_pace"] == 75 and s["consistency"] == 75 and s["overtaking"] == 50
-    assert s["defending"] == 50 and s["starts"] == 62 and round(s["clean"]) == 50 and s["late_race"] == 80
+    assert s["qualifying"] == 80 and s["race_pace"] == 75 and round(s["consistency"]) == 94 and s["overtaking"] == 50
+    assert s["defending"] == 50 and round(s["starts"]) == 62 and s["clean"] == 85 and s["late_race"] == 80
     assert s["braking"] == 100 and s["tyres"] is None             # clipped, and missing stays missing
 
 

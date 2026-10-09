@@ -108,7 +108,8 @@ def detect_passes(grid: Grid, L: float, corners: list[dict], profile: np.ndarray
                 else:
                     kc = min(k + hold, len(T) - 1)
                     pa, pb = grid.POS[passer, kc], grid.POS[passed, kc]
-                    if pa > 0 and pb > 0 and pa > pb:
+                    before_a, before_b = grid.POS[passer, max(e1 - 1, 0)], grid.POS[passed, max(e1 - 1, 0)]
+                    if pa > 0 and pb > 0 and (pa > pb or (before_a > 0 and before_b > 0 and before_a < before_b)):
                         kind = "unconfirmed"  # distance says pass, game order disagrees
                     else:
                         kind = _classify(grid, passer, passed, k, L, profile, bin_m, contacts, p, mass)

@@ -17,10 +17,12 @@ ATTACK_S = 1.0
 
 
 def overtaking(ra) -> dict:
+    from .race import COUNTED
     laps = ra.laps.sort_values(["lap", "t_end"]).copy()
     laps["gap_ahead"] = laps.groupby("lap").t_end.diff()
     laps["gap_behind"] = -laps.groupby("lap").t_end.diff(-1)
     passes = ra.passes if ra.passes is not None else pd.DataFrame(columns=["passer", "passed", "kind", "corner", "lap"])
+    passes = passes[passes.kind.isin(COUNTED)]  # pit cycles and unconfirmed/lap-traffic changes are not passes
     is_ai = dict(zip(ra.entrants.name, ra.entrants.is_ai.astype(bool)))
     cls = ra.classification
     grid = dict(zip(cls.name, cls.grid)) if "grid" in cls else {}

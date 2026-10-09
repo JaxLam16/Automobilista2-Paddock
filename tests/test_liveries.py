@@ -71,7 +71,7 @@ def setup_game(tmp_path):
 
 
 def hashes(game):
-    return {str(p.relative_to(game)): hashlib.sha256(p.read_bytes()).hexdigest()
+    return {p.relative_to(game).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in game.rglob('*') if p.is_file()}
 
 

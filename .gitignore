@@ -17,3 +17,17 @@ __pycache__/
 /ams2season.log*
 /.appwindow/
 *.db
+/balance_of_performance/
+/bop_update_install_backup/
+/conversion_update_install_backup/
+
+# Local investigations, preserved update artifacts and release outputs
+/diagnostics/
+/archive/
+/build/
+/releases/
+/Car Setups/
+/donor_baseline_update_backups/
+/donor_source_fix_backups/
+/telemetry_update_backups/
+/weekend_rd_update_backups/

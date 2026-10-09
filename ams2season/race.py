@@ -135,7 +135,7 @@ def analyze_race(path_or_session, humans: set[str] | None = None,
     battles = detect_battles(grid, L, params)
 
     entrants = cls[["name", "car", "car_class"]].copy()
-    entrants["is_ai"] = ~entrants.name.map(_norm).isin(hum) if hum else False
+    entrants["is_ai"] = ~entrants.name.map(_norm).isin(hum) if humans is not None else False
     ai_names = set(entrants.loc[entrants.is_ai, "name"])
 
     if (cls.grid.isna()).any():
@@ -145,7 +145,8 @@ def analyze_race(path_or_session, humans: set[str] | None = None,
     if unconfirmed:
         warnings.append(f"{unconfirmed} distance-based order changes disagreed with game positions and were ignored")
 
-    stats = _entrant_stats(cls, laps, passes, battles, pits, incidents, fr, ai_names, green_t)
+    stats = _entrant_stats(cls, laps, passes, battles, pits, incidents, fr, ai_names, green_t,
+                           start_grid=_observed_start_grid(sess, fr))
     try:  # driving style for every car: braking/throttle point consistency and track usage
         from .metrics import driving_metrics
         from .trackmap import recording_edge_samples, track_geometry
@@ -154,19 +155,113 @@ def analyze_race(path_or_session, humans: set[str] | None = None,
             normal = {(r.name, int(r.lap) - 1) for r in laps[laps.clean].itertuples()}
             geo = track_geometry(fr, *ref_xy, L, normal=normal, samples=recording_edge_samples(sess), cloud_points=0)
             edges = geo.get("offsets")
+            if edges:
+                edges = dict(edges, source=geo.get('edges', {}).get('source', 'estimated'))
         from .metrics import strength_columns
         dm, corner_speeds = driving_metrics(fr, laps, corners, L, ref_xy, edges, mode=racing_mode)
         stats = stats.merge(dm, on="name", how="left")
         stats = stats.merge(strength_columns(stats, laps, corner_speeds, corners), on="name", how="left")
     except Exception as exc:  # never let the extra metrics break a race analysis
         warnings.append(f"driving metrics unavailable: {exc}")
+    try:
+        from .technique import technique_report, throttle_consistency_summary
+        pedal_report = technique_report(sess, corners_override, mode=racing_mode)
+        driver = pedal_report.get('driver') or (sess.meta.get('local') or {}).get('name')
+        channel = throttle_consistency_summary(pedal_report)
+        measured = stats.name == driver
+        stats['throttle_rating_source'] = 'acceleration'
+        if measured.any() and channel.get(racing_mode) is not None:
+            stats.loc[measured, 'throttle_consistency'] = channel[racing_mode]
+            stats.loc[measured, 'throttle_rating_source'] = 'pedals'
+            # Pickup scatter remains a separately named distance measurement;
+            # it is not the scale used by the pedal shape rating.
+            for mode, score in channel.items():
+                stats.loc[measured, f'throttle_consistency_{mode}'] = score
+            scatter = [c['scatter_by_mode'][racing_mode]['pickup_sd'] for c in pedal_report.get('corners', [])
+                       if c['scatter_by_mode'][racing_mode].get('throttle_marker_laps', 0) >= 2]
+            stats.loc[measured, 'throttle_point_sd'] = float(np.median(scatter)) if scatter else np.nan
+        elif measured.any() and sess.local is not None and {'throttle', 'brake'} <= set(sess.local):
+            stats.loc[measured, 'throttle_rating_source'] = 'unavailable'
+            for column in ['throttle_consistency', 'throttle_point_sd'] + [f'throttle_consistency_{m}' for m in ('equal', 'reduced', 'excluded')]:
+                stats.loc[measured, column] = np.nan
+    except Exception as exc:
+        warnings.append(f'pedal throttle rating unavailable: {exc}')
     ra = RaceAnalysis(sess, entrants, cls, laps, passes, battles, pits, incidents, corners, stats, warnings, fr)
     ra.racing_mode = racing_mode
     ra.corner_speeds = locals().get("corner_speeds", pd.DataFrame(columns=["name", "corner", "vmin"]))
     return ra
 
 
-def _entrant_stats(cls, laps, passes, battles, pits, incidents, fr, ai_names, green_t) -> pd.DataFrame:
+def _observed_start_grid(sess: Session, fr: pd.DataFrame) -> dict[str, int]:
+    """Actual game grid, without treating a mid-race distance order as a start.
+
+    Some AMS2 recordings open on the first racing tick and mark the green event
+    late. Accept that grid only if the whole observed field is still stationary
+    on lap zero. A genuinely late recording has no trustworthy starting grid.
+    """
+    green_t = sess.green_t
+    if green_t is None:
+        return {}
+    events = [e for e in sess.events if e.get('type') == 'green']
+    event = events[0] if events else None
+    if event is not None:
+        grid = event.get('grid') or {}
+        if event.get('late'):
+            near = fr[(fr.t >= green_t) & (fr.t <= green_t + 0.5)]
+            first = near.sort_values('t', kind='stable').groupby('name', sort=False).first()
+            if (first.empty or 'laps_completed' not in first or 'speed' not in first
+                    or not first.laps_completed.eq(0).all()
+                    or not first.speed.between(0, 2.5).all()):
+                return {}
+    else:
+        # Legacy sessions may have no event journal. Require real pre-green
+        # observations; the sample at inferred green can already be mid-race.
+        before = fr[(fr.t < green_t) & (fr.race_pos > 0)]
+        if 'race_state' in before:
+            before = before[before.race_state == S.RACESTATE_NOT_STARTED]
+        if before.empty:
+            return {}
+        last_t = before.t.max()
+        grid = before[before.t >= last_t - 0.5].groupby('name').race_pos.last().to_dict()
+    if not isinstance(grid, dict):
+        return {}
+    out = {}
+    for name, position in grid.items():
+        if (isinstance(position, bool) or not isinstance(position, (int, float, np.number))
+                or not math.isfinite(position) or float(position) != int(position) or position < 1):
+            return {}
+        out[name] = int(position)
+    # Missing or duplicate grid slots make the number of opportunities unknown.
+    if set(out.values()) != set(range(1, len(out) + 1)) or len(set(out.values())) != len(out):
+        return {}
+    return out
+
+
+def _start_lap1_position(el: pd.DataFrame, g: pd.DataFrame, green_t: float, size: int):
+    """A first-lap position needs complete start-to-line recording coverage."""
+    first = el[el.lap == 1]
+    if first.empty or size < 2 or 'laps_completed' not in g:
+        return np.nan
+    end = float(first.t_end.iat[0])
+    if not math.isfinite(end) or end <= green_t:
+        return np.nan
+    segment = g[(g.t >= green_t) & (g.t <= end + 1.0)].sort_values('t', kind='stable')
+    if (len(segment) < 2 or segment.t.iat[0] > green_t + 2.0
+            or segment.laps_completed.iat[0] != 0
+            or np.diff(segment.t.to_numpy(float)).max() > 2.0):
+        return np.nan
+    crossing = segment[(segment.t >= end) & (segment.laps_completed >= 1)]
+    pos = crossing.loc[crossing.race_pos.between(1, size), 'race_pos']
+    if pos.empty:
+        return np.nan
+    # A sustained game position around the line avoids one corrupt/outlying tick.
+    modes = pos.mode()
+    chosen = pos[pos.isin(modes)].iat[-1]
+    return float(chosen) if float(chosen) == int(chosen) else np.nan
+
+
+def _entrant_stats(cls, laps, passes, battles, pits, incidents, fr, ai_names, green_t,
+                   start_grid: dict[str, int] | None = None) -> pd.DataFrame:
     counted = passes[passes.kind.isin(COUNTED)]
     field_size = len(cls)
     clean = laps[laps.clean]
@@ -175,6 +270,9 @@ def _entrant_stats(cls, laps, passes, battles, pits, incidents, fr, ai_names, gr
     ai_ref = float(ai_meds.median()) if len(ai_meds) else np.nan
     human_order = [n for n in cls.name if n not in ai_names]
     after_green = fr[fr.t >= green_t + 1.0]
+    start_grid = start_grid or {}
+    start_size = len(start_grid)
+    from .legends import start_score
 
     rows = []
     for r in cls.itertuples():
@@ -192,11 +290,16 @@ def _entrant_stats(cls, laps, passes, battles, pits, incidents, fr, ai_names, gr
         g = after_green[after_green.name == n]
         inc = incidents[incidents.name == n]
         involved = incidents[(incidents.kind == "contact") & ((incidents.name == n) | (incidents.other == n))]
+        start_position = start_grid.get(n)
+        first_lap_position = _start_lap1_position(el, fr[fr.name == n], green_t, start_size)
         rows.append({
             "name": n, "is_ai": n in ai_names, "grid": r.grid, "finish": r.pos, "status": r.status,
             "laps": r.laps, "human_rank": (human_order.index(n) + 1) if n in human_order else np.nan,
             "positions_gained": (r.grid - r.pos) if pd.notna(r.grid) else np.nan,
             "lap1_pos": el.loc[el.lap == 1, "position"].iat[0] if (el.lap == 1).any() else np.nan,
+            "start_grid": start_position, "start_field_size": start_size if start_position else np.nan,
+            "start_lap1_pos": first_lap_position if start_position else np.nan,
+            "start_score": start_score(start_position, first_lap_position, start_size),
             "best_lap": float(valid.time.min()) if len(valid) else np.nan,
             "median_clean": float(ec.time.median()) if len(ec) else np.nan,
             "consistency_s": float(ec.time.std()) if len(ec) > 2 else np.nan,

@@ -687,7 +687,8 @@ def save_track_corners(root: Path, track: str, layout: str, corners: list | None
     """Your own turn positions for a track ([{name, apex}] in metres of lap; None = back to automatic)."""
     data = load_track_file(root, track, layout) or {"track": track, "layout": layout, "samples": {"left": [], "right": []}}
     if corners:
-        data["corners"] = [{"name": str(c.get("name") or f"T{i + 1}").strip()[:12], "apex": round(float(c["apex"]), 1)}
+        data["corners"] = [{"name": str(c.get("name") or f"T{i + 1}").strip()[:12], "apex": round(float(c["apex"]), 1),
+                            **({'exit_policy': 'compromise'} if c.get('exit_policy') == 'compromise' else {})}
                            for i, c in enumerate(sorted(corners, key=lambda c: float(c["apex"])))]
     else:
         data.pop("corners", None)

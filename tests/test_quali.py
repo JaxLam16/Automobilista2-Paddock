@@ -2,13 +2,74 @@
 import json
 
 import numpy as np
+import pandas as pd
 import pytest
 
+from ams2season import shm as S
+from ams2season.derive import Session
 from ams2season.quali import analyze_qualifying, quali_data
 from ams2season.race import analyze_race
 from ams2season.simulate import RaceScript, run_race
 
 HUMANS = ["Jax", "Mason", "Eli", "Theo"]
+
+
+def _close_laps(tmp_path, local_name):
+    # Two valid flying laps differ by only 15 ms, as in the Testing recording.
+    t = np.arange(0.05, 306, 0.05)
+    crossings = [0, 100, 200.015, 300.015, 400.015]
+    dist = np.interp(t, crossings, np.arange(5) * 1000)
+    angle = dist / 1000 * 2 * np.pi
+    fr = pd.DataFrame({"t": t, "name": "AI", "car": "GT3", "car_class": "Testing",
+                       "lap_dist": dist % 1000, "laps_completed": (dist // 1000).astype(int),
+                       "speed": 10.0, "x": 160 * np.cos(angle), "z": 160 * np.sin(angle),
+                       "race_state": S.RACESTATE_RACING, "pit_mode": 0, "lap_invalid": False,
+                       "last_lap": np.where(t < 100, 0, np.where(t < 200.015, 100.5,
+                                              np.where(t < 300.015, 100.015, 100.0))),
+                       "fastest_lap": np.where(t < 200.015, 0, np.where(t < 300.015, 100.015, 100.0)),
+                       "cur_s1": 30.0, "cur_s2": 30.0})
+    lo = pd.DataFrame({"t": t, "throttle": np.where(t < 200.015, 0.3, 0.9),
+                       "brake": 0.0, "steering": 0.0, "gear": 3})
+    return Session(tmp_path, {"track_length": 1000, "local": {"name": local_name}}, fr, lo)
+
+
+def test_best_lap_prefers_exact_time_over_earlier_near_match(tmp_path):
+    qa = analyze_qualifying(_close_laps(tmp_path, "Observer"), humans={"Observer"})
+    assert qa.classification.best.iat[0] == pytest.approx(100.0)
+    assert qa.classification.lap_no.iat[0] == 2
+
+
+def test_friend_inputs_use_closest_lap_time(tmp_path, monkeypatch):
+    own = _close_laps(tmp_path, "Observer")
+    friend = _close_laps(tmp_path, "AI")
+    monkeypatch.setattr("ams2season.quali.load_session", lambda _: friend)
+    qa = analyze_qualifying(own, humans={"Observer"}, extra_recordings=["friend"])
+    assert np.median(qa.best["AI"]["thr"]) == pytest.approx(90.0)
+
+
+def test_long_recording_pause_does_not_invent_empty_qualifying_laps(tmp_path):
+    sess = _close_laps(tmp_path, "Observer")
+    # Simulation continues from the same position after a 20-minute pause.
+    sess.frames.loc[sess.frames.t >= 150, 't'] += 1200
+    sess.local.loc[sess.local.t >= 150, 't'] += 1200
+    qa = analyze_qualifying(sess, humans={"Observer"})
+    assert len(qa.laps) == 1 and qa.laps.valid.all()
+    assert qa.classification.best.iat[0] == pytest.approx(100.0)
+    assert qa.classification.valid_laps.iat[0] == 1
+    assert qa.laps.t0.iat[0] > 1400
+    assert np.isfinite(qa.best['AI']['v']).all()
+    assert any('gaps' in w for w in qa.warnings)
+
+
+def test_gap_during_fastest_lap_uses_an_observed_lap_instead(tmp_path):
+    sess = _close_laps(tmp_path, "Observer")
+    sess.frames = sess.frames[~sess.frames.t.between(230, 245)].copy()
+    sess.local = sess.local[~sess.local.t.between(230, 245)].copy()
+    qa = analyze_qualifying(sess, humans={"Observer"})
+    assert len(qa.laps) == 1
+    assert qa.classification.best.iat[0] == pytest.approx(100.015)
+    assert qa.laps.t1.iat[0] < 201
+    assert any('gaps' in w for w in qa.warnings)
 
 
 @pytest.fixture(scope="module")

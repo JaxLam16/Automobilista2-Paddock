@@ -8,19 +8,20 @@ with a world champion.
 """
 from __future__ import annotations
 
+import math
 import numpy as np
 
 DIMENSIONS = [
     ("qualifying", "Qualifying", "Where you start: your average grid slot against the field."),
     ("race_pace", "Race pace", "Your typical clean lap against the field's."),
-    ("consistency", "Consistency", "How little your clean laps vary."),
+    ("consistency", "Consistency", "How little your clean laps vary: 2% lap-time variation scores 50; under 0.5% scores over 94."),
     ("braking", "Braking precision", "Hitting the same braking points lap after lap."),
-    ("throttle", "Throttle control", "Getting back on the power at the same point every lap."),
-    ("track_usage", "Track usage", "Using every inch: kerb at the apex, edge on the way in and out."),
+    ("throttle", "Throttle control", "Repeatable power application and commitment. Recorded pedals filter brief shift transients and allow small modulation; other cars use a speed-derived pickup proxy."),
+    ("track_usage", "Track usage", "Sustained wheel clearance at entry, apex and exit. Supported linked corners and intended narrow exits are exempt from wide-exit scoring."),
     ("overtaking", "Overtaking", "Laps spent attacking that ended with a pass."),
     ("defending", "Defending", "Laps spent defending that kept the place."),
-    ("starts", "Starts", "Places gained on lap 1."),
-    ("clean", "Clean driving", "Laps without a mistake that cost time."),
+    ("starts", "Starts", "First-lap position against the observed starting grid. Holding position scores 50, holding pole scores 100. Gains and losses are scaled to the places available ahead or behind; missing start evidence stays unrated."),
+    ("clean", "Clean driving", "Percentage of race laps without a detected mistake that cost time."),
     ("tyres", "Tyre management", "Tyre wear and lock-ups against the field (needs your own recordings)."),
     ("late_race", "Late-race pace", "Whether your laps get quicker or slower as a race goes on."),
 ]
@@ -71,23 +72,56 @@ LEGENDS = [
 
 
 def _clip(v):
-    return None if v is None or v != v else float(max(0.0, min(100.0, v)))
+    return None if v is None or not math.isfinite(v) else float(max(0.0, min(100.0, v)))
+
+
+def start_score(grid, lap1_position, field_size):
+    """Rate one observed start, adjusting improvement for the places available.
+
+    A place gained from second uses the sole available passing opportunity, whereas
+    one gained from twentieth uses only one of nineteen. Neither simply starting
+    near the back nor field size grants points. Holding pole is the best attainable
+    result, and every loss remains below 50 even when it starts from pole.
+    """
+    values = (grid, lap1_position, field_size)
+    if any(isinstance(v, bool) or not isinstance(v, (int, float, np.number))
+           or not math.isfinite(v) or float(v) != int(v) for v in values):
+        return None
+    grid, position, size = map(int, values)
+    if size < 2 or not 1 <= grid <= size or not 1 <= position <= size:
+        return None
+    gain = grid - position
+    if gain == 0:
+        return 100.0 if grid == 1 else 50.0
+    if gain > 0:
+        return 50.0 + 50.0 * math.sqrt(gain / (grid - 1))
+    return 50.0 - 50.0 * math.sqrt(-gain / (size - grid))
 
 
 def scores_from_raw(raw: dict) -> dict:
     """Your measurements on a 0-100 scale per dimension (50 = roughly typical), None where there's no data."""
-    g = raw.get
+    def g(key):
+        value = raw.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float, np.number)) or not math.isfinite(value):
+            return None
+        if key in ('lap_cv_pct', 'grid_pct', 'clean_share') and value < 0:
+            return None
+        return float(value)
     return {
         "qualifying": _clip(100 * g("grid_pct")) if g("grid_pct") is not None else None,
         "race_pace": _clip(50 - 25 * g("pace_rel_pct")) if g("pace_rel_pct") is not None else None,
-        "consistency": _clip(100 - 50 * g("lap_cv_pct")) if g("lap_cv_pct") is not None else None,
+        "consistency": _clip(100 / (1 + (g("lap_cv_pct") / 2.0) ** 2)) if g("lap_cv_pct") is not None else None,
         "braking": _clip(g("brake_consistency")),
         "throttle": _clip(g("throttle_consistency")),
         "track_usage": _clip(g("track_usage")),
         "overtaking": _clip(20 + g("pass_rate")) if g("pass_rate") is not None else None,
         "defending": _clip((g("hold_rate") - 50) * 2) if g("hold_rate") is not None else None,
-        "starts": _clip(50 + 12 * g("lap1_gain")) if g("lap1_gain") is not None else None,
-        "clean": _clip((g("clean_share") - 70) * 3.33) if g("clean_share") is not None else None,
+        # Current profiles store the opportunity-adjusted score per race before
+        # averaging. Keep the old gain-only API for older standalone callers, but
+        # explicit missing start evidence must never fall back to a made-up score.
+        "starts": _clip(g("start_score")) if "start_score" in raw else
+                  (_clip(50 + 50 * math.tanh(g("lap1_gain") / 4)) if g("lap1_gain") is not None else None),
+        "clean": _clip(g("clean_share")),
         "tyres": _clip(g("tyre_score")),
         "late_race": _clip(50 - 300 * g("trend_pct")) if g("trend_pct") is not None else None,
     }
