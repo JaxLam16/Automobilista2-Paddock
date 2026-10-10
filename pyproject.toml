@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ams2season"
-version = "0.1.0a3"
+version = "0.1.0a4"
 description = "Record AMS2 multiplayer races (humans + AI) and turn them into championship standings and debrief stats"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["numpy>=1.24", "pandas>=2.1", "pyarrow>=14", "pillow>=10"]
+dependencies = ["numpy>=1.24", "pandas>=2.1", "pyarrow>=14", "pillow>=12"]
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
@@ -17,10 +17,10 @@ test = ["pytest>=7"]
 ams2season = "ams2season.cli:main"
 
 [tool.setuptools]
-packages = ["ams2season", "ams2season.engineer"]
+packages = ["ams2season", "ams2season.engineer", "ams2season.designer"]
 
 [tool.setuptools.package-data]
-ams2season = ["app_ui.html", "assets/*", "assets/car_icons/*", "livery_editor.js", "livery_editor.css", "LIVERY_EDITOR_NOTICES.txt", "bop_editor.js", "bop_editor.css", "replay_timing.js", "development_ui.js", "development_ui.css", "identity_ui.js"]
+ams2season = ["app_ui.html", "assets/*", "assets/car_icons/*", "livery_editor.js", "livery_editor.css", "LIVERY_EDITOR_NOTICES.txt", "bop_editor.js", "bop_editor.css", "replay_timing.js", "development_ui.js", "development_ui.css", "identity_ui.js", "designer/web/**/*", "designer/decals/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -117,10 +117,13 @@ def main():
         assert not call(port, 'GET', '/api/recorder')['running']
         for path in ('/', '/bop-editor.js', '/bop-editor.css', '/livery-editor.js',
                      '/livery-editor.css', '/development-ui.js', '/development-ui.css',
-                     '/replay-timing.js', '/identity-ui.js', '/favicon.ico'):
+                     '/replay-timing.js', '/identity-ui.js', '/favicon.ico', '/livery-designer/',
+                     '/livery-designer/editor/app.js', '/livery-designer/editor/engine.js',
+                     '/livery-designer/vendor/three/build/three.module.js',
+                     '/livery-designer/vendor/three-mesh-bvh/build/index.module.js'):
             assert len(call(port, 'GET', path)) > 50
         for path in ('/api/car-icons', '/api/engineer', '/api/bop', '/api/bop/config',
-                     '/api/bop/car-setups', '/api/liveries', '/api/identities/catalog', '/api/tracks'):
+                     '/api/bop/car-setups', '/api/liveries', '/api/identities/catalog', '/api/tracks', '/api/livery-designer'):
             call(port, 'GET', path)
         scan_guard = call(port, 'GET', '/api/bop/class-sets', expected_status=400)
         assert 'scan' in scan_guard['error'].lower()
@@ -208,6 +211,30 @@ def main():
             assert driver['color'] == color and driver['is_ai'] == ai
             assert driver['livery']['image'].startswith('data:image/png;base64,')
         assert before == {name: digest(original / name) for name in before}
+        # The designer must run on the same frozen server, using only authored fixtures.
+        import runpy
+        import sys
+        sys.path.insert(0, str(ROOT))
+        fixture = runpy.run_path(str(ROOT / 'tools/release/designer_fixture.py'))
+        game = fixture['synthetic_game'](stage / 'synthetic-mod-game')
+        call(port, 'POST', '/api/livery-designer', {'game_path': game.root})
+        assert call(port, 'GET', '/api/livery-designer')['cars'] == 1
+        assert call(port, 'GET', '/livery-designer/api/car/sample')['parts']
+        call(port, 'POST', '/livery-designer/api/project?car=sample&name=Portable',
+             {'car': 'sample', 'version': 1, 'name': 'Portable', 'layers': []})
+        assert call(port, 'GET', '/livery-designer/api/projects')[0]['name'] == 'Portable'
+        connection = http.client.HTTPConnection('127.0.0.1', port, timeout=90)
+        try:
+            connection.request('POST', '/livery-designer/api/install?car=sample&width=64&height=64&name=Portable',
+                body=bytes([200, 30, 40, 255]) * 64 * 64, headers={'Content-Type': 'application/octet-stream'})
+            response = connection.getresponse()
+            saved = json.loads(response.read())
+            assert response.status == 200 and saved['slot'] == 2
+        finally:
+            connection.close()
+        assert call(port, 'GET', '/livery-designer/api/info/sample')['next'] == 3
+        assert before == {name: digest(original / name) for name in before}
+        report['checks'].extend(['bundled offline 3D designer assets', 'frozen designer mesh / project save / DDS install with authored fixtures'])
         close(process, port)
         process = None
         report['checks'].extend(['persistent livery AI without an installed game', 'fictional AI full-field points / human-only separation',

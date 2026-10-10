@@ -15,9 +15,9 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-RELEASE_NAME = 'AMS2-Paddock-0.1.0-alpha.3-Windows'
+RELEASE_NAME = 'AMS2-Paddock-0.1.0-alpha.4-Windows'
 USER_DOCS = ('QUICKSTART.md', 'ALPHA_NOTES.md', 'BALANCE_OF_PERFORMANCE_README.md',
-             'CAR_CONVERSION_README.md', 'LIVERY_EDITOR_README.md', 'CHAMPIONSHIP_LIVERIES.md')
+             'CAR_CONVERSION_README.md', 'LIVERY_EDITOR_README.md', 'CHAMPIONSHIP_LIVERIES.md', 'LIVERY_DESIGNER.md')
 DEPENDENCIES = ('numpy', 'pandas', 'pyarrow', 'pillow', 'pyinstaller',
                 'pyinstaller-hooks-contrib', 'packaging', 'python-dateutil', 'pytz', 'tzdata', 'six', 'setuptools')
 
@@ -66,6 +66,12 @@ def collect_notices(destination):
         raise ValueError('Python LICENSE.txt was not found; cannot assemble runtime notices.')
     shutil.copy2(python_license, destination / 'PYTHON_LICENSE.txt')
     shutil.copy2(ROOT / 'ams2season' / 'LIVERY_EDITOR_NOTICES.txt', destination / 'PCarsTools_MIT.txt')
+    for name in ('three', 'three-mesh-bvh'):
+        source = ROOT / 'ams2season/designer/web/vendor' / name / 'LICENSE'
+        if source.exists():
+            target = destination / name
+            target.mkdir(exist_ok=True)
+            shutil.copy2(source, target / 'LICENSE')
     (destination / 'README.txt').write_text(
         'Third-party notices for the bundled Python runtime and packages.\n'
         'Additional native library notices are retained with the bundled packages under _internal.\n'

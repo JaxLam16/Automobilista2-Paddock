@@ -527,6 +527,7 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border
       <a href="#/trackmap" data-nav="trackmap">Track maps</a>
       <a href="#/caricons" data-nav="caricons">Car icons</a>
       <a href="#/liveries" data-nav="liveries">Livery editor</a>
+      <a href="#/livery-designer" data-nav="livery-designer">Livery designer</a>
       <a href="#/bop" data-nav="bop">Balance of Performance</a>
       <a href="#/conversion" data-nav="conversion">Car Conversion</a>
       <a href="#/settings" data-nav="settings">Settings</a>
@@ -739,6 +740,7 @@ function markNav() {
   var hash = location.hash || "#/";
   var key = hash === "#/" ? "home" : hash.indexOf("#/recordings") === 0 ? "recordings" : hash.indexOf("#/settings") === 0 ? "settings"
     : hash.indexOf("#/trackmap") === 0 ? "trackmap" : hash.indexOf("#/practice") === 0 ? "practice" : hash.indexOf("#/caricons") === 0 ? "caricons" : hash.indexOf("#/engineer") === 0 ? "engineer"
+    : hash.indexOf("#/livery-designer") === 0 ? "livery-designer"
     : hash.indexOf("#/liveries") === 0 ? "liveries"
     : hash.indexOf("#/bop") === 0 ? "bop"
     : hash.indexOf("#/conversion") === 0 ? "conversion"
@@ -4642,9 +4644,41 @@ function viewSettings() {
   });
 }
 
+// ------------------------------------------------------------------ livery designer
+function viewLiveryDesigner() {
+  return api("/api/livery-designer").then(function (d) {
+    var input = h("input", {type: "text", value: d.game_path || d.suggestion, placeholder: "Automobilista 2 installation folder", style: {width: "100%"}});
+    var note = h("p", {class: "hint"}, d.error || "Supports mod cars with loose meshes (.meb), render models (.vhf) and livery lists (.rcf). Base-game encrypted models are unavailable.");
+    var open = h("button", {class: "btn", disabled: !d.ready || !d.cars, onclick: function () {
+      document.getElementById("view").style.maxWidth = "none";
+      setView(h("div", {class: "row", style: {marginBottom: "10px"}}, h("h2", null, "Livery designer"),
+        h("span", {class: "hint"}, "Ctrl+S saves your project. Close AMS2 before Save to game.")),
+        h("iframe", {id: "designer-frame", src: "/livery-designer/", title: "3D livery designer", style: {width: "100%", height: "calc(100vh - 160px)", minHeight: "650px", border: "0", borderRadius: "10px"}}));
+    }}, "Open designer");
+    var save = h("button", {class: "btn ghost", onclick: function () {
+      save.disabled = true;
+      api("/api/livery-designer", "POST", {game_path: input.value}).then(function (r) {
+        d = r; note.textContent = r.cars + " supported mod cars found. Projects are saved in " + r.projects_dir;
+        open.disabled = !r.ready || !r.cars;
+      }).catch(function (e) { note.textContent = e.message; }).finally(function () { save.disabled = false; });
+    }}, "Use folder / refresh cars");
+    setView(h("h1", null, "Livery designer"), h("p", {class: "sub"}, "Paint directly on a 3D car with layers, logos, shapes and text."),
+      h("div", {class: "panel pad"}, h("label", null, "Game folder"), input, h("div", {class: "row", style: {marginTop: "12px"}}, save, open), note,
+        h("p", {class: "hint"}, d.ready ? d.cars + " supported mod cars found." : "Choose your game folder to start.")),
+      h("p", {class: "explain"}, "Projects and imported decals stay in Paddock's livery_designer folder. Save to game backs up changed files in the game's _livery_tool_backups folder. Enable all liveries for a car in Livery editor before installing designs; rescan that editor afterwards to include the new livery."),
+      h("p", {class: "hint"}, "The 3D libraries and starter decals are bundled. Online racing fonts need internet; installed fonts work offline."));
+  });
+}
+
 // ------------------------------------------------------------------ router
 function render(skipIdentity, identityChamp) {
   var hash = location.hash || "#/";
+  var designer = document.getElementById("designer-frame");
+  if (designer) {
+    if (hash.split("?")[0] === "#/livery-designer") { markNav(); return; }
+    var canLeave = designer.contentWindow.paddockDesignerCanLeave;
+    if (canLeave && !canLeave()) { history.replaceState(null, "", "#/livery-designer"); markNav(); return; }
+  }
   markNav();
   if (state.cleanup) { state.cleanup(); state.cleanup = null; }
   var v = document.getElementById("view");
@@ -4670,6 +4704,7 @@ function render(skipIdentity, identityChamp) {
   else if (path === "#/trackmap") p = viewTrackMap();
   else if (path === "#/practice") p = viewPractice();
   else if (path === "#/caricons") p = viewCarIcons(q);
+  else if (path === "#/livery-designer") p = viewLiveryDesigner();
   else if (path === "#/liveries") p = viewLiveries();
   else if (path === "#/bop") p = viewBop();
   else if (path === "#/conversion") p = viewConversion();

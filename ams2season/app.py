@@ -1258,6 +1258,7 @@ class App:
         self.closing_at: float | None = None
         self.port = None
         self._livery_editor = None
+        self._livery_designer = None
         self._bop_editor = None
         self._development = None
         if (self.lib.root / 'balance_of_performance' / 'development_receipts.db').exists():
@@ -1275,7 +1276,9 @@ class App:
             return False
         now = time.monotonic()
         if self.closing_at is not None and now - self.closing_at > self.CLOSE_GRACE_S:
-            return self.last_heartbeat is None or self.last_heartbeat < self.closing_at
+            # Windows' clock can give successive requests the same timestamp.
+            # A heartbeat after closing already clears closing_at in route().
+            return self.last_heartbeat is None or self.last_heartbeat <= self.closing_at
         return self.last_heartbeat is not None and now - self.last_heartbeat > self.SILENT_LIMIT_S
 
     def log_error(self, method: str, path: str, exc: Exception) -> None:
@@ -1355,6 +1358,13 @@ class App:
             self.recorder.engineer_key = None
             return {"ok": True}
         raise LookupError("unknown engineer request")
+
+    @property
+    def livery_designer(self):
+        if self._livery_designer is None:
+            from .livery_designer import LiveryDesigner
+            self._livery_designer = LiveryDesigner(self)
+        return self._livery_designer
 
     @property
     def liveries(self):
@@ -1787,6 +1797,9 @@ def make_handler(app: App):
                 body = gzip.compress(body, compresslevel=5)
             self.send_response(code)
             self.send_header("Content-Type", ctype)
+            if ctype.startswith('image/svg+xml'):
+                # Imported SVG logos must remain images even when opened directly.
+                self.send_header('Content-Security-Policy', "sandbox; default-src 'none'; style-src 'unsafe-inline'")
             if not ctype.startswith("image/"):
                 # never reuse an old copy: after an update the app window must load the new page, scripts and data
                 self.send_header("Cache-Control", "no-store")
@@ -1810,6 +1823,40 @@ def make_handler(app: App):
             url = urlparse(self.path)
             query = {k: v[0] for k, v in parse_qs(url.query).items()}
             try:
+                if url.path.startswith('/livery-designer/') or url.path == '/api/livery-designer':
+                    if method not in ('GET', 'POST'):
+                        raise LookupError('Unknown designer request.')
+                    if method == 'POST':
+                        def reject_designer(code, message):
+                            # Drain small rejected bodies before closing: unread uploads
+                            # can reset the connection on Windows and hide the error.
+                            length = int(self.headers.get('Content-Length') or 0)
+                            if 0 < length <= 1 << 20:
+                                self.rfile.read(length)
+                            self.close_connection = True
+                            return self._json(code, {'error': message})
+                        origin = self.headers.get('Origin')
+                        if (origin and origin != 'http://' + self.headers.get('Host', '')) or self.headers.get('Sec-Fetch-Site') == 'cross-site':
+                            return reject_designer(403, 'Designer changes must come from this app window.')
+                        ctype = self.headers.get('Content-Type', '').split(';')[0].strip()
+                        if ctype not in ('application/json', 'application/octet-stream', 'image/png', 'application/zip'):
+                            return reject_designer(415, 'Designer uploads require JSON or binary image data.')
+                        n = int(self.headers.get('Content-Length') or 0)
+                        if not 0 <= n <= 512 << 20:
+                            return self._json(413, {'error': 'Designer uploads must be at most 512 MB.'})
+                        data = self.rfile.read(n)
+                        if len(data) != n:
+                            raise ValueError('Designer upload was cut short.')
+                    else:
+                        data = b''
+                    if url.path == '/api/livery-designer':
+                        result = app.livery_designer.status() if method == 'GET' else app.livery_designer.configure(json.loads(data))
+                        return self._json(200, result)
+                    relative = '/' + url.path[len('/livery-designer/'):]
+                    if url.query:
+                        relative += '?' + url.query
+                    code, data, ctype = app.livery_designer.handle(method, relative, self.headers, data)
+                    return self._send(code, data, ctype)
                 if method == "GET" and url.path in ("/", "/index.html"):
                     return self._send(200, ui_file.read_bytes(), "text/html; charset=utf-8")
                 if method == "GET" and url.path == "/replay-timing.js":

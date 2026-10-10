@@ -1,4 +1,4 @@
-# 0.1.0 alpha 3
+# 0.1.0 alpha 4
 
 This portable Windows build of the current Paddock app bundles
 the recorder, race and championship analysis, practice tools, race engineer,
@@ -14,7 +14,7 @@ picture-based assignment review for each recording, and independent human-friend
 filters. Registered AI can earn full-field points while remaining AI for human
 rankings and awards. See [Championship liveries](CHAMPIONSHIP_LIVERIES.md).
 
-Alpha 3 adds optional human car/livery selections, a championship car-class
+Alpha 3 added optional human car/livery selections, a championship car-class
 filter with per-picker exceptions, and livery pictures beside drivers in
 standings, race results and replay. Replay car markers use estimated paint
 colors with manual overrides. The race assignment button remains visible
@@ -56,3 +56,12 @@ before roster setup and provides a shortcut to the championship Settings.
 The build environment is recorded in `BUILD_INFO.json`; the adjacent release
 verification report records automated validation. A real game session and a
 separate tester PC are still required to establish game and machine compatibility.
+
+## Livery designer
+
+New sidebar tool for painting supported loose mod meshes in 3D. Core graphics
+libraries and starter decals are bundled; online fonts need internet. Projects
+and imported decals live in the personal livery_designer folder. Close AMS2
+before Save to game, enable all liveries in Livery editor first, then rescan that
+editor after saving. Real-game material/loader compatibility still needs testing.
+See LIVERY_DESIGNER.md.

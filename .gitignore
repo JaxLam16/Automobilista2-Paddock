@@ -31,3 +31,7 @@ __pycache__/
 /donor_source_fix_backups/
 /telemetry_update_backups/
 /weekend_rd_update_backups/
+
+# Livery designer user projects and supplied import archive
+/livery_designer/
+/ams2_livery_tool.zip

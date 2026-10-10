@@ -12,8 +12,8 @@ selected paint colors and pictures appear in replay. Follow the
 
 ## Run the Windows alpha
 
-Download [0.1.0 Alpha 3 for Windows](https://github.com/JaxLam16/Automobilista2-Paddock/releases/tag/v0.1.0-alpha.3)
-and choose the `AMS2-Paddock-0.1.0-alpha.3-Windows.zip` asset.
+Download [0.1.0 Alpha 4 for Windows](https://github.com/JaxLam16/Automobilista2-Paddock/releases/tag/v0.1.0-alpha.4)
+and choose the `AMS2-Paddock-0.1.0-alpha.4-Windows.zip` asset.
 
 1. Extract the **entire ZIP** to a writable folder, such as `Documents\AMS2 Paddock`.
 2. Double-click **AMS2 Paddock.exe**. Keep the `_internal` folder beside it.
@@ -40,6 +40,12 @@ Do not replace your working installation with an old incremental update installe
 - [Balance of Performance](docs/BALANCE_OF_PERFORMANCE_README.md)
 - [Car conversion and custom classes](docs/CAR_CONVERSION_README.md)
 - [Livery editor](docs/LIVERY_EDITOR_README.md)
+
+## Livery designer
+
+Use **Livery designer** in the sidebar to paint supported mod cars in 3D with
+layers, text, logos and patterns, save editable projects and export to AMS2.
+See [the designer guide](docs/LIVERY_DESIGNER.md) for support and backup details.
 
 ## Develop from this checkout
 
