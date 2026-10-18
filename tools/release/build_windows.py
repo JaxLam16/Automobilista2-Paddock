@@ -8,6 +8,7 @@ import importlib.metadata as metadata
 import json
 from pathlib import Path
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -15,9 +16,10 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-RELEASE_NAME = 'AMS2-Paddock-0.1.0-alpha.4-Windows'
+RELEASE_NAME = 'AMS2-Paddock-0.1.0-alpha.8-Windows'
 USER_DOCS = ('QUICKSTART.md', 'ALPHA_NOTES.md', 'BALANCE_OF_PERFORMANCE_README.md',
-             'CAR_CONVERSION_README.md', 'LIVERY_EDITOR_README.md', 'CHAMPIONSHIP_LIVERIES.md', 'LIVERY_DESIGNER.md')
+             'CAR_CONVERSION_README.md', 'LIVERY_EDITOR_README.md', 'CHAMPIONSHIP_LIVERIES.md', 'LIVERY_DESIGNER.md', 'CREW_CHIEF.md',
+             'CORNER_SKILLS.md')
 DEPENDENCIES = ('numpy', 'pandas', 'pyarrow', 'pillow', 'pyinstaller',
                 'pyinstaller-hooks-contrib', 'packaging', 'python-dateutil', 'pytz', 'tzdata', 'six', 'setuptools')
 
@@ -34,6 +36,22 @@ def source_files():
     project = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))
     for pattern in project['tool']['setuptools']['package-data']['ams2season']:
         files.update(p for p in package.glob(pattern) if p.is_file())
+    # Keep the current pinned native libraries, not older hot-reload copies or
+    # incomplete compiler outputs that happen to share the assets directory.
+    assets = package / 'assets' / 'crew_chief'
+    current = set()
+    for name in ('audio_core', 'mapper_core'):
+        receipt = json.loads((assets / (name + '.build.json')).read_text(encoding='utf-8'))
+        filename = receipt.get('assembly_file', name + '.dll')
+        if not re.fullmatch(name + r'(?:\.[a-f0-9]{64})?\.dll', filename):
+            raise ValueError('Invalid native release assembly: ' + filename)
+        assembly = assets / filename
+        if sha(assembly) != receipt['assembly_sha256']:
+            raise ValueError('Native release assembly checksum mismatch: ' + filename)
+        current.add(assembly)
+    files = {p for p in files if not p.name.endswith(('.building', '.tmp')) and not (
+        p.parent == assets and re.fullmatch(r'(?:audio_core|mapper_core)(?:\.[a-f0-9]{64})?\.dll', p.name)
+        and p not in current)}
     for file in files:
         if file.is_symlink() or not file.resolve().is_relative_to(package.resolve()):
             raise ValueError(f'Invalid source path: {file}')
@@ -66,6 +84,7 @@ def collect_notices(destination):
         raise ValueError('Python LICENSE.txt was not found; cannot assemble runtime notices.')
     shutil.copy2(python_license, destination / 'PYTHON_LICENSE.txt')
     shutil.copy2(ROOT / 'ams2season' / 'LIVERY_EDITOR_NOTICES.txt', destination / 'PCarsTools_MIT.txt')
+    shutil.copy2(ROOT / 'ams2season/assets/crew_chief/LICENSE', destination / 'CrewChiefV4_MIT.txt')
     for name in ('three', 'three-mesh-bvh'):
         source = ROOT / 'ams2season/designer/web/vendor' / name / 'LICENSE'
         if source.exists():
@@ -129,9 +148,17 @@ def main():
                 parts.pop()
             command += ['--hidden-import', '.'.join(parts)]
     command.append(str(entry))
+    # Expanded data paths can exceed Windows' CreateProcess command-line limit.
+    # Feed the same arguments to PyInstaller inside a tiny isolated Python runner.
+    arguments = stage / 'pyinstaller-arguments.json'
+    arguments.write_text(json.dumps(command[3:]), encoding='utf-8')
+    runner = stage / 'freeze.py'
+    runner.write_text("import json\nfrom pathlib import Path\nfrom PyInstaller.__main__ import run\n"
+                      "run(json.loads(Path(__file__).with_name('pyinstaller-arguments.json').read_text(encoding='utf-8')))\n",
+                      encoding='utf-8')
     log_path = stage / 'pyinstaller.log'
     with log_path.open('w', encoding='utf-8') as log:
-        result = subprocess.run(command, cwd=snapshot, stdout=log, stderr=subprocess.STDOUT)
+        result = subprocess.run([sys.executable, str(runner)], cwd=snapshot, stdout=log, stderr=subprocess.STDOUT)
     if result.returncode:
         raise RuntimeError(f'PyInstaller failed. See {log_path}')
     output.parent.mkdir(exist_ok=True)
@@ -147,7 +174,8 @@ def main():
             'architecture': platform.machine(), 'dependencies': versions,
             'source_files': {file.relative_to(ROOT).as_posix(): sha(snapshot / file.relative_to(ROOT)) for file in files},
             'launcher_sha256': sha(entry), 'signed': False,
-            'personal_data_included': False, 'game_content_included': False}
+            'personal_data_included': False, 'game_content_included': False,
+            'voice_audio_included': False, 'full_crew_chief_parity': False}
     (output / 'BUILD_INFO.json').write_text(json.dumps(info, indent=2), encoding='utf-8')
     payload = sorted(file for file in output.rglob('*') if file.is_file())
     manifest = {file.relative_to(output).as_posix(): sha(file) for file in payload}

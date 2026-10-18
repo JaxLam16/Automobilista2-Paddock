@@ -2,8 +2,52 @@
 var IdentityUI = (function () {
   "use strict";
   var pending = {}, seen = {};
+  var presetCatalogue;
   function norm(s) { return String(s || "").toLowerCase().trim().replace(/\s+/g, " "); }
   function className(s) { return norm(String(s || '').replace(/_/g, ' ')); }
+  function presetNorm(s) { return norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function namePresets(cfg, onPick, currentName) {
+    var box=h('details',null,h('summary',null,'Choose a preset name (mix any lists)'));
+    var built=false;
+    box.ontoggle=function(){
+      if(!box.open||built)return;built=true;
+      var search=h('input',{type:'search',placeholder:'Search names or series','aria-label':'Search preset driver names',style:{width:'100%',maxWidth:'420px'}});
+      var choice=h('select',{'aria-label':'Preset driver name',style:{width:'100%',maxWidth:'420px'}});
+      var note=h('p',{class:'hint',role:'status'}),groups=[];
+      box.appendChild(h('p',{class:'hint'},'Pick one driver at a time from any group. Mix series and eras freely; custom names still work.'));
+      box.appendChild(search);box.appendChild(choice);box.appendChild(note);
+      function options(){
+        var query=presetNorm(search.value);
+        fill(choice,h('option',{value:''},'Choose an individual driver…'));
+        groups.forEach(function(group){
+          var names=group.names.filter(function(name){return !query||presetNorm(name+' '+group.label).indexOf(query)>=0;});
+          if(!names.length)return;
+          var optgroup=h('optgroup',{label:group.label});
+          names.forEach(function(name){
+            var used=cfg.drivers.some(function(d){return presetNorm(d.display)===presetNorm(name)&&presetNorm(d.display)!==presetNorm(currentName||'');});
+            optgroup.appendChild(h('option',{value:group.id+'|'+name,disabled:used},name+(used?' (already in roster)':'')));
+          });choice.appendChild(optgroup);
+        });
+      }
+      search.oninput=options;
+      choice.onchange=function(){
+        if(!choice.value)return;
+        var split=choice.value.indexOf('|'),group=groups.find(function(g){return g.id===choice.value.slice(0,split);});
+        var name=choice.value.slice(split+1);
+        if(!group||group.names.indexOf(name)<0)return;
+        if(cfg.drivers.some(function(d){return presetNorm(d.display)===presetNorm(name)&&presetNorm(d.display)!==presetNorm(currentName||'');})){
+          note.textContent='That driver is already in this championship.';return;
+        }
+        onPick(name);choice.value='';options();
+        fill(note,'Selected '+name+' from '+group.label+'. '+(group.note||'')+' Checked '+group.checked+'. ',
+          h('a',{href:group.sources[0],target:'_blank',rel:'noopener'},'Official source'));
+      };
+      presetCatalogue=presetCatalogue||api('/api/driver-name-presets');
+      presetCatalogue.then(function(data){groups=data.groups;options();note.textContent='Season lists checked '+data.updated+'. Legend lists are curated selections. Choosing a name does not replace your roster.';})
+        .catch(function(e){presetCatalogue=null;note.textContent='Presets unavailable: '+e.message;});
+    };
+    return box;
+  }
   function thumbnail(binding) {
     if (!binding || !binding.livery_id) return null;
     return h('img', {src: binding.image || (binding.preview ? 'data:image/png;base64,' + binding.preview : '/api/liveries/image?car=' + encodeURIComponent(binding.car_id) + '&livery=' + encodeURIComponent(binding.livery_id)),
@@ -96,9 +140,10 @@ var IdentityUI = (function () {
           if (colors) colors.refresh();
         }, null, cfg.car_class);
         var colors = replayColor(binding, function () {});
-        return h("details", {class: "panel pad", open: !driver.display, style: {marginTop: "12px"}},
+        return h("details", {class: "panel pad", open: !driver.display || !binding.livery_id, style: {marginTop: "12px"}},
           h("summary", null, preview, h("b", null, driver.display || (driver.role === 'ai' ? "New fictional AI" : 'New human friend')), driver.role === 'ai' ? ' · AI' : ' · Human friend', description),
           driver.role === 'ai' ? h("label", {class: "field"}, h("span", null, "Fictional driver name"), h("input", {type: "text", value: driver.display || "", "aria-label": "Fictional driver name", oninput: function (e) { driver.display = e.target.value; }})) : null,
+          driver.role === 'ai' ? namePresets(cfg,function(name){driver.display=name;draw();},driver.display) : null,
           h("label", {class: "field"}, h("span", null, "Recorded car model (use the exact name shown in a recording)"), model), picker,
           colors,
           driver.role === 'ai' ? h("button", {class: "btn ghost small", type: "button", style: {marginTop: "12px"}, onclick: function () { cfg.drivers.splice(cfg.drivers.indexOf(driver), 1); draw(); }}, "Remove fictional AI") :
@@ -117,7 +162,12 @@ var IdentityUI = (function () {
         h("button", {class: "btn ghost small", type: "button", style: {marginTop: "12px"}, onclick: function () {
           cfg.drivers.push({key: "ai-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7), role: "ai", display: "", aliases: [], livery: {}});
           cfg.livery_ai = true; draw();
-        }}, "Add fictional AI driver")));
+        }}, "Add fictional AI driver"),
+        namePresets(cfg,function(name){
+          cfg.drivers.push({key:'ai-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),
+            role:'ai',display:name,aliases:[],livery:{}});
+          cfg.livery_ai=true;draw();
+        }),h('p',{class:'hint'},'Add any mix of preset and custom AI names, assign their cars and liveries, then Save changes.')));
     }
     box.refresh = draw;
     api("/api/identities/catalog").then(function (c) { catalog = c; draw(); }).catch(function (e) { draw(); box.appendChild(h("p", {class: "lose"}, e.message)); });

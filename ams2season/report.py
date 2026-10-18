@@ -373,7 +373,7 @@ footer{color:var(--faint);font-size:.85rem;margin-top:56px;border-top:1px solid 
 
   <section>
     <h2>Gap to the leader</h2>
-    <p class="explain">Seconds behind whoever was leading at each lap line. Flat lines are a car holding pace; a cliff is a pit stop, spin or off.</p>
+    <p class="explain">Elapsed-time gap at the same completed race distance, including full-lap deficits. The horizontal axis is each driver's completed lap; lapped finishers end earlier. The full gap range is shown. A rising line means time lost, with no automatic diagnosis of the cause.</p>
     <div class="panel scroll"><svg id="gapchart" role="img" aria-label="Gap to leader by lap"></svg></div>
   </section>
 
@@ -596,10 +596,12 @@ function watchBtn(t){
   var gaps = [];
   D.drivers.forEach(function(d){ (D.laps[d.name] || []).forEach(function(p){ if (p.gap != null) gaps.push(p.gap); }); });
   gaps.sort(function(a, b){ return a - b; });
-  var cap = gaps.length ? Math.max(5, gaps[Math.floor(gaps.length * 0.9)] * 1.25) : 10;
-  var step = cap > 60 ? 15 : cap > 30 ? 10 : cap > 12 ? 5 : cap > 6 ? 2 : 1;
+  var maximum = gaps.length ? gaps[gaps.length - 1] : 10;
+  var rough = Math.max(1, maximum / 6), power = Math.pow(10, Math.floor(Math.log10(rough)));
+  var step = [1, 2, 5, 10].map(function(v){ return v * power; }).find(function(v){ return v >= rough; });
+  var cap = Math.max(5, Math.ceil(maximum * 1.05 / step) * step);
   var x = function(l){ return left + (l - 1) * (W - left - right) / Math.max(L - 1, 1); };
-  var y = function(g){ return top + Math.min(g, cap) / cap * (H - top - bottom); };
+  var y = function(g){ return top + g / cap * (H - top - bottom); };
   for (var s = 0; s <= cap; s += step) {
     svg.appendChild(sv("line", {x1: left, x2: W - right, y1: y(s), y2: y(s), stroke: "var(--line)", "stroke-width": 1}));
     svg.appendChild(sv("text", {x: left - 10, y: y(s) + 4, "text-anchor": "end", "font-size": 12, "class": "faint"}, s === 0 ? "Leader" : "+" + s + "s"));
@@ -617,8 +619,8 @@ function watchBtn(t){
     var last = laps[laps.length - 1];
     if (!d.is_ai) {
       g.appendChild(sv("circle", {cx: x(last.lap), cy: y(last.gap), r: 4, fill: colorOf(d.name)}));
-      if (last.lap === L) g.appendChild(sv("text", {x: W - right + 10, y: y(last.gap) + 4, "font-size": 13, "font-weight": 600},
-        d.name + (last.gap > cap ? " (+" + Math.round(last.gap) + "s)" : "")));
+      g.appendChild(sv("text", {x: Math.min(W-right+10,x(last.lap)+10), y: y(last.gap) + 4, "font-size": 13, "font-weight": 600},
+        d.name + " +" + last.gap.toFixed(1) + "s · L" + last.lap));
     }
     g.addEventListener("click", function(){ setFocus(d.name); }); g.style.cursor = "pointer";
     svg.appendChild(g);

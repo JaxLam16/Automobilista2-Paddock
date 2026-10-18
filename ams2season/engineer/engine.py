@@ -14,7 +14,7 @@ import pandas as pd
 
 from .catalog import BY_KEY, CATEGORIES, CORNER, action_text, garage_hint
 
-ENGINE_VERSION = 3   # bump when recommendations or breakdowns change shape: older sessions are re-evaluated when opened
+ENGINE_VERSION = 4   # bump when recommendations or breakdowns change shape: older sessions are re-evaluated when opened
 from .corners import corner_balance, find_corners
 from .evidence import braking_traction, gearing, platform, thermals, tyres
 
@@ -433,6 +433,7 @@ def _has_evidence(cat: str, m: dict) -> bool:
 
 
 TYRE_CHANGE_AT_PCT = 70.0   # plan a tyre change before the worst tyre is this worn
+LOW_FUEL_GAP_L = 30.0       # a low-fuel comparison run only when race fuel is at least this much heavier
 
 
 def race_fuel(state: dict, m: dict | None) -> dict | None:
@@ -504,20 +505,59 @@ def race_fuel(state: dict, m: dict | None) -> dict | None:
             "wear_per_lap_pct": round(worst_race, 3) if worst_race else None, "tyre_life_laps": life, "notes": notes}
 
 
+FIRST_RUN = {"fuel_l": None, "tyres": "Slick", "laps": 4,
+             "objective": "Learn the track and do at least two clean flying laps, so I can measure fuel use and work out what the race needs."}
+
+
+def low_fuel_l(per_lap_l: float) -> int:
+    """Enough for an out lap, a few flying laps, an in lap and a small reserve."""
+    return int(math.ceil(per_lap_l * 5 + 3))
+
+
+def race_run_fuel(rf: dict | None, cap: float) -> int | None:
+    """What a race-fuel practice run carries: the race's starting fuel, or a full tank when the race
+    needs more than one tank (the longest stint can then run on a full one)."""
+    if not rf:
+        return None
+    if not rf.get("per_lap_l"):
+        return 0                  # fuel usage is off for the race: no fuel is used
+    return int(cap) if rf["litres"] > cap else int(min(rf["start_fuel_l"], cap))
+
+
 def next_run(state: dict, m: dict | None, recs: list[dict]) -> dict:
+    """The next practice run. Fuel is planned from measurement, never a full tank by default: the
+    first run goes out on whatever is in; once fuel use and lap time are known, one run carries race
+    fuel (a full tank only when the race needs more than a tank); a low-fuel comparison follows only
+    when race fuel is heavy enough for the difference to matter."""
     runs = state.get("runs_analysed", 0)
     rf = race_fuel(state, m)
     cap = ((m or {}).get("fuel") or {}).get("capacity_l") or 120
-    if runs == 0 or not state.get("high_fuel_done"):
-        return {"fuel_l": int(cap), "tyres": "Slick", "laps": 6, "objective": "Full tank: measure fuel use and tyre behaviour, and see the car's pace on maximum fuel."
-                + (" (No full-tank run yet: the runs so far were on low fuel.)" if runs else "")}
-    if not state.get("low_fuel_done"):
-        low = int(math.ceil((rf["per_lap_l"] if rf else 3.0) * 5 + 3))
-        return {"fuel_l": low, "tyres": "Slick", "laps": 4, "objective": "Low fuel: compare your pace with the full-tank run to learn what the fuel load costs."}
-    if recs:
-        return {"fuel_l": min(rf["start_fuel_l"], int(cap)) if rf else int(cap * 0.5), "tyres": "Slick", "laps": 5,
-                "objective": f"Try the {len(recs)} change{'s' if len(recs) != 1 else ''} below and confirm they help."}
-    return {"fuel_l": min(rf["start_fuel_l"], int(cap)) if rf else int(cap * 0.5), "tyres": "Slick", "laps": 5,
+    race_l = race_run_fuel(rf, cap)
+    changes = (f"Try the {len(recs)} change{'s' if len(recs) != 1 else ''} below and confirm they help."
+               if recs else None)
+    if race_l is None:
+        if runs == 0:
+            return dict(FIRST_RUN)
+        unmeasured = "Fuel use isn't measured yet: do at least two clean flying laps (fuel usage must be on in practice)."
+        return {"fuel_l": None, "tyres": "Slick", "laps": 4,
+                "objective": (changes + " " + unmeasured) if changes else unmeasured}
+    if race_l == 0:
+        light = low_fuel_l(rf.get("per_lap_measured_l") or 3.0)
+        return {"fuel_l": light, "tyres": "Slick", "laps": 5,
+                "objective": changes or "Fuel usage is off for the race, so the fuel load doesn't matter there: run light and work on the setup."}
+    if not state.get("high_fuel_done"):
+        heavy = race_l >= cap
+        return {"fuel_l": race_l, "tyres": "Slick", "laps": 5,
+                "objective": ("Full tank: the race needs more than one, so feel the car on the heaviest stint you'll run." if heavy
+                              else "Race fuel: what the race needs plus a lap in reserve, so you feel the car on the fuel you'll start with.")}
+    per_practice = rf.get("per_lap_measured_l") or rf["per_lap_l"]
+    low = low_fuel_l(per_practice)
+    if not state.get("low_fuel_done") and race_l - low >= LOW_FUEL_GAP_L:
+        return {"fuel_l": low, "tyres": "Slick", "laps": 4,
+                "objective": "Low fuel: compare your pace with the race-fuel run to learn what the fuel load costs."}
+    if changes:
+        return {"fuel_l": race_l, "tyres": "Slick", "laps": 5, "objective": changes}
+    return {"fuel_l": race_l, "tyres": "Slick", "laps": 5,
             "objective": "Setup is settled: a race-fuel confirmation run, or you're ready to go racing."}
 
 

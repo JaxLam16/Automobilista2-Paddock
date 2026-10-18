@@ -1,0 +1,35 @@
+{
+  "IS_MY_PIT_BOX_OCCUPIED": [
+    "is my pit box occupied",
+    "is my pit stall occupied"
+  ],
+  "WHATS_PITLANE_SPEED_LIMIT": [
+    "what's the pitlane speed limit",
+    "what's the pit speed limit",
+    "pit speed limit"
+  ],
+  "HOW_MANY_LAPS_SINCE_PITTING": [
+    "how many laps since I pitted",
+    "how long since I pitted"
+  ],
+  "DO_I_HAVE_A_MANDATORY_PIT_STOP": [
+    "do I have to pit",
+    "do I need to pit",
+    "do I have a mandatory pit stop",
+    "do I have a mandatory stop",
+    "do I have to make a pit stop"
+  ],
+  "SESSION_STATUS": [
+    "session status",
+    "race status"
+  ],
+  "STATUS": [
+    "full update",
+    "full status",
+    "update me"
+  ],
+  "WHAT_ARE_THE_PIT_ACTIONS": [
+    "what are the pit actions",
+    "what's the pitstop plan"
+  ]
+}

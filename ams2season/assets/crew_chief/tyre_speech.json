@@ -1,0 +1,127 @@
+{
+  "HOWS_MY_FRONT_CAMBER": [
+    "how's my front camber"
+  ],
+  "HOWS_MY_FRONT_CAMBER_RIGHT_NOW": [
+    "how's my front camber right now"
+  ],
+  "HOWS_MY_LEFT_FRONT_CAMBER": [
+    "how's my left front camber"
+  ],
+  "HOWS_MY_LEFT_FRONT_CAMBER_RIGHT_NOW": [
+    "how's my left front camber right now"
+  ],
+  "HOWS_MY_LEFT_REAR_CAMBER": [
+    "how's my left rear camber"
+  ],
+  "HOWS_MY_LEFT_REAR_CAMBER_RIGHT_NOW": [
+    "how's my left rear camber right now"
+  ],
+  "HOWS_MY_REAR_CAMBER": [
+    "how's my rear camber"
+  ],
+  "HOWS_MY_REAR_CAMBER_RIGHT_NOW": [
+    "how's my rear camber right now"
+  ],
+  "HOWS_MY_RIGHT_FRONT_CAMBER": [
+    "how's my right front camber"
+  ],
+  "HOWS_MY_RIGHT_FRONT_CAMBER_RIGHT_NOW": [
+    "how's my right front camber right now"
+  ],
+  "HOWS_MY_RIGHT_REAR_CAMBER": [
+    "how's my right rear camber"
+  ],
+  "HOWS_MY_RIGHT_REAR_CAMBER_RIGHT_NOW": [
+    "how's my right rear camber right now"
+  ],
+  "HOWS_MY_TYRE_WEAR": [
+    "how's my tire wear",
+    "what's my tire wear",
+    "tire wear",
+    "how are my tires"
+  ],
+  "HOW_ARE_MY_BRAKE_TEMPS": [
+    "how are my brake temps",
+    "how are my brake temperatures"
+  ],
+  "HOW_ARE_MY_FRONT_TYRE_PRESSURES": [
+    "how are my front pressures",
+    "how are my front tire pressures"
+  ],
+  "HOW_ARE_MY_FRONT_TYRE_PRESSURES_RIGHT_NOW": [
+    "how are my front pressures right now",
+    "how are my front tire pressures right now"
+  ],
+  "HOW_ARE_MY_REAR_TYRE_PRESSURES": [
+    "how are my rear pressures",
+    "how are my rear tire pressures"
+  ],
+  "HOW_ARE_MY_REAR_TYRE_PRESSURES_RIGHT_NOW": [
+    "how are my rear pressures right now",
+    "how are my rear tire pressures right now"
+  ],
+  "HOW_ARE_MY_TYRE_PRESSURES": [
+    "how are my pressures",
+    "how are my tire pressures"
+  ],
+  "HOW_ARE_MY_TYRE_PRESSURES_RIGHT_NOW": [
+    "how are my pressures right now",
+    "how are my tire pressures right now"
+  ],
+  "HOW_ARE_MY_TYRE_TEMPS": [
+    "how are my tire temps",
+    "how are my tire temperatures"
+  ],
+  "HOW_LONG_WILL_THESE_TYRES_LAST": [
+    "how long will the tires last",
+    "how long on these tires",
+    "how long will these tires last"
+  ],
+  "HOW_MANY_LAPS_ON_TYRE_SET": [
+    "how many laps on tire set",
+    "how many laps are on tire set"
+  ],
+  "HOW_OLD_ARE_THESE_TYRES": [
+    "how old are these tires"
+  ],
+  "WHAT_ARE_MY_BRAKE_TEMPS": [
+    "what are my brake temps",
+    "what are my brake temperatures",
+    "brake temps",
+    "brake temperatures"
+  ],
+  "WHAT_ARE_MY_LEFT_FRONT_SURFACE_TEMPS": [
+    "what are my left front surface temps"
+  ],
+  "WHAT_ARE_MY_LEFT_REAR_SURFACE_TEMPS": [
+    "what are my left rear surface temps"
+  ],
+  "WHAT_ARE_MY_RIGHT_FRONT_SURFACE_TEMPS": [
+    "what are my right front surface temps"
+  ],
+  "WHAT_ARE_MY_RIGHT_REAR_SURFACE_TEMPS": [
+    "what are my right rear surface temps"
+  ],
+  "WHAT_ARE_MY_TYRE_PRESSURES": [
+    "what are my tire pressures",
+    "tire pressures"
+  ],
+  "WHAT_ARE_MY_TYRE_TEMPS": [
+    "what are my tire temps",
+    "what are my tire temperatures",
+    "tire temps",
+    "tire temperatures"
+  ],
+  "WHAT_ARE_THE_RELATIVE_TYRE_PERFORMANCES": [
+    "give me tyre pace differences",
+    "what are the tire speeds",
+    "whats the difference between tires",
+    "compare tire compounds"
+  ],
+  "WHAT_TYRES_AM_I_ON": [
+    "what tires am i on",
+    "what tire am i on",
+    "what tire type am i on"
+  ]
+}

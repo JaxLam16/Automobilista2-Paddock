@@ -1,4 +1,4 @@
-# Automobilista 2 Paddock — first alpha
+# Automobilista 2 Paddock — Windows alpha
 
 Paddock records AMS2 sessions, builds championship standings and helps you review
 race pace, braking, throttle, tyres and driving consistency. It also includes
@@ -12,8 +12,8 @@ selected paint colors and pictures appear in replay. Follow the
 
 ## Run the Windows alpha
 
-Download [0.1.0 Alpha 4 for Windows](https://github.com/JaxLam16/Automobilista2-Paddock/releases/tag/v0.1.0-alpha.4)
-and choose the `AMS2-Paddock-0.1.0-alpha.4-Windows.zip` asset.
+Download [0.1.0 Alpha 8 for Windows](https://github.com/JaxLam16/Automobilista2-Paddock/releases/tag/v0.1.0-alpha.8)
+and choose the `AMS2-Paddock-0.1.0-alpha.8-Windows.zip` asset.
 
 1. Extract the **entire ZIP** to a writable folder, such as `Documents\AMS2 Paddock`.
 2. Double-click **AMS2 Paddock.exe**. Keep the `_internal` folder beside it.
@@ -37,9 +37,17 @@ Do not replace your working installation with an old incremental update installe
 
 ## Feature guides
 
+- [Corner skills, minimal overlay and reference sharing](docs/CORNER_SKILLS.md)
 - [Balance of Performance](docs/BALANCE_OF_PERFORMANCE_README.md)
 - [Car conversion and custom classes](docs/CAR_CONVERSION_README.md)
 - [Livery editor](docs/LIVERY_EDITOR_README.md)
+- [Crew Chief connection](docs/CREW_CHIEF.md) — local radio connection and a spoken check; automatic corner coaching is planned.
+
+Alpha 8 includes experimental live coaching and setup/skill overlays. It contains
+no voice pack, personal speech or original Crew Chief audio. Original baseline
+integration needs a compatible local Crew Chief installation and sound pack;
+cached Daniel audio is not bundled. Keep Crew Chief available for established
+race calls. Full call parity and automatic league synchronization are unfinished.
 
 ## Livery designer
 

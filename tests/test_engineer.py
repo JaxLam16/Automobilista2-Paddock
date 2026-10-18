@@ -86,7 +86,10 @@ def test_workflow_on_real_runs(runs, tmp_path):
     r1 = s["runs"][-1]
     assert r1["measure"]["n_flying"] >= 1 and len(r1["measure"]["corners"]) >= 8
     assert any(r["setting"] == "final_drive" and r["ticks"] > 0 for r in r1["recommendations"])   # 6th gear never near the limiter
-    assert s["next_run"]["fuel_l"] >= 100 and s["race_fuel"]["litres"] > 60                        # 25 L was a low-fuel run: full tank next; race fuel for 60 min
+    # The measured 60-minute race load is below a full tank. The practice plan
+    # should use that load, as requested, rather than the old 100+ litre default.
+    assert 60 < s["next_run"]["fuel_l"] < 100 and s["race_fuel"]["litres"] > 60
+    assert s["next_run"]["objective"].startswith("Race fuel")
     assert s["flags"]["low_fuel_done"] and not s["flags"].get("high_fuel_done")
     s = st.decide(s["key"], {}, manual=[{"setting": "downforce_rear", "ticks": 2}, {"setting": "arb_front", "ticks": 2}])
     assert s["ticks"] == {"downforce_rear": 2, "arb_front": 2}

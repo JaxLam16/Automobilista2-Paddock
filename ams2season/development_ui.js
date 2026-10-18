@@ -7,8 +7,9 @@ window.AMS2CampaignUI = function (ui) {
   var url = function (id) { return "/api/championships/" + encodeURIComponent(id); };
   var link = function (id, tab, label) { return h("a", {class: "btn ghost small", href: "#/champ/" + id + "/" + tab}, label); };
   function slotsDialog(d, id, w) {
-    w = w || {round: Math.max(0, ...(d.weekends || []).map(function (x) { return x.round; })) + 1};
-    return api("/api/recordings").then(function (R) {
+    return Promise.all([api("/api/recordings"),api(url(id)+'/weekends')]).then(function (values) {
+      var R=values[0],weekends=values[1];
+      w=w||{round:weekends.next_round||Math.max(0,...(weekends.weekends||[]).map(function(x){return x.round;}))+1};
       var round = h("input", {type: "number", min: 1, max: 999, value: w.round, required: true, disabled: !!w.sessions});
       var name = h("input", {value: w.name || "", placeholder: "Optional weekend name"});
       function pick(role, type) {
@@ -26,7 +27,8 @@ window.AMS2CampaignUI = function (ui) {
       ui.dialog("Weekend recordings", [field("Weekend", round), field("Name", name),
         h("div", {class: "campaign-grid"}, field("Practice 1 · setup and track learning", p1), field("Practice 2 · development test", p2)),
         h("p", {class: "hint"}, "Practice 1 stays out of season ratings and championship points. Choose your R&D goals after P1 and before assigning P2."),
-        h("h3", null, "Qualifying + race"), field("Race recording", race), field("Paired qualifying recording", quali),
+        h("h3", null, "Qualifying + race · optional"), field("Race recording", race), field("Paired qualifying recording", quali),
+        h("p", {class: "hint"}, "Save with Practice 1 only to start R&D now. Qualifying and race recordings can be added later."),
         h("p", {class: "hint"}, "Keep the recorder running through qualifying and the race. AMS2 records each session separately; they appear together as one weekend entry here.")
       ], function () {
         return api(url(id) + "/weekends", "POST", {round: Number(round.value), name: name.value, practice1: p1.value, practice2: p2.value, race: race.value, qualify: quali.value})
@@ -36,6 +38,18 @@ window.AMS2CampaignUI = function (ui) {
   }
   function weekendSection(d, id) {
     var rows = d.weekends || [];
+    function deleteWeekend(w) {
+      return api(url(id)+'/weekends/'+w.round).then(function(review){
+        if(!review.can_delete){fail(new Error(review.blocked_reason));return;}
+        ui.dialog('Delete Weekend '+w.round,[h('p',null,review.note),
+          h('p',null,review.filed_sessions+' filed sessions · '+review.practice_entries+' practice entries · '+review.corrections+' corrections.'),
+          h('p',null,review.development_history+' R&D history entries retained; '+review.unearned_plans+' unassessed plans cancelled.'),
+          h('p',{class:'hint'},'Recordings kept: '+(review.recordings.join(', ')||'none assigned'))],
+          function(){return api(url(id)+'/weekends/'+w.round,'DELETE',{token:review.token}).then(function(result){
+            toast('Weekend deleted. Championship backup saved at '+result.backup);render();ui.refreshNav();
+          });},'Delete weekend');
+      }).catch(function(e){fail(new Error((e.message||String(e))+' If this update was just installed, restart Paddock after recording finishes.'));});
+    }
     function slot(w, role, title, text) {
       var r = (w.sessions || {})[role];
       return h("div", {class: "campaign-slot"}, h("p", {class: "kicker"}, title), h("p", {class: "hint"}, text),
@@ -55,8 +69,9 @@ window.AMS2CampaignUI = function (ui) {
       rows.length ? rows.map(function (w) {
         return h("article", {class: "panel pad campaign-weekend"}, h("div", {class: "headrow"}, h("div", null,
           h("h3", null, "Weekend " + w.round + (w.name ? " · " + w.name : "")), h("p", {class: "muted"}, (w.track || "Track not assigned").replace(/_/g, " "))),
-          h("div", {class: "actions"}, h("button", {class: "btn ghost small", onclick: function () { slotsDialog(d, id, w); }}, "Assign recordings"), link(id, "development", "R&D"))),
-          h("div", {class: "campaign-weekend-grid"}, slot(w, "practice1", "01 / Practice 1", "Engineer setup and a 3-lap reference."),
+          h("div", {class: "actions"}, h("button", {class: "btn ghost small", onclick: function () { slotsDialog(d, id, w); }}, "Assign recordings"), link(id, "development", "R&D"),
+            h('button',{class:'btn ghost small',onclick:function(){deleteWeekend(w);}},'Delete weekend'))),
+          h("div", {class: "campaign-weekend-grid"}, slot(w, "practice1", "01 / Practice 1", "Engineer setup and a reference from one or more clean laps."),
             slot(w, "practice2", "02 / Practice 2", "Test your locked development objectives."),
             h("div", {class: "campaign-slot"}, h("p", {class: "kicker"}, "03 / Qualifying + race"),
               slot(w, "qualify", "Qualifying", "Grid preparation."), slot(w, "race", "Race", "Points and season ratings."))));
@@ -72,6 +87,33 @@ window.AMS2CampaignUI = function (ui) {
     }
     function draw(D) {
       var cfg = D.config, available = D.catalog.filter(function (c) { return c.available; });
+      var ai=D.ai_development||{},aiEnabled=h('input',{type:'checkbox',checked:!!ai.enabled,'aria-label':'Enable automatic AI development'});
+      var aiRateLabel=h('span',null,(ai.rate_pct==null?100:ai.rate_pct)+'%');
+      var aiRate=h('input',{type:'range',min:0,max:200,step:25,value:ai.rate_pct==null?100:ai.rate_pct,'aria-label':'AI development rate',oninput:function(e){aiRateLabel.textContent=e.target.value+'%';}});
+      var aiPanel=h('details',{class:'panel pad'},h('summary',null,'AI development rate'),
+        h('label',null,aiEnabled,' Automatic AI-only car development'),h('label',null,'Development rate ',aiRate,aiRateLabel),
+        h('p',{class:'hint'},ai.rate_description||'100% earns one minor upgrade level per eligible AI-only car per weekend.'),
+        h('p',{class:'hint'},'Progress starts with the next unfinished weekend and is earned when P2 or a race is assigned. 0% pauses progress. AMS2 must be closed before queued physics upgrades apply. Shared human/AI car models are excluded; assign cars to every human first.'),
+        h('p',{class:'hint'},'Eligible models: '+((ai.eligible_cars||[]).map(function(c){return c.name;}).join(', ')||'none')),
+        (ai.held_cars||[]).map(function(c){return h('p',{class:'hint warnline'},c.model+': '+c.reason);}),
+        h('p',{class:'hint'},(ai.jobs||[]).filter(function(j){return j.state==='queued';}).length+' queued · '+(ai.jobs||[]).filter(function(j){return j.state==='applied';}).length+' applied.'),
+        (ai.jobs||[]).filter(function(j){return j.error;}).map(function(j){return h('p',{class:'hint warnline'},j.car+': '+j.error);}),
+        h('button',{class:'btn ghost small',onclick:function(){action('ai-configure',{enabled:aiEnabled.checked,rate_pct:Number(aiRate.value)},'AI development rate saved.');}},'Save AI development rate'));
+      var states=D.saved_states||{}, stateName=h('input',{'aria-label':'R&D state name',placeholder:'State name',maxLength:100});
+      var stateChoice=h('select',{'aria-label':'Saved championship R&D state'},h('option',{value:''},'Choose saved state'),(states.snapshots||[]).map(function(s){return h('option',{value:s.id},s.name+' · '+ui.fmtDate(s.created));}));
+      function reviewState(kind) {
+        return api(url(id)+'/development/preview-state','POST',{kind:kind,state:stateChoice.value}).then(function(review){
+          var rows=review.changes.map(function(c){return h('div',null,h('h4',null,c.name),h('ul',null,c.parameters.map(function(p){return h('li',null,p.parameter+': '+p.before+' → '+p.after);})));});
+          ui.dialog(kind==='reset'?'Reset all cars to no R&D':'Load '+review.state_name,
+            [h('p',null,review.note),h('p',{class:'hint'},'Close AMS2 before applying. The outgoing championship state is checkpointed automatically. Research points and completed history stay saved.'),rows],
+            function(){return api(url(id)+'/development/apply-state','POST',{token:review.token}).then(function(){toast('Championship car state applied.');return refresh();});},'Apply reviewed state');
+        }).catch(fail);
+      }
+      var statePanel=h('details',{class:'panel pad'},h('summary',null,'Championship R&D save states'),
+        h('p',{class:'hint'},states.is_active===false?'Another championship state is active; this championship’s automatic upgrades are held until you load or reset its state.':'Save the current research parameters, or reset all journalled research before starting this championship.'),
+        h('div',{class:'actions'},stateName,h('button',{class:'btn ghost small',disabled:states.is_active===false,onclick:function(){api(url(id)+'/development/save-state','POST',{name:stateName.value}).then(function(){toast('R&D state saved.');refresh();}).catch(fail);}},'Save current R&D state')),
+        h('div',{class:'actions'},stateChoice,h('button',{class:'btn ghost small',onclick:function(){reviewState('load');}},'Review saved state'),
+          h('button',{class:'btn ghost small',onclick:function(){reviewState('reset');}},'Review reset of all R&D')));
       var path = h("input", {value: D.physics.game_path || "", placeholder: "C:\\...\\Automobilista 2", "aria-label": "AMS2 installation folder"});
       var car = h("select", {"aria-label": "Championship development car"}, h("option", {value: ""}, "Choose installed car"),
         D.cars.map(function (c) { return h("option", {value: c.id, selected: cfg.car === c.id}, c.name + " · " + c.class); }));
@@ -85,11 +127,29 @@ window.AMS2CampaignUI = function (ui) {
         field("Championship car", car), field("Car name in telemetry (if different)", telemetryName),
         h("label", {class: "check"}, auto, "Automatically apply earned upgrades when AMS2 is closed"),
         h("button", {class: "btn", onclick: function () { action("configure", {car: car.value, telemetry_car: telemetryName.value, automatic: auto.checked}, "Development car saved."); }}, "Use this installed car"));
+      function normalizedCar(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
       var choices = D.weekends.filter(function (w) { return w.practice1 && !w.practice2 && !w.development.length; });
-      if (!choices.some(function (w) { return w.round === currentRound; })) currentRound = choices.length ? choices[0].round : null;
-      var week = h("select", {"aria-label": "Development weekend", onchange: function (e) { currentRound = Number(e.target.value); }},
-        choices.map(function (w) { return h("option", {value: w.round, selected: currentRound === w.round}, "Weekend " + w.round + " · " + (w.track || "").replace(/_/g, " ")); }));
-      var planButton = h("button", {class: "btn", disabled: !cfg.car || !choices.length || !selected.size, onclick: function () {
+      function matchesCar(w) {
+        var name=((w.sessions||{}).practice1||{}).car;
+        return !!name && !!cfg.telemetry_car && normalizedCar(name)===normalizedCar(cfg.telemetry_car);
+      }
+      if (!choices.some(function (w) { return w.round === currentRound; })) {
+        var matching=choices.filter(matchesCar).sort(function(a,b){return b.round-a.round;});
+        currentRound=matching.length?matching[0].round:choices.length?choices[choices.length-1].round:null;
+      }
+      var referenceNote=h('p',{role:'status','aria-label':'Development P1 reference'}),planButton;
+      function updateReference() {
+        var w=choices.find(function(w){return w.round===currentRound;}),r=w&&((w.sessions||{}).practice1||{}),match=w&&matchesCar(w);
+        referenceNote.className=match?'hint':'hint warnline';
+        referenceNote.textContent=!w?'Assign Practice 1 before planning development.':
+          'Weekend '+w.round+' P1: '+(r.car||'unknown car')+' · '+(r.started_at?ui.fmtDate(r.started_at):w.practice1)+
+          '. R&D car: '+(cfg.name||'not selected')+'.'+(!match?' Choose a P1 recorded in the R&D car.':'');
+        if(planButton)planButton.disabled=!cfg.car||!selected.size||!match;
+      }
+      var week = h("select", {"aria-label": "Development weekend", onchange: function (e) { currentRound = Number(e.target.value); updateReference(); }},
+        choices.map(function (w) { var r=((w.sessions||{}).practice1||{});return h("option", {value: w.round, selected: currentRound === w.round},
+          "Weekend " + w.round + " · " + (r.car||'Unknown P1 car')+' · '+(w.track || "").replace(/_/g, " ")+(matchesCar(w)?'':' · different car')); }));
+      planButton = h("button", {class: "btn", disabled: true, onclick: function () {
         action("plan", {round: Number(week.value), categories: Array.from(selected)}, "Development objectives locked for Practice 2.").then(function () { selected.clear(); });
       }}, "Lock Practice 2 objectives");
       var catalog = h("div", {class: "campaign-catalog"}, D.catalog.map(function (c) {
@@ -97,7 +157,7 @@ window.AMS2CampaignUI = function (ui) {
           "aria-label": "Develop " + c.name, onchange: function () {
             if (inp.checked && selected.size >= 2) { inp.checked = false; toast("Choose up to two development areas."); return; }
             if (inp.checked) selected.add(c.id); else selected.delete(c.id);
-            planButton.disabled = !selected.size || !cfg.car || !choices.length;
+            updateReference();
           }});
         return h("label", {class: "panel pad campaign-category" + (!c.available ? " campaign-unavailable" : "")},
           h("div", {class: "headrow"}, h("b", null, c.name), inp), h("p", {class: "hint"}, c.description),
@@ -124,7 +184,10 @@ window.AMS2CampaignUI = function (ui) {
             function () { return action("undo", {plan: p.id}, "Physics upgrade restored from backup."); }, "Undo upgrade");
         }}, "Undo latest upgrade"));
         return h("article", {class: "panel pad campaign-plan"}, h("div", {class: "headrow"}, h("h3", null, "Weekend " + p.round + " development"), h("span", {class: "badge"}, p.state)),
-          h("p", {class: "muted"}, p.driver + " · " + p.car_name + " · P1 reference " + ui.lapTime(p.baseline.median) + " from laps " + p.baseline.reference_laps.join(", ")),
+          p.weekend_deleted?h('p',{class:'hint'},'Weekend deleted. Earned research and upgrade history retained.'):null,
+          h("p", {class: "muted"}, p.driver + " · " + p.car_name + " · P1 reference " + ui.lapTime(p.baseline.average == null ? p.baseline.median : p.baseline.average) +
+            (p.baseline.average == null ? " (saved median)" : " (average)") + " from laps " + p.baseline.reference_laps.join(", ") +
+            (p.baseline.reference_laps.length === 1 ? " · One-lap estimate; more clean laps improve the reference." : "")),
           h("div", {class: "campaign-grid"}, rows.map(function (x) {
             var c = D.catalog.find(function (c) { return c.id === x.category; });
             return h("div", null, h("h4", null, c ? c.name : x.category), h("ul", {class: "tips"}, x.objectives.map(function (o) {
@@ -132,7 +195,8 @@ window.AMS2CampaignUI = function (ui) {
                 o.actual != null ? h("span", {class: "muted"}, " Measured: " + o.actual + (o.laps.length ? " · laps " + o.laps.join(", ") : "")) : o.passed === false ? " No eligible sample." : "");
             })));
           })),
-          evaluation ? h("p", null, passed + " objective" + (passed === 1 ? "" : "s") + " met · " + Object.values(p.upgrades).reduce(function (a, b) { return a + b; }, 0) + " upgrade levels earned.") : null,
+          evaluation ? h("p", null, passed + " objective" + (passed === 1 ? "" : "s") + " met · " + Object.values(p.upgrades).reduce(function (a, b) { return a + b; }, 0) + " upgrade levels earned." +
+            (evaluation.sample_quality === 'single_lap' ? " One-lap assessment; precision is limited." : "")) : null,
           p.error ? h("p", {class: "muted"}, p.error) : null,
           p.physics_changes ? h("details", null, h("summary", null, "Applied physics changes"), p.physics_changes.map(function (c) {
             return h("ul", {class: "tips"}, c.parameters.map(function (v) { return h("li", null, v.parameter + ": " + Number(v.before).toPrecision(6) + " → " + Number(v.after).toPrecision(6) + " " + v.unit); }));
@@ -140,14 +204,17 @@ window.AMS2CampaignUI = function (ui) {
           p.transaction ? h("p", {class: "hint campaign-file"}, "Transaction " + p.transaction) : null,
           h("div", {class: "actions", style: {marginTop: "12px"}}, controls));
       });
+      updateReference();
       box.replaceChildren(h("div", {class: "headrow", style: {marginTop: "24px"}}, h("div", null, h("h2", null, "Research & development"),
         h("p", {class: "explain"}, "Two areas per weekend. Each completed objective earns a research point; every two points unlock one small upgrade, up to eight levels per area. Partial credit carries through the season.")), link(id, "rounds", "Weekend recordings")),
-        h("p", {class: "hint"}, "Rewards modify the installed car’s physics. Game files are backed up; queued upgrades apply after AMS2 closes. These are campaign rewards, and do not promise a particular lap-time improvement."), binding,
+        h("p", {class: "hint"}, "Start with Practice 1 only: one clean flying lap is enough. Practice 2 also needs only one clean lap; extra eligible clean laps are averaged. Qualifying and a race are optional until later."),
+        h("div", {class: "actions"}, h("button", {class: "btn ghost small", onclick: function () { slotsDialog(D, id); }}, "Start with Practice 1")),
+        h("p", {class: "hint"}, "Rewards modify the installed car’s physics. Game files are backed up; queued upgrades apply after AMS2 closes. These are campaign rewards, and do not promise a particular lap-time improvement."), statePanel,aiPanel,binding,
         plans.length ? h("section", null, h("h3", null, "Your development programme"), plans) : null,
         h("div", {class: "headrow", style: {margin: "24px 0 16px"}}, h("div", null, h("h3", null, "Choose your next development areas"),
           h("p", {class: "hint"}, available.length + " areas supported by this installed car.")), choices.length ? week : null),
         !choices.length ? h("p", {class: "muted"}, "Assign P1 to a new weekend before choosing its development areas.") : null,
-        catalog, h("div", {class: "actions", style: {marginTop: "18px"}}, planButton));
+        referenceNote,catalog, h("div", {class: "actions", style: {marginTop: "18px"}}, planButton));
       var pending = D.plans.some(function (p) { return p.state === "queued" || p.state === "applying"; });
       if (pending && !timer) timer = setInterval(refresh, 5000);
       if (!pending && timer) { clearInterval(timer); timer = null; }

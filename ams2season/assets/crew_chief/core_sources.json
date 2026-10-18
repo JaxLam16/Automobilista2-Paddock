@@ -1,0 +1,139 @@
+{
+  "ConditionsMonitor.cs": {
+    "original": "diagnostics\\cc-mapper-20261016\\Events\\ConditionsMonitor.cs",
+    "sha256": "2cba7685acfe26bbf79ef297400af24ea1573440382cb68372cf19c839e55187",
+    "transformation": "none"
+  },
+  "AbstractEvent.cs": {
+    "original": "diagnostics\\cc-next-20261015\\Events\\AbstractEvent.cs",
+    "sha256": "828b619dad40f8476c26199843260314279b579f94e5d716a82b069e58612c90",
+    "transformation": "none"
+  },
+  "QueuedMessage.cs": {
+    "original": "diagnostics\\cc-audio-20261016\\QueuedMessage.cs",
+    "sha256": "1a533aebd522bffbc70cc3134673670dd57768caba155377c7b12a9d65d21c2f",
+    "transformation": "none"
+  },
+  "SoundMetadata.cs": {
+    "original": "diagnostics\\cc-weather-20261016\\SoundMetadata.cs",
+    "sha256": "0320898ca27e7c6099d8257dc7123a045a4640ce77f6b71112169d9abc2a8b13",
+    "transformation": "none"
+  },
+  "core_message_utils.cs": {
+    "original": "diagnostics/cc-mapper-20261016/Utilities.cs",
+    "sha256": "ff97b603f4e0a8701b122771e8bacb051a6e58b8acc55265f8bcc148f4b042c8",
+    "transformation": "two unchanged fractional-number methods with namespace/using wrappers"
+  },
+  "core_commands.cs": {
+    "original": "diagnostics/cc-next-20261015/SpeechCommands.cs",
+    "sha256": "cbcd290bc7b12febeb58e387d58aa9573ab91f46aef0090c5a9ef16e5fca6f02",
+    "transformation": "unchanged full ID enum; typed command dispatcher only, full grammar pending"
+  },
+  "EngineMonitor.cs": {
+    "original": "diagnostics/cc-next-20261015/Events/EngineMonitor.cs",
+    "sha256": "336a728eb21d26702a373309b1ab110a026e0750030ad79a2411eb804497675a",
+    "transformation": "none"
+  },
+  "DamageReporting.cs": {
+    "original": "diagnostics\\cc-baseline-next-20261016\\DamageReporting.cs",
+    "original_sha256": "f7f2968b821db02448546220ef6382265a7cdff6b9470eb478de2cca50e2c88c",
+    "sha256": "58b1a505afaa54a474dd7a7d863f1775a32d750804736c703f9f85c3dce091f0",
+    "transformation": "one DateTime.UtcNow read replaced by MapperClock.UtcNow; all event logic unchanged"
+  },
+  "Fuel.cs": {
+    "original": "diagnostics\\cc-baseline-next-20261016\\Fuel.cs",
+    "original_sha256": "8f5986c2b901dbca7fdbd81ceda11d44c88415c95c274ec00405ee6cddf069ec",
+    "sha256": "8f5986c2b901dbca7fdbd81ceda11d44c88415c95c274ec00405ee6cddf069ec",
+    "transformation": "none"
+  },
+  "Fuel_legacy.cs": {
+    "original": "diagnostics\\cc-fuel-20261016\\Fuel_legacy.cs",
+    "original_sha256": "df2f7a0fdc80a882bbedeb0089f1527dab3e1b8b21341aa66b4726cc4f97e78e",
+    "sha256": "df2f7a0fdc80a882bbedeb0089f1527dab3e1b8b21341aa66b4726cc4f97e78e",
+    "transformation": "none"
+  },
+  "Fuel.TopicWindow.cs": {
+    "original": "diagnostics\\cc-fuel-20261016\\Fuel.TopicWindow.cs",
+    "original_sha256": "756e0d1986f883f02bbc6f688f24befa6d529c71ce06d23e378db84c29876a66",
+    "sha256": "1de9e16b3f709afeb9085545bd07bdbca5e0368ffd4f4af307e803b91693b5db",
+    "transformation": "2 UTC clock reads injected"
+  },
+  "RaceTime.cs": {
+    "original": "diagnostics\\cc-weather-20261016\\RaceTime.cs",
+    "original_sha256": "65a86222c8862c41247d1101f4682ba1c2c9452f2d651604358b627400afbc13",
+    "sha256": "65a86222c8862c41247d1101f4682ba1c2c9452f2d651604358b627400afbc13",
+    "transformation": "none"
+  },
+  "PitStops.cs": {
+    "original": "diagnostics\\cc-baseline-next-20261016\\PitStops.cs",
+    "original_sha256": "fb1b9eabf1da6b49efd9ba81900d4490f1544f9a9c8f46ef7eee6d69af9faa51",
+    "sha256": "fb1b9eabf1da6b49efd9ba81900d4490f1544f9a9c8f46ef7eee6d69af9faa51",
+    "transformation": "none"
+  },
+  "Position.cs": {
+    "original": "diagnostics/cc-baseline-next-20261016/Position.cs",
+    "original_sha256": "be42192b1c1e313212b34df4008b6ccf3d3192bb048f7cdde4705bc3464f8820",
+    "sha256": "be42192b1c1e313212b34df4008b6ccf3d3192bb048f7cdde4705bc3464f8820",
+    "transformation": "none"
+  },
+  "LapCounter.cs": {
+    "original": "diagnostics\\cc-baseline-next-20261016\\LapCounter.cs",
+    "sha256": "8d714327666f36eecabefab261f8b4564f9576b4c5af54c07b58d1298fa6b2fa",
+    "transformation": "none",
+    "original_sha256": "8d714327666f36eecabefab261f8b4564f9576b4c5af54c07b58d1298fa6b2fa"
+  },
+  "Timings.cs": {
+    "original": "diagnostics/cc-timing-prep-20261016/Timings.cs",
+    "sha256": "80af8c8212479a1aa5010b9ecd8d6e3aa11c2511181f5d6de073f64db9ce90a4",
+    "transformation": "none",
+    "original_sha256": "80af8c8212479a1aa5010b9ecd8d6e3aa11c2511181f5d6de073f64db9ce90a4"
+  },
+  "OpponentMessages.cs": {
+    "original": "diagnostics/cc-timing-prep-20261016/OpponentMessages.cs",
+    "sha256": "be225beb3564eff95cac7acdfddc41e7a77b23ab0d25801bb980a77122b4562e",
+    "transformation": "none",
+    "original_sha256": "be225beb3564eff95cac7acdfddc41e7a77b23ab0d25801bb980a77122b4562e"
+  },
+  "SessionEndMessages.cs": {
+    "original": "diagnostics/cc-timing-legacy-prep-20261017/dependency-IL-source/CrewChiefV4.Events.SessionEndMessages.cs",
+    "sha256": "c6c6e10f27a45643c08ac6d1e5a73d07d765d886ef7e5e9bee7354ab6f1021cf",
+    "transformation": "none; exact installed 4.19.5.4 IL source view",
+    "installed_exe_sha256": "b621c1daa0b25ab75b8f19bbb7a89fc49fcdafa4c2996cd737732be5a6ff16ec",
+    "caller_audit": "diagnostics/cc-session-end-20261017/installed-provenance.json"
+  },
+  "Timings_legacy.cs": {
+    "original": "diagnostics/cc-timing-legacy-prep-20261017/installed-IL-source/Timings_legacy.cs",
+    "sha256": "e4d9a30328babdeddfc438945cebef32d7c1b524e23cf219f39f8d2eb3e36029",
+    "transformation": "none; exact installed 4.19.5.4 IL source view",
+    "installed_exe_sha256": "b621c1daa0b25ab75b8f19bbb7a89fc49fcdafa4c2996cd737732be5a6ff16ec",
+    "boundary_audit": "diagnostics/cc-legacy-timings-20261017/candidate-provenance.json"
+  },
+  "TyreMonitor.cs": {
+    "original": "diagnostics/cc-tyres-prep-20261017/installed-IL-source/CrewChiefV4.Events.TyreMonitor.cs",
+    "sha256": "d0b24d38a71c612e0fff67742117e87376c78b2ef646be9adbbdc2b533aaf7f1",
+    "original_sha256": "d0b24d38a71c612e0fff67742117e87376c78b2ef646be9adbbdc2b533aaf7f1",
+    "transformation": "none; unchanged installed 4.19.5.4 IL source view",
+    "installed_exe_sha256": "b621c1daa0b25ab75b8f19bbb7a89fc49fcdafa4c2996cd737732be5a6ff16ec"
+  },
+  "TyrePerformanceContainer.cs": {
+    "original": "diagnostics/cc-tyres-prep-20261017/dependency-IL-source/CrewChiefV4.Events.TyrePerformanceContainer.cs",
+    "sha256": "55568cb76550691b28757a54567764e26d0ff7754945a0b94d6c07d567b4d39a",
+    "original_sha256": "55568cb76550691b28757a54567764e26d0ff7754945a0b94d6c07d567b4d39a",
+    "transformation": "none; unchanged installed 4.19.5.4 IL source view",
+    "installed_exe_sha256": "b621c1daa0b25ab75b8f19bbb7a89fc49fcdafa4c2996cd737732be5a6ff16ec"
+  },
+  "LapTimes.cs": {
+    "original": "diagnostics\\cc-laptimes-prep-20261017\\installed-IL-source\\CrewChiefV4.Events.LapTimes.cs",
+    "sha256": "1ba0069c97fff8d20944a9fda37cf93c280a22a9bfa5c17237968d1db92414f8",
+    "original_sha256": "1ba0069c97fff8d20944a9fda37cf93c280a22a9bfa5c17237968d1db92414f8",
+    "transformation": "none; unchanged installed 4.19.5.4 IL source view",
+    "installed_exe_sha256": "b621c1daa0b25ab75b8f19bbb7a89fc49fcdafa4c2996cd737732be5a6ff16ec"
+  },
+  "LapTimes_legacy.cs": {
+    "original": "diagnostics\\cc-laptimes-prep-20261017\\installed-IL-source\\CrewChiefV4.Events.LapTimes_legacy.cs",
+    "sha256": "52453810a7d2a2d01800b541bdfddf8c373d788a1e87c65959f782302a91f7fc",
+    "original_sha256": "52453810a7d2a2d01800b541bdfddf8c373d788a1e87c65959f782302a91f7fc",
+    "transformation": "none; unchanged installed 4.19.5.4 IL source view",
+    "installed_exe_sha256": "b621c1daa0b25ab75b8f19bbb7a89fc49fcdafa4c2996cd737732be5a6ff16ec"
+  }
+}

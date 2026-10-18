@@ -114,6 +114,21 @@ def test_missing_exit_edge_stays_unavailable_without_losing_apex_distance():
     assert d['apex_gap_m'] is not None
     assert d['exit_gap_m'] is None and d['track_usage'] is None
     assert d['exit_treatment'] == 'unavailable' and d['edge_source'] == 'estimated'
+
+
+def test_long_continuous_sequence_exempts_exit_without_requiring_next_kerb():
+    ld,left,right=geometry()
+    off=np.interp(ld,[0,150,230,270,1000],[-5.15,-5.15,5.15,0,0])
+    curvature=np.full(200,.004);curvature[80:]=-.004
+    following={'name':'Following bend','apex':530.,'dir':'right','radius':250}
+    c={'name':'First bend','apex':250.,'dir':'left','radius':250}
+    d=corner_track_usage(ld,off,c,1000,left,right,720,280,next_corner=following,curvature=curvature)
+    normal=corner_track_usage(ld,off,c,1000,left,right,720,280,next_corner=following)
+    assert d['exit_treatment']=='linked_corner' and d['exit_gap_m']==normal['exit_gap_m']
+    assert d['track_usage']>normal['track_usage']
+    curvature[70:82]=0
+    d=corner_track_usage(ld,off,c,1000,left,right,720,280,next_corner=following,curvature=curvature)
+    assert d['exit_treatment']=='normal'
     empty = corner_track_usage(ld, off, {'apex': 250, 'dir': 'left'}, 1000, [], [], 1000, 1000)
     assert empty['exit_gap_m'] is None
 

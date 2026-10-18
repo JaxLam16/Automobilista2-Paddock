@@ -1,0 +1,31 @@
+{
+  "LapCounter.cs": {
+    "original": "diagnostics\\cc-baseline-next-20261016\\LapCounter.cs",
+    "sha256": "8d714327666f36eecabefab261f8b4564f9576b4c5af54c07b58d1298fa6b2fa",
+    "transformation": "none",
+    "original_sha256": "8d714327666f36eecabefab261f8b4564f9576b4c5af54c07b58d1298fa6b2fa"
+  },
+  "dependencies": {
+    "diagnostics\\cc-lapcounter-20261016\\Opponents.cs": "f645b87168c50ec5e2f1c0959cbe67261f11f3e0f247af32fa9019d559586490",
+    "diagnostics\\cc-lapcounter-20261016\\Spotter.cs": "ce345d51be0ffa5c31499e97b65f843e8ef256403acbe51b06e465f33cb3ac72",
+    "diagnostics\\cc-headless-20261016\\Audio\\AudioPlayer.cs": "5624cfdab1b5bf3a72e794df7b51e2b183c41145b10dc8e960db36775ade6d9b",
+    "diagnostics\\cc-fuel-20261016\\Strategy.cs": "a4c83dcdcad35fb05cc213c653a904439ccfbe13040bb4b2c3a38e99166c7800",
+    "diagnostics\\cc-pitstops-20261016\\FrozenOrderMonitor.cs": "d0873ceccc408cd5879e57b9f0d3a2193029438be47919dce1919b6516e397fe"
+  },
+  "boundaries": [
+    "manual formation grid-side bridge pending; optional mode withheld",
+    "original shared reputation helper has its genuine AMS2 no-op; R3E/iRacing resource boundaries throw",
+    "full Opponents and Strategy event bodies pending"
+  ],
+  "projected_sources": {
+    "lapcounter_dependencies.cs": "f5b5698331c6c49210606013d205496fee8a3fa758388584ec2751e0f68f05a5",
+    "lapcounter_host.cs": "ef0589c29d45907ad9b48f95fdc7f6e605ab8a838af964ed2c04275357c0673d",
+    "mapper_host.cs": "32a28b0de5b499b505ff8b527321f02d00b1540e0be260e280d16f19c6ae07a4",
+    "fuel_host.cs": "5c96de8f42012816f21f306019fe00cf9a62e90656478cc345987522c84a2907",
+    "fuel_dependencies.cs": "8362c5f29c4361e0536670cd2c60247041fd07330391fb7677bdae084ef164eb",
+    "pit_dependencies.cs": "33f3a8aa372d4d622ed679921ec047a2cfe85c4c853ec424571f35b721e45f5e",
+    "core_events.cs": "79bb2b5a087fb878a3824e19fe6f2d9bf79896c5ee69b2fc706976f1fd07d569",
+    "audio_metadata_host.cs": "148d529065d4da49d2179f96b46253c371fba2cf27dec4fe3a245ba5626192fe"
+  },
+  "projection_note": "Unchanged dependency method bodies/fields with wrappers; Strategy MessageContents explicitly qualified; iRacing/RF2 and manual-mode unsupported boundaries declared."
+}

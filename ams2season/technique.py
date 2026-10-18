@@ -112,6 +112,13 @@ def recording_laps(sess: Session) -> tuple[str | None, list, float]:
                "gear": seg.gear.to_numpy(float) if "gear" in seg.columns else None,
                "steer": seg.steering.to_numpy(float) * 100 if "steering" in seg.columns else None,
                "s1": lap.s1, "s2": lap.s2, "s3": lap.s3}
+        from .skills import CHANNELS
+        for key in CHANNELS:
+            if key in seg.columns:
+                rec[key] = seg[key].to_numpy(float)
+        for key in ('x','z'):
+            if key in fr.columns:
+                rec[key] = np.interp(seg.t.to_numpy(float), fr.t.to_numpy(float), fr[key].to_numpy(float))
         if has_tyres:
             for k in ("wear", "ttemp", "press", "btemp", "rps"):
                 for w in WHEELS:
@@ -406,6 +413,7 @@ def corner_shapes(laps: list, corners: list, L: float, max_traces: int = 12, rac
     xb = np.arange(BRAKE_WIN[0], BRAKE_WIN[1] + STEP, STEP)
     xt = np.arange(THROTTLE_WIN[0], THROTTLE_WIN[1] + STEP, STEP)
     xs = np.arange(-150, 100 + STEP, STEP)
+    xi = np.arange(min(BRAKE_WIN[0], THROTTLE_WIN[0]), max(BRAKE_WIN[1], THROTTLE_WIN[1]) + STEP, STEP)
     good = [lp for lp in laps if lp["valid"]] or laps
     best = min(good, key=lambda lp: lp["time"]) if good else None
     filtered = []
@@ -420,7 +428,7 @@ def corner_shapes(laps: list, corners: list, L: float, max_traces: int = 12, rac
         brake_bounds = (BRAKE_WIN[0], min(BRAKE_WIN[1], after / 2))
         brake_peak_bounds = (max(BRAKE_WIN[0], -before / 2), min(20.0, after / 2))
         throttle_bounds = (max(THROTTLE_WIN[0], -before / 2), min(THROTTLE_WIN[1], after / 2))
-        rows, Bs, Ts, score_Bs, score_Ts = [], [], [], [], []
+        rows, Bs, Ts, score_Bs, score_Ts, inputs = [], [], [], [], [], []
         for lp in filtered:
             B, T = _trace(lp, "brake", apex, L, xb), _trace(lp, "throttle", apex, L, xt)
             V = _trace(lp, "speed", apex, L, xs)
@@ -443,6 +451,9 @@ def corner_shapes(laps: list, corners: list, L: float, max_traces: int = 12, rac
                 Bb = np.where(np.isfinite(Bb), 0, np.nan)
             met.update({"lap": lp["n"], "time": lp["time"], "best": lp["n"] == best["n"] if best is not None else False, "racing": bool((racing or {}).get((lp["n"], c["name"])))})
             rows.append(met)
+            inputs.append({'lap':lp['n'], 'brake':_trace(lp,'brake',apex,L,xi),
+                           'throttle':_trace(lp,'throttle',apex,L,xi),
+                           'steering':_trace(lp,'steer',apex,L,xi) if lp.get('steer') is not None else np.full(len(xi),np.nan)})
             Bs.append(B)
             Ts.append(T)
             score_Bs.append(Bb)
@@ -459,6 +470,11 @@ def corner_shapes(laps: list, corners: list, L: float, max_traces: int = 12, rac
         bi = next((i for i, r in enumerate(rows) if r["best"]), None)
         pick = list(range(len(rows)))[-max_traces:]
         r1 = lambda a: [None if not np.isfinite(v) else round(float(v), 1) for v in a]
+        mean_input = {}
+        for channel in ('brake','throttle','steering'):
+            values=np.vstack([entry[channel] for entry in inputs])
+            counts=np.isfinite(values).sum(axis=0)
+            mean_input[channel]=r1(np.divide(np.nansum(values,axis=0),counts,out=np.full(len(xi),np.nan),where=counts>0))
         scored_throttle = np.vstack(score_Ts)
         analysis_mean = np.divide(np.nansum(scored_throttle, axis=0), np.isfinite(scored_throttle).sum(axis=0),
                                   out=np.full(len(xt), np.nan), where=np.isfinite(scored_throttle).sum(axis=0) > 0)
@@ -469,6 +485,9 @@ def corner_shapes(laps: list, corners: list, L: float, max_traces: int = 12, rac
             "excluded_fallback": bool(any(flags) and (len(flags) - sum(flags)) < 3),
             "scores_by_mode": {m: v[0] for m, v in by_mode.items()}, "scatter_by_mode": {m: v[1] for m, v in by_mode.items()},
             "typical": typical, "describe": _describe(typical),
+            'inputs':{'x':r1(xi),'mean':mean_input,
+                      'laps':[{'lap':entry['lap'],**{key:r1(entry[key]) for key in ('brake','throttle','steering')}} for entry in inputs],
+                      'steering_unit':'percent of recorded normalized input; not steering-wheel degrees'},
             "brake": {"x": r1(xb), "mean": r1(mb), "p25": r1(np.nanpercentile(B, 25, axis=0)), "p75": r1(np.nanpercentile(B, 75, axis=0)),
                       "laps": [r1(B[i]) for i in pick], "best": r1(B[bi]) if bi is not None else None},
             "throttle": {"x": r1(xt), "mean": r1(mt), "p25": r1(np.nanpercentile(T, 25, axis=0)), "p75": r1(np.nanpercentile(T, 75, axis=0)),
@@ -597,7 +616,7 @@ def throttle_consistency_summary(report: dict) -> dict:
     return {mode: report.get("summary_by_mode", {}).get(mode, {}).get("throttle") for mode in MODES}
 
 
-def technique_report(path_or_session, corners_override=None, mode: str = "reduced") -> dict:
+def technique_report(path_or_session, corners_override=None, mode: str = "reduced", skill_geometry=None) -> dict:
     sess = path_or_session if isinstance(path_or_session, Session) else load_session(path_or_session)
     name, laps, L = recording_laps(sess)
     if not name or not laps:
@@ -661,6 +680,8 @@ def technique_report(path_or_session, corners_override=None, mode: str = "reduce
         if tyres and tyres["lockups_per_lap"] >= 0.3:
             tips.append(f"About {tyres['lockups_per_lap']:.1f} front lock-ups per lap: ease the initial brake hit slightly.")
         summary["tips"] = tips
+    from .skills import report as skill_report
+    if skill_geometry is not None and abs(skill_geometry.length-L)>.5:skill_geometry=None
     m = sess.meta
     return {"available": True, "driver": name, "session_type": sess.type, "folder": sess.path.name,
             "track": m.get("track_location_translated") or m.get("track_location"),
@@ -670,4 +691,4 @@ def technique_report(path_or_session, corners_override=None, mode: str = "reduce
             "best": min((lp["time"] for lp in good), default=None), "corners": shapes, "summary": summary, "tyres": tyres,
             "summary_by_mode": summary_by_mode, "racing_mode": mode,
             "racing_passes": sum(c["racing_laps"] for c in shapes), "passes": sum(len(c["laps"]) for c in shapes),
-            "map": track}
+            "map": track, "skills": skill_report(laps,corners,L,skill_geometry,racing)}

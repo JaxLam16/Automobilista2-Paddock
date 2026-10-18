@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import sqlite3
+import uuid
+from datetime import datetime,timezone
 from pathlib import Path
 
 from .season import connect, ingest
@@ -13,6 +17,83 @@ CREATE TABLE IF NOT EXISTS development(id TEXT PRIMARY KEY, round INTEGER NOT NU
     driver TEXT NOT NULL, car TEXT NOT NULL, state TEXT NOT NULL, data TEXT NOT NULL);
 """
 ROLES = {'practice1': 'practice', 'practice2': 'practice', 'qualify': 'qualify', 'race': 'race'}
+
+
+def next_round(lib,cid):
+    con=connection(lib._db(cid))
+    try:
+        values=[r[0] for table in ('weekend','event','development') for r in con.execute('SELECT round FROM '+table)]
+        row=con.execute("SELECT value FROM meta WHERE key='ai_development'").fetchone()
+        if row:values.extend(j['round'] for j in json.loads(row['value']).get('jobs',[]))
+        return max(values,default=0)+1
+    finally:con.close()
+
+
+def deletion_review(lib,cid,rnd):
+    if isinstance(rnd,bool) or not isinstance(rnd,int) or not 1<=rnd<=999:
+        raise ValueError('Choose a weekend number between 1 and 999.')
+    weekend=next((w for w in weekends(lib,cid) if w['round']==rnd),None)
+    if weekend is None:raise LookupError('This weekend is no longer in the championship.')
+    con=connection(lib._db(cid))
+    try:
+        event=con.execute('SELECT * FROM event WHERE round=?',(rnd,)).fetchone()
+        sessions=[dict(r) for r in con.execute('SELECT * FROM session WHERE event_id=? ORDER BY id',(event['id'],))] if event else []
+        practices=[dict(r) for r in con.execute('SELECT * FROM practice WHERE round=? ORDER BY id',(rnd,))]
+        corrections=[dict(r) for r in con.execute('SELECT * FROM correction WHERE round=? ORDER BY id',(rnd,))]
+        projects=[dict(r) for r in con.execute('SELECT * FROM development WHERE round=? ORDER BY id',(rnd,))]
+        plans=[json.loads(p['data']) for p in projects]
+        ai=con.execute("SELECT value FROM meta WHERE key='ai_development'").fetchone()
+        jobs=[j for j in json.loads(ai['value']).get('jobs',[]) if j['round']==rnd] if ai else []
+        blocked=any(p['state'] in ('queued','applying','blocked') for p in plans) or any(j['state']!='applied' for j in jobs)
+        snapshot={'championship':cid,'weekend':{k:v for k,v in weekend.items() if k not in ('sessions','development')},
+                  'event':dict(event) if event else None,'sessions':sessions,'practices':practices,
+                  'corrections':corrections,'projects':projects,'ai_jobs':jobs}
+        token=hashlib.sha256(json.dumps(snapshot,sort_keys=True,allow_nan=False).encode()).hexdigest()
+        recordings=set(w for role in ROLES if (w:=weekend.get(role)))
+        recordings.update(Path(s['path']).name for s in sessions+practices)
+        return {'round':rnd,'token':token,'recordings':sorted(recordings),'filed_sessions':len(sessions),
+                'practice_entries':len(practices),'corrections':len(corrections),'development_history':len(plans),
+                'unearned_plans':sum(not p.get('evaluation') for p in plans),
+                'can_delete':not blocked,'blocked_reason':'Resolve pending human/AI physics upgrades before deleting this weekend.' if blocked else None,
+                'note':'Removes this weekend and its filed results/points from this championship. Recording files are kept. Earned R&D and applied physics stay intact; unassessed plans are cancelled. A complete championship backup is saved first.'}
+    finally:con.close()
+
+
+def remove(lib,cid,rnd,token):
+    """Caller holds development/library locks. Never deletes recording or game files."""
+    review=deletion_review(lib,cid,rnd)
+    if not review['can_delete']:raise ValueError(review['blocked_reason'])
+    if not isinstance(token,str) or token!=review['token']:
+        raise ValueError('The weekend changed. Review its deletion again before continuing.')
+    db=lib._db(cid);con=connection(db)
+    try:
+        directory=db.parent/'backups';directory.mkdir(exist_ok=True)
+        stamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
+        backup=directory/f'{db.stem}-before-delete-weekend-{rnd}-{stamp}-{uuid.uuid4().hex}.db'
+        with sqlite3.connect(backup) as target:
+            con.backup(target)
+            if target.execute('PRAGMA integrity_check').fetchone()[0]!='ok':
+                raise ValueError('The championship backup did not verify; the weekend was kept.')
+        # Recheck after the backup, including earned/queued project changes.
+        if deletion_review(lib,cid,rnd)['token']!=token:
+            raise ValueError('The weekend changed. Review its deletion again before continuing.')
+        with con:
+            for row in con.execute('SELECT id,data FROM development WHERE round=?',(rnd,)).fetchall():
+                plan=json.loads(row['data']);plan['weekend_deleted']=True
+                if not plan.get('evaluation'):plan['state']='cancelled'
+                con.execute('UPDATE development SET state=?,data=? WHERE id=?',
+                            (plan['state'],json.dumps(plan,allow_nan=False),row['id']))
+            event=con.execute('SELECT id FROM event WHERE round=?',(rnd,)).fetchone()
+            if event:
+                con.execute('DELETE FROM session WHERE event_id=?',(event['id'],))
+                con.execute('DELETE FROM event WHERE id=?',(event['id'],))
+            con.execute('DELETE FROM correction WHERE round=?',(rnd,))
+            con.execute('DELETE FROM practice WHERE round=?',(rnd,))
+            con.execute('DELETE FROM weekend WHERE round=?',(rnd,))
+        lib._report_cache.clear()
+        return {'ok':True,'round':rnd,'backup':str(backup),'recordings_preserved':review['recordings'],
+                'development_history_retained':review['development_history']}
+    finally:con.close()
 
 
 def connection(db):

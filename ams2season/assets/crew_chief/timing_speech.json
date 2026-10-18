@@ -1,0 +1,47 @@
+{
+  "WHATS_MY_GAP_IN_FRONT": [
+    "what's the gap ahead",
+    "what's the gap in front",
+    "what's my gap ahead",
+    "whats my gap in front",
+    "gap in front",
+    "gap ahead"
+  ],
+  "WHATS_MY_GAP_BEHIND": [
+    "what's the gap behind",
+    "what's my gap behind",
+    "gap behind"
+  ],
+  "WHATS_MY_GAP_BEHIND_ON_TRACK": [
+    "what's the gap behind on track"
+  ],
+  "WHATS_MY_GAP_IN_FRONT_ON_TRACK": [
+    "what's the gap ahead on track"
+  ],
+  "WHATS_MY_GAP_TO_LEADER": [
+    "what's the gap to the leader"
+  ],
+  "WHATS_THE_LEADER_LAP": [
+    "what lap is the leader on"
+  ],
+  "WHERE_AM_I_FASTER": [
+    "where should I attack",
+    "where am I faster",
+    "where can I attack"
+  ],
+  "WHERE_AM_I_SLOWER": [
+    "where should I defend",
+    "where am I slower",
+    "where is he faster",
+    "where will he attack"
+  ],
+  "SESSION_STATUS": [
+    "session status",
+    "race status"
+  ],
+  "STATUS": [
+    "full update",
+    "full status",
+    "update me"
+  ]
+}

@@ -14,8 +14,9 @@ W = ("fl", "fr", "rl", "rr")
 
 
 class EngineerTracker:
-    def __init__(self, on_run_end=None, min_laps: int = 1):
+    def __init__(self, on_run_end=None, min_laps: int = 1, expected=None):
         self.on_run_end = on_run_end
+        self.expected = expected
         self.min_laps = min_laps
         self.rows, self.state = [], "garage"
         self.last_snap_t = None
@@ -25,6 +26,16 @@ class EngineerTracker:
 
     def feed(self, snap, now: float) -> None:
         try:
+            if self.expected:
+                from .. import shm as S
+                identity = {"car": S.cstr(snap.mCarName).strip(), "track": S.cstr(snap.mTrackLocation).strip(),
+                            "layout": S.cstr(snap.mTrackVariation).strip() or S.cstr(snap.mTrackLocation).strip()}
+                if (any(identity[k] != self.expected[k] for k in self.expected)
+                        or getattr(snap, "mGameState", S.GAME_INGAME_PLAYING) not in
+                        (S.GAME_INGAME_PLAYING, S.GAME_INGAME_PAUSED, S.GAME_INGAME_INMENU_TIME_TICKING)
+                        or getattr(snap, "mSessionState", S.SESSION_INVALID) == S.SESSION_INVALID):
+                    self.rows, self.state, self.last_snap_t = [], "garage", None
+                    return
             i = max(0, int(getattr(snap, "mViewedParticipantIndex", 0)))
             p = snap.mParticipantInfo[i]
             pit = int(getattr(snap, "mPitMode", 0))

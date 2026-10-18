@@ -1,0 +1,31 @@
+{
+  "HOWS_MY_PACE": [
+    "how's my pace"
+  ],
+  "HOWS_MY_SELF_PACE": [
+    "how's my self gap",
+    "how's my personal pace",
+    "how's my delta best"
+  ],
+  "WHATS_MY_BEST_LAP_TIME": [
+    "what's my best lap time",
+    "best lap time",
+    "best lap"
+  ],
+  "WHATS_MY_LAST_SECTOR_TIME": [
+    "what's my last sector time"
+  ],
+  "WHATS_THE_FASTEST_LAP_TIME": [
+    "what's the fastest lap",
+    "what's the fastest lap time"
+  ],
+  "WHAT_ARE_MY_SECTOR_TIMES": [
+    "what are my sector times"
+  ],
+  "WHAT_WAS_MY_LAST_LAP_TIME": [
+    "what's my last lap time",
+    "last lap time",
+    "lap time",
+    "what's my lap time"
+  ]
+}

@@ -4,14 +4,62 @@ measurements and recommendations, what you decided, and what one tick has been m
 from __future__ import annotations
 
 import json
+import hashlib
+import copy
 import re
+import threading
 import time
+from functools import wraps
 from pathlib import Path
 
 import pandas as pd
 
 from . import engine
 from .catalog import BY_KEY, CAT_LABEL, CATEGORIES
+
+_STORE_LOCK = threading.RLock()
+
+
+def _locked(method):
+    @wraps(method)
+    def run(*args, **kwargs):
+        with _STORE_LOCK:
+            return method(*args, **kwargs)
+    return run
+
+
+def recommendation_token(session, run, rec):
+    """Bind a garage decision to the exact analysed recommendation, not its setting alone."""
+    value = {'key': session.get('key'), 'car': session.get('car'), 'track': session.get('track'),
+             'layout': session.get('layout'), 'run': run.get('id'), 'analysed_at': run.get('analysed_at'),
+             'source': run.get('source'), 'recommendation': rec}
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def setup_review(session):
+    """Receipt for saved decisions; submitting acknowledges them without applying ticks again."""
+    run = (session.get('runs') or [None])[-1]
+    if not run:
+        return None
+    choices = {'applied', 'skipped', 'maxed', 'unavailable'}
+    items = [{'id': r['id'], 'setting': r['setting'], 'label': BY_KEY[r['setting']]['label'],
+              'ticks': r['ticks'], 'decision': (run.get('decisions') or {}).get(r['id']),
+              'revision': recommendation_token(session, run, r)}
+             for r in run.get('recommendations') or [] if r.get('setting') in BY_KEY
+             and r.get('ticks') and not r.get('info')]
+    remaining = sum(i['decision'] not in choices for i in items)
+    value = {'key': session.get('key'), 'car': session.get('car'), 'track': session.get('track'),
+             'layout': session.get('layout'), 'run_id': run['id'], 'items': items,
+             'pending_changes': session.get('pending_changes') or [], 'ticks': session.get('ticks') or {},
+             'maxed': session.get('maxed') or {}, 'unavailable': session.get('unavailable') or [],
+             'next_run': session.get('next_run') or {}}
+    token = hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    submission = run.get('setup_submission') or {}
+    return {**value, 'token': token, 'remaining': remaining,
+            'counts': {c: sum(i['decision'] == c for i in items) for c in sorted(choices)},
+            'can_submit': not remaining and bool(items or value['pending_changes']),
+            'submitted': submission.get('token') == token,
+            'submitted_at': submission.get('submitted_at') if submission.get('token') == token else None}
 
 LEARNABLE = {  # setting prefix -> (learned key, measurement, sign: + if positive ticks raise the measurement)
     "pressure_": ("pressure", "press_hot_bar", 1), "camber_": ("camber", "inner_minus_outer", 1),
@@ -38,6 +86,10 @@ class EngineerStore:
             raise LookupError("no such engineer session")
         return p
 
+    @_locked
+    def delete(self, key):
+        self.path(key).unlink(missing_ok=True)
+
     def list(self) -> list[dict]:
         out = []
         for f in sorted(self.dir.glob("*.json")) if self.dir.exists() else []:
@@ -50,6 +102,7 @@ class EngineerStore:
                         "updated": s.get("updated"), "categories": last["categories"] if last else None})
         return sorted(out, key=lambda x: x.get("updated") or "", reverse=True)
 
+    @_locked
     def get(self, key: str) -> dict:
         p = self.path(key)
         if not p.exists():
@@ -59,18 +112,29 @@ class EngineerStore:
             # analysed by an older engineer: bring the latest run's advice, colours and breakdowns up to date
             s.setdefault("flags", {}).setdefault("clean_streak", {})
             s["flags"].setdefault("tested", {})
+            if (s.get("fuel_plan") or 0) < 2:   # fuel runs are now judged against race fuel, not the tank
+                for k in ("high_fuel_done", "low_fuel_done", "high_fuel_run", "low_fuel_run"):
+                    s["flags"].pop(k, None)
+                for run in s["runs"]:
+                    self._mark_fuel(s, run["measure"])
+                s["fuel_plan"] = 2
             self._evaluate(s)
             self.save(s)
         return s
 
+    @_locked
     def save(self, s: dict) -> dict:
         s["updated"] = time.strftime("%Y-%m-%dT%H:%M:%S")
         if s.get("runs"):
             s["engine_version"] = engine.ENGINE_VERSION
         self.dir.mkdir(parents=True, exist_ok=True)
-        self.path(s["key"]).write_text(json.dumps(s), encoding="utf-8")
+        path = self.path(s['key'])
+        temporary = path.with_suffix('.json.tmp')
+        temporary.write_text(json.dumps(s), encoding='utf-8')
+        temporary.replace(path)
         return s
 
+    @_locked
     def create(self, car: str, track: str, layout: str, race_target: dict | None = None, **opts) -> dict:
         key = self.key(car, track, layout)
         try:
@@ -100,6 +164,7 @@ class EngineerStore:
                 "clean_streak": s["flags"].get("clean_streak", {}), "fuel_per_lap": (last.get("fuel") or {}).get("per_lap_l"),
                 "avg_lap": last.get("avg_lap")}
 
+    @_locked
     def add_run(self, key: str, lo: pd.DataFrame, L: float, source: str) -> dict:
         s = self.get(key)
         m = engine.measure_run(lo, L, s.get("corners"))
@@ -109,26 +174,33 @@ class EngineerStore:
         changes = s.get("pending_changes", [])
         learned_now = self._learn(s, prev, m, changes) if prev else []
         checks = self._verify(s, prev, m, changes)
-        # high- and low-fuel runs, judged on the tank itself (not relative to each other), and once both exist,
-        # what the fuel load costs per lap
-        f = m.get("fuel") or {}
-        if f.get("start_l") and f.get("capacity_l") and m.get("avg_lap"):
-            share = f["start_l"] / f["capacity_l"]
-            if share >= 0.7:
-                s["flags"]["high_fuel_done"] = True
-                s["flags"]["high_fuel_run"] = {"fuel_l": f["start_l"], "avg_lap": m["avg_lap"]}
-            elif share <= 0.35:
-                s["flags"]["low_fuel_done"] = True
-                s["flags"]["low_fuel_run"] = {"fuel_l": f["start_l"], "avg_lap": m["avg_lap"]}
-            hi, lo_ = s["flags"].get("high_fuel_run"), s["flags"].get("low_fuel_run")
-            if hi and lo_ and hi["fuel_l"] > lo_["fuel_l"] + 20:
-                s["fuel_effect_s_per_10l"] = round((hi["avg_lap"] - lo_["avg_lap"]) / (hi["fuel_l"] - lo_["fuel_l"]) * 10, 3)
+        self._mark_fuel(s, m)
         run = {"id": len(s["runs"]) + 1, "source": source, "analysed_at": time.strftime("%Y-%m-%dT%H:%M:%S"), "measure": m,
                "changes_before": changes, "compare": engine.compare(prev, m), "learned": learned_now, "checks": checks, "decisions": {}}
         s["runs"].append(run)
         s["pending_changes"] = []
         self._evaluate(s, new_run=True)
         return self.save(s)
+
+    def _mark_fuel(self, s: dict, m: dict) -> None:
+        """Race-fuel ("high") and low-fuel runs, judged on the tank itself, and once both exist, what the
+        fuel load costs per lap. "High" is race fuel or more: the race's starting fuel (a full tank when it
+        needs more than one), estimated from this run's own fuel use when it's the first measurement."""
+        f = m.get("fuel") or {}
+        if not (f.get("start_l") and f.get("capacity_l") and m.get("avg_lap")):
+            return
+        share = f["start_l"] / f["capacity_l"]
+        race_l = engine.race_run_fuel(engine.race_fuel(self._state(s), m), f["capacity_l"])
+        per = f.get("per_lap_l") or self._state(s).get("fuel_per_lap")
+        if share >= 0.7 or race_l is not None and f["start_l"] >= race_l - max(2.0, 0.1 * race_l):
+            s["flags"]["high_fuel_done"] = True
+            s["flags"]["high_fuel_run"] = {"fuel_l": f["start_l"], "avg_lap": m["avg_lap"]}
+        elif share <= 0.35 or per and f["start_l"] <= engine.low_fuel_l(per) + 3:
+            s["flags"]["low_fuel_done"] = True
+            s["flags"]["low_fuel_run"] = {"fuel_l": f["start_l"], "avg_lap": m["avg_lap"]}
+        hi, lo_ = s["flags"].get("high_fuel_run"), s["flags"].get("low_fuel_run")
+        if hi and lo_ and hi["fuel_l"] > lo_["fuel_l"] + 20:
+            s["fuel_effect_s_per_10l"] = round((hi["avg_lap"] - lo_["avg_lap"]) / (hi["fuel_l"] - lo_["fuel_l"]) * 10, 3)
 
     def _evaluate(self, s: dict, new_run: bool = False) -> None:
         """Recommendations, category colours and breakdowns, the qualifying variant and the plan for the latest
@@ -215,6 +287,7 @@ class EngineerStore:
                 out.append(f"ABS still reads {b1['abs_setting']}: the change doesn't seem to have gone in.")
         return out
 
+    @_locked
     def feedback(self, key: str, fb: dict) -> dict:
         """How the latest run felt. Re-evaluates that run's recommendations with it."""
         s = self.get(key)
@@ -236,6 +309,7 @@ class EngineerStore:
         return self.save(s)
 
     # ------------------------------------------------------------------------------------------ decisions
+    @_locked
     def decide(self, key: str, decisions: dict, manual: list | None = None) -> dict:
         """decisions: recommendation id -> "applied" | "maxed" | "unavailable" | "skipped" (for the latest run).
         manual: [{setting, ticks}] for changes you made yourself."""
@@ -246,7 +320,7 @@ class EngineerStore:
         changes = []
         for rec in run["recommendations"]:
             d = decisions.get(rec["id"])
-            if not d:
+            if not d or run.get('decisions', {}).get(rec['id']):
                 continue
             run["decisions"][rec["id"]] = d
             if d == "applied":
@@ -267,11 +341,56 @@ class EngineerStore:
         s["pending_changes"] = s.get("pending_changes", []) + changes
         return self.save(s)
 
+    @_locked
+    def decide_recommendation(self, key, run_id, rec_id, token, decision, *, guard=None):
+        """Overlay's idempotent single-card equivalent of the normal setup decisions."""
+        if decision not in ('applied', 'skipped', 'maxed', 'unavailable'):
+            raise ValueError('Choose Applied, Skipped, Maxed out or Unavailable.')
+        if guard is not None and not guard():
+            raise ValueError('Garage telemetry changed. No setup decision was saved.')
+        session = self.get(key)
+        run = (session.get('runs') or [None])[-1]
+        rec = next((r for r in (run or {}).get('recommendations', []) if r['id'] == rec_id), None)
+        if not run or run.get('id') != run_id or not rec or recommendation_token(session, run, rec) != token:
+            raise ValueError('This recommendation changed. Review the current garage checklist.')
+        previous = (run.get('decisions') or {}).get(rec_id)
+        if previous:
+            if previous == decision:
+                return {'saved': False, 'decision': previous, 'duplicate': True}
+            raise ValueError('This instruction was already reviewed. Review its decision on the Setup engineer page.')
+        if guard is not None and not guard():
+            raise ValueError('Garage telemetry changed. No setup decision was saved.')
+        self.decide(key, {rec_id: decision})
+        return {'saved': True, 'decision': decision, 'duplicate': False}
+
+    @_locked
+    def submit_changes(self, key, run_id, token, *, guard=None):
+        """Seal the reviewed setup for the next run. Never reapply saved decisions."""
+        def check_guard():
+            if guard is not None and not guard():
+                raise ValueError('Garage telemetry changed. Setup was not submitted.')
+        check_guard()
+        session = self.get(key)
+        review = setup_review(session)
+        if not review or review['run_id'] != run_id or review['token'] != token:
+            raise ValueError('The setup review changed. Review the current checklist before submitting.')
+        if not review['can_submit']:
+            raise ValueError('Review each setup instruction first: Applied, Skip, Maxed out or Not available.')
+        check_guard()
+        if review['submitted']:
+            return {'saved': False, 'duplicate': True, 'review': review}
+        session['runs'][-1]['setup_submission'] = copy.deepcopy({
+            'token': token, 'run_id': run_id, 'submitted_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
+            'items': review['items'], 'pending_changes': review['pending_changes'], 'next_run': review['next_run']})
+        self.save(session)
+        return {'saved': True, 'duplicate': False, 'review': setup_review(session)}
+
 
 def summary_for_ui(s: dict) -> dict:
     last = s["runs"][-1] if s.get("runs") else None
     return {**{k: v for k, v in s.items() if k != "runs"},
-            "runs": [{k: r.get(k) for k in ("id", "source", "analysed_at", "changes_before", "compare", "learned", "checks", "decisions", "feedback")}
+            "setup_review": setup_review(s),
+            "runs": [{k: r.get(k) for k in ("id", "source", "analysed_at", "changes_before", "compare", "learned", "checks", "decisions", "feedback", "setup_submission")}
                      | {"best_lap": r["measure"].get("best_lap"), "avg_lap": r["measure"].get("avg_lap"), "laps": r["measure"].get("n_flying"),
                         "fuel_start": (r["measure"].get("fuel") or {}).get("start_l"), "compound": r["measure"].get("compound")} for r in s.get("runs", [])],
             "latest": last, "category_labels": CAT_LABEL}

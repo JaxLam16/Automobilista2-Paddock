@@ -19,7 +19,7 @@ import pandas as pd
 from .passes import PassParams
 from .race import COUNTED, _norm, analyze_race
 
-ANALYSIS_VERSION = 3  # opportunity-aware starts and linked-corner exit clearance
+ANALYSIS_VERSION = 4  # continuous sequences do not require an isolated wide exit
 
 SCHEMA = """
 PRAGMA foreign_keys = ON;

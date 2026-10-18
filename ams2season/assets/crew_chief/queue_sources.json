@@ -1,0 +1,50 @@
+{
+  "queue_original.cs": {
+    "original": "diagnostics\\cc-headless-20261016\\Audio\\AudioPlayer.cs",
+    "methods": [
+      "public void enableKeepQuietMode()",
+      "public void disableKeepQuietMode()",
+      "private bool messageFunctionIsEmptyOrTrue(",
+      "private void playQueueContents(",
+      "private Boolean queueHasDueMessages(",
+      "public int purgeQueues(",
+      "private int purgeQueue(",
+      "public void playMessage(QueuedMessage queuedMessage)",
+      "public Boolean playRant(",
+      "public Boolean getDelayedRant(",
+      "public SoundType getPriortyOfFirstWaitingImmediateMessage()",
+      "public QueuedMessage getFirstWaitingImmediateMessage(",
+      "public void playMessageImmediately(",
+      "private int getInsertionIndex(",
+      "public void playMessage(QueuedMessage queuedMessage, PearlsOfWisdom.PearlType",
+      "public Boolean removeQueuedMessage(",
+      "public void removeImmediateMessages(",
+      "private Boolean checkPearlOfWisdomValid(",
+      "private Boolean clipIsPearlOfWisdom(",
+      "private Boolean hasPearlJustBeenPlayed()",
+      "public void suspendPearlsOfWisdom()",
+      "public void repeatLastMessage()",
+      "internal void pauseQueueAndPlayDelayedImmediateMessage(",
+      "public void wakeMonitorThreadForRegularMessages("
+    ],
+    "transformation": "unchanged original method bodies, namespace/using wrapper",
+    "sha256": "6a227b9e6779488debcf374ab0b5f5a746b421149d8cb5eb5d79381ab1d25c76"
+  },
+  "queue_moderator.cs": {
+    "original": "diagnostics\\cc-queue-20261016\\PlaybackModerator.cs",
+    "methods": [
+      "public static void UpdateAutoVerbosity(",
+      "public static bool MessageCanBeQueued(",
+      "public static bool ImmediateMessageCanBeQueued(",
+      "static PlaybackModerator()",
+      "private static Boolean CanInterrupt("
+    ],
+    "transformation": "unchanged original moderation methods; isolated field declarations/log adapter; channel hooks pending",
+    "sha256": "e15440d6d62bf185a42c6280cb29480b7f4056038874d077cec5b8f8cf2a790c"
+  },
+  "PearlsOfWisdom.cs": {
+    "original": "diagnostics\\cc-queue-20261016\\PearlsOfWisdom.cs",
+    "transformation": "none",
+    "sha256": "7a62763148c21ab40be13fc741a5769afdbc3f3000d87e2714d17878bda35ed8"
+  }
+}

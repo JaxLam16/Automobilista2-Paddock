@@ -1,0 +1,16 @@
+{
+  "block_male_sounds": false,
+  "min_time_between_personalised_messages": 60,
+  "pause_between_message_fragments": 0,
+  "use_sweary_messages": false,
+  "no_minutes_in_lap_times": false,
+  "personalisation": "",
+  "sound_pack_version": 202,
+  "number_config": {
+    "prefix_hundred_and_thousand_with_one": "true",
+    "say_and_between_hundred_and_units": "true",
+    "say_and_between_thousand_and_units": "true",
+    "allow_short_hundreds": "true",
+    "always_use_thousands": "false"
+  }
+}

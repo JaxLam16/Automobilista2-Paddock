@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.usefixtures('closed_synthetic_game')
+
 from ams2season.bff import BffArchive, _KEYS, checksum, path_uid, rc4
 from ams2season.bop import BopEditor
 from ams2season.bop_physics import (change_crd, crd_properties, decode, edit,

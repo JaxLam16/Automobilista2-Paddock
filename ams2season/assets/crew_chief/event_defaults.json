@@ -1,0 +1,20 @@
+{
+  "just_the_facts": false,
+  "max_complaints_per_session": 60,
+  "play_cut_track_warnings": true,
+  "use_american_terms": false,
+  "block_male_sounds": false,
+  "use_sweary_messages": false,
+  "enable_blue_flag_messages": true,
+  "enable_yellow_flag_messages": true,
+  "enable_opponent_crash_messages": true,
+  "enable_simple_incident_detection_listprop": "RACE_ONLY",
+  "iracing_disable_luckydog": true,
+  "iracing_override_luckydog": false,
+  "max_distance_moved_for_yellow_announcement": 10,
+  "min_secs_for_debris_flag": 120,
+  "report_allowed_overtakes_under_yellow": false,
+  "report_yellows_in_all_sectors": false,
+  "simple_incident_detection_report_delay": 2000,
+  "time_between_caution_period_status_reminders": 60
+}

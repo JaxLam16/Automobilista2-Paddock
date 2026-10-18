@@ -1,0 +1,44 @@
+{
+  "PitStops.cs": {
+    "original": "diagnostics\\cc-baseline-next-20261016\\PitStops.cs",
+    "original_sha256": "fb1b9eabf1da6b49efd9ba81900d4490f1544f9a9c8f46ef7eee6d69af9faa51",
+    "sha256": "fb1b9eabf1da6b49efd9ba81900d4490f1544f9a9c8f46ef7eee6d69af9faa51",
+    "transformation": "none"
+  },
+  "pit_dependencies.cs": {
+    "original": "diagnostics\\cc-fuel-20261016\\Strategy.cs",
+    "original_sha256": "a4c83dcdcad35fb05cc213c653a904439ccfbe13040bb4b2c3a38e99166c7800",
+    "sha256": "33f3a8aa372d4d622ed679921ec047a2cfe85c4c853ec424571f35b721e45f5e",
+    "members": [
+      "public static bool pitStallIsBlocked = false;"
+    ],
+    "transformation": "unchanged field declaration; its only updater is guarded by Game.RF1; enclosing host partial type declaration only (member bodies unchanged)",
+    "dependencies": [
+      {
+        "original": "diagnostics\\cc-headless-20261016\\Audio\\AudioPlayer.cs",
+        "original_sha256": "5624cfdab1b5bf3a72e794df7b51e2b183c41145b10dc8e960db36775ade6d9b",
+        "members": [
+          "folderYes",
+          "folderNo",
+          "dtmPitWindowOpenBackground",
+          "dtmPitWindowClosedBackground"
+        ]
+      },
+      {
+        "original": "diagnostics\\cc-pitstops-20261016\\FrozenOrderMonitor.cs",
+        "original_sha256": "d0873ceccc408cd5879e57b9f0d3a2193029438be47919dce1919b6516e397fe",
+        "members": [
+          "folderKilometresPerHour",
+          "folderMilesPerHour"
+        ]
+      },
+      {
+        "original": "diagnostics\\cc-pitstops-20261016\\Battery.cs",
+        "original_sha256": "3cac1f86733d8514452b5ef21c031b9210cd3255a9d55351e6350f84ede3f86f",
+        "members": [
+          "folderMinutes"
+        ]
+      }
+    ]
+  }
+}

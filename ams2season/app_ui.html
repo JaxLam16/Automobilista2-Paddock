@@ -48,6 +48,8 @@ nav a,nav button.navlink{display:block;text-decoration:none;padding:8px 12px;bor
 nav a:hover,nav button.navlink:hover{background:var(--row)}
 nav a.active{background:var(--panel);box-shadow:0 0 0 1px var(--line)}
 nav .group{color:var(--faint);font-size:.82rem;padding:16px 12px 4px}
+.appctl{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 12px;border-top:1px solid var(--line)}
+.appctl .hint{flex-basis:100%;margin:0;color:#E4572E}
 nav .champlink{font-weight:400;padding-left:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 nav button.navlink.add{color:var(--muted);font-weight:400;padding-left:20px}
 
@@ -58,10 +60,10 @@ nav button.navlink.add{color:var(--muted);font-weight:400;padding-left:20px}
 .light.connected{background:var(--green)} .light.waiting{background:var(--amber)} .light.off{background:transparent;box-shadow:inset 0 0 0 2px var(--faint)}
 @keyframes onair{0%{box-shadow:0 0 0 0 rgba(200,30,43,.55)}70%{box-shadow:0 0 0 9px rgba(200,30,43,0)}100%{box-shadow:0 0 0 0 rgba(200,30,43,0)}}
 @media (prefers-reduced-motion:reduce){.light.recording{animation:none}}
-.rec .detail{color:var(--muted);font-size:.88rem;margin:6px 0 10px}
+.rec .detail{color:var(--muted);font-size:.88rem;margin:6px 0 10px;overflow-wrap:anywhere;max-height:9em;overflow-y:auto}
 .rec button{width:100%}
 
-main{overflow-y:auto;min-height:0}
+main{overflow-y:auto;min-height:0;min-width:0}
 .view{max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,44px) clamp(18px,4vw,44px) 80px}
 h1{font:600 clamp(2.1rem,4.4vw,3.4rem)/1 var(--cond);margin:0;letter-spacing:-.005em}
 h2{font:600 1.5rem/1.15 var(--cond);margin:0 0 4px}
@@ -84,6 +86,13 @@ section{margin-top:clamp(28px,4vw,44px)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .pad{padding:clamp(14px,2vw,20px)}
 .scroll{overflow-x:auto}
+.recordings-table{table-layout:fixed}
+.recordings-table th,.recordings-table td{padding-left:8px;padding-right:8px;white-space:normal;overflow-wrap:anywhere}
+.recordings-table th:nth-child(1){width:14%}.recordings-table th:nth-child(2){width:26%}
+.recordings-table th:nth-child(3){width:10%}.recordings-table th:nth-child(4){width:7%}
+.recordings-table th:nth-child(5){width:10%}.recordings-table th:nth-child(6){width:13%}
+.recordings-table th:nth-child(7){width:20%}
+.recordings-table .btn{white-space:normal;max-width:100%;text-align:center}
 table{border-collapse:collapse;width:100%}
 th{font:600 .8rem/1.2 var(--sans);color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -149,7 +158,8 @@ input:focus,select:focus{border-color:var(--focus);outline:none;box-shadow:0 0 0
 iframe.report{width:100%;border:0;display:block;min-height:70vh;background:var(--paper)}
 .racebar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px clamp(18px,4vw,44px);
   border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:2}
-.racebar .title{font-weight:600}
+.racebar > div{min-width:0;max-width:100%}
+.racebar .title{font-weight:600;overflow-wrap:anywhere}
 .drawer{padding:16px clamp(18px,4vw,44px);border-bottom:1px solid var(--line);background:var(--side)}
 pre.log{font:12px/1.5 ui-monospace,Consolas,monospace;max-height:280px;overflow:auto;margin:0;white-space:pre-wrap;color:var(--muted)}
 
@@ -456,7 +466,8 @@ th[data-sort="desc"]::after{content:" \25BC";font-size:.7em}
 
 .warnline{color:var(--amber);font-weight:600}
 
-.engsessions{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.engsess{text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px}
+.engsessions{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:12px}.engsess{text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+.eng-current{overflow-wrap:anywhere}.eng-recorded select{max-width:100%;min-width:0}
 .dots{display:flex;gap:4px}.dots i{width:14px;height:14px;border-radius:4px;display:inline-block}
 .engtop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr);gap:14px;margin-top:14px}
 @media (max-width:1150px){.engtop{grid-template-columns:minmax(0,1fr)}}
@@ -533,6 +544,11 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border
       <a href="#/settings" data-nav="settings">Settings</a>
     </nav>
     <div class="rec" id="rec" aria-live="polite"></div>
+    <div class="appctl" id="appctl">
+      <p class="hint" id="appupdate" hidden>An update was installed. Restart Paddock to use it.</p>
+      <button class="btn ghost small" id="apprestart" title="Shut Paddock down completely and start it again (loads installed updates)">Restart Paddock</button>
+      <button class="btn ghost small" id="appexit" title="Shut Paddock down completely">Exit Paddock</button>
+    </div>
   </aside>
   <main id="main"><div class="view" id="view"></div></main>
 </div>
@@ -544,6 +560,7 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border
 <script src="/replay-timing.js"></script>
 <script src="/development-ui.js"></script>
 <script src="/identity-ui.js"></script>
+<script src="/crew-chief.js"></script>
 <script>
 "use strict";
 var COLORS = ["#E4572E", "#2E86DE", "#E0A100", "#13A3A3", "#D6336C", "#A0522D", "#3F51B5", "#6D7F2A"];
@@ -892,7 +909,7 @@ function viewRecordings() {
       var seg = h("div", {class: "seg"}, [["race", "Races"], ["qualify", "Qualifying"], ["practice", "Practice"], ["all", "Everything"]].map(function (o) {
         return h("button", {"aria-pressed": String(recFilter === o[0]), onclick: function () { recFilter = o[0]; draw(); }}, o[1]);
       }));
-      var table = rows.length ? h("div", {class: "panel scroll"}, h("table", null,
+      var table = rows.length ? h("div", {class: "panel scroll"}, h("table", {class: "recordings-table"},
         h("thead", null, h("tr", null, ["When", "Track", "Session", "Cars", recFilter === "qualify" ? "Pole" : "Winner", "Championship", ""].map(function (x) { return h("th", null, x); }))),
         h("tbody", null, rows.map(function (r) {
           var isRace = r.type === "race", isQ = r.type === "qualify", isP = r.type === "practice", live = r.status !== "complete";
@@ -900,7 +917,7 @@ function viewRecordings() {
               if (e.target.closest("button")) return;
               location.hash = isP ? "#/technique/" + encodeURIComponent(r.id) : isQ ? "#/quali/" + encodeURIComponent(r.id) : "#/race/" + encodeURIComponent(r.id) + (r.assigned.length ? "?champ=" + r.assigned[0].champ : ""); } : null},
             h("td", null, fmtDate(r.started_at), h("span", {class: "faint"}, " " + fmtTime(r.started_at))),
-            h("td", null, trackName(r)),
+            h("td", {class: "rec-track"}, trackName(r)),
             h("td", null, r.type === "qualify" ? "Qualifying" : r.type === "race" ? (r.raced === false ? "Race (didn't start)" : "Race") : r.type === "practice" ? "Practice" : r.type,
               live ? [" ", h("span", {class: "badge live"}, "recording")] : null, r.imported_from ? [" ", h("span", {class: "badge"}, "from " + r.imported_from)] : null),
             h("td", {class: "num"}, r.cars),
@@ -918,7 +935,7 @@ function viewRecordings() {
           h("p", {class: "sub"}, plural(d.recordings.length, "session") + " recorded. Click a race for its report and replay, or a qualifying session to compare everyone's best laps.")),
           h("div", {class: "actions"}, seg)),
         h("div", {class: "panel pad importbar"}, h("div", null, h("b", null, "Got a friend's recording?"),
-            h("span", {class: "muted"}, " Drop their folder or zip anywhere in the app, or pick it here. If you were in the same session, their car shows beside yours in Brake & throttle.")),
+            h("span", {class: "muted"}, " Drop their folder or zip anywhere in the app, or pick it here. If you were in the same session, their car shows beside yours in Corner by corner.")),
           h("div", {class: "actions"}, h("button", {class: "btn ghost small", onclick: function () { zipIn.click(); }}, "Import a zip"),
             h("button", {class: "btn ghost small", onclick: function () { dirIn.click(); }}, "Import a folder"), zipIn, dirIn)),
         h("section", {style: {marginTop: "16px"}}, table));
@@ -1092,7 +1109,7 @@ function practiceSection(d, id) {
     d.practice.map(function (p) {
       return h("div", {class: "panel pad", style: {marginBottom: "12px"}},
         h("div", {class: "headrow"}, h("div", null, h("b", null, "Round " + p.round + " practice"), h("span", {class: "muted"}, " · " + (p.track || "") + " · " + fmtDate(p.started_at))),
-          h("div", {class: "actions"}, h("a", {class: "btn ghost small", href: "#/technique/" + encodeURIComponent(p.recording)}, "Brake & throttle"),
+          h("div", {class: "actions"}, h("a", {class: "btn ghost small", href: "#/technique/" + encodeURIComponent(p.recording)}, "Corner by corner"),
             h("button", {class: "btn ghost small", onclick: function () {
               if (!confirm("Remove this practice and its points?")) return;
               api("/api/championships/" + id + "/practice/" + p.id, "DELETE").then(function () { toast("Practice removed."); render(); }).catch(fail);
@@ -2473,11 +2490,13 @@ function viewQuali(recording, query, practiceMode) {
     [0.25, 0.5, 1, 2, 4].forEach(function (sp) { speedSeg.appendChild(h("button", {"data-s": sp, onclick: function () { speed = sp; syncControls(); }}, sp + "x")); });
     function box(label, get, set) { return h("label", {class: "check", style: {margin: 0, fontSize: ".9rem"}}, h("input", {type: "checkbox", checked: get(), onchange: function (e) { set(e.target.checked); }}), label); }
     var tabs = h("div", {class: "seg"}, h("button", {"aria-pressed": "true"}, practiceMode ? "Replay your laps" : "Compare laps"),
+      practiceMode ? null : h('a',{class:'btn ghost small',href:'#/engineer/radio?qualifying='+encodeURIComponent(recording)+(champ?'&champ='+encodeURIComponent(champ):'')},'Assign race names'),
       practiceMode ? null : h("button", {"aria-pressed": "false", onclick: function () { location.hash = "#/qualibd/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : ""); }}, "Breakdown"),
-      h("button", {"aria-pressed": "false", onclick: function () { location.hash = "#/technique/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : ""); }}, "Brake & throttle"));
+      h("button", {"aria-pressed": "false", onclick: function () { location.hash = "#/technique/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : ""); }}, "Corner by corner"));
+    if(practiceMode)tabs=h('div',{class:'actions'},practiceButtons(recording,champ,'laps'));
     var bar = h("div", {class: "racebar"},
       h("div", null, Q.race ? h("a", {class: "link", href: raceHref(Q.race, champ)}, "Back to the race")
-          : practiceMode ? h("a", {class: "link", href: "#/technique/" + encodeURIComponent(recording)}, "Back to brake & throttle")
+          : practiceMode ? h("a", {class: "link", href: "#/technique/" + encodeURIComponent(recording)}, "Back to corner by corner")
           : h("a", {class: "link", href: "#/recordings"}, "Back to recordings"),
         h("div", {class: "title"}, (practiceMode ? (Q.driver || "Your") + "'s laps: " : "Qualifying: ") + Q.meta.track + " " + Q.meta.layout + ", " + fmtDate(Q.meta.started_at) +
           (Q.merged_recordings && Q.merged_recordings.length ? " (" + (Q.merged_recordings.length + 1) + " recordings merged)" : ""))),
@@ -2851,6 +2870,7 @@ function viewQualiBreakdown(recording, query) {
       return h("td", {class: "num" + shade(d.name, s, v)}, v == null ? "-" : v.toFixed(3));
     }
     var tabs = h("div", {class: "seg"},
+      h('a',{class:'btn ghost small',href:'#/engineer/radio?qualifying='+encodeURIComponent(recording)+(champ?'&champ='+encodeURIComponent(champ):'')},'Assign race names'),
       h("button", {"aria-pressed": "false", onclick: function () { location.hash = "#/quali/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : ""); }}, "Compare laps"),
       h("button", {"aria-pressed": "true"}, "Breakdown"));
     var head = h("div", {class: "headrow"},
@@ -3188,10 +3208,10 @@ function viewTechnique(recording, query) {
     var greys = ["#2E86DE", "#E4572E", "#13A3A3", "#D6336C"];
     drivers.forEach(function (x, i) { x.color = TQ.colors[x.driver] || greys[i % greys.length]; });
     var title = h("div", null, h("p", {class: "kicker"}, (TQ.type === "practice" ? "Practice" : TQ.type === "qualify" ? "Qualifying" : "Race") + ", " + fmtDate(TQ.started_at)),
-      h("h1", null, "Brake & throttle: " + TQ.track + " " + TQ.layout));
+      h("h1", null, "Corner by corner: " + TQ.track + " " + TQ.layout));
     if (!drivers.length) { setView(h("div", {class: "headrow"}, title, h("div", {class: "actions"}, TQ.race ? h("a", {class: "btn small", href: raceHref(TQ.race, champ)}, "Back to the race") : null)),
       h("div", {class: "panel", style: {marginTop: "20px"}}, emptyState("No pedal inputs in this recording", (TQ.drivers[0] || {}).reason || "Pedal inputs are only recorded for the driver whose PC ran the recorder."))); return; }
-    var di = 0, ci = 0, cmp = -1;
+    var di = 0, ci = 0, cmp = -1, inputLap = '';
     var body = h("div");
     function scoreClass(v) { return v >= 85 ? "good" : v >= 70 ? "ok" : "poor"; }
     function spark(c) {
@@ -3204,6 +3224,8 @@ function viewTechnique(recording, query) {
     }
     function shapeChart(c, key, label, color, other) {
       var S = c[key], W = 560, H = 230, pl = 46, pr = 12, pt = 14, pb = 30;
+      var selected=c.inputs&&c.inputs.laps.find(function(l){return String(l.lap)===inputLap;});
+      var selectedValues=selected?S.x.map(function(x){var i=c.inputs.x.indexOf(x);return i<0?null:selected[key][i];}):null;
       var x0 = S.x[0], x1 = S.x[S.x.length - 1];
       var X = function (x) { return pl + (x - x0) / (x1 - x0) * (W - pl - pr); }, Y = function (v) { return pt + (1 - v / 100) * (H - pt - pb); };
       var sv = svg("svg", {viewBox: "0 0 " + W + " " + H, width: "100%", role: "img", "aria-label": label});
@@ -3213,15 +3235,37 @@ function viewTechnique(recording, query) {
       function path(ys) { var d = "", started = false; S.x.forEach(function (x, i) { if (ys[i] == null) { started = false; return; } d += (started ? "L" : "M") + X(x).toFixed(1) + "," + Y(ys[i]).toFixed(1); started = true; }); return d; }
       var band = ""; S.x.forEach(function (x, i) { if (S.p75[i] != null) band += (band ? "L" : "M") + X(x).toFixed(1) + "," + Y(S.p75[i]).toFixed(1); });
       for (var i = S.x.length - 1; i >= 0; i--) if (S.p25[i] != null) band += "L" + X(S.x[i]).toFixed(1) + "," + Y(S.p25[i]).toFixed(1);
-      sv.appendChild(svg("path", {d: band + "Z", fill: color, opacity: 0.16}));
-      S.laps.forEach(function (ys) { sv.appendChild(svg("path", {d: path(ys), fill: "none", stroke: "var(--faint)", "stroke-width": 1, opacity: 0.55})); });
-      if (S.best) sv.appendChild(svg("path", {d: path(S.best), fill: "none", stroke: "var(--ink)", "stroke-width": 1.6, "stroke-dasharray": "5 4"}));
+      if(!selected)sv.appendChild(svg("path", {d: band + "Z", fill: color, opacity: 0.16}));
+      if(!selected)S.laps.forEach(function (ys) { sv.appendChild(svg("path", {d: path(ys), fill: "none", stroke: "var(--faint)", "stroke-width": 1, opacity: 0.55})); });
+      if (!selected&&S.best) sv.appendChild(svg("path", {d: path(S.best), fill: "none", stroke: "var(--ink)", "stroke-width": 1.6, "stroke-dasharray": "5 4"}));
       if (other) { var oc = other.corners.find(function (o) { return o.corner === c.corner; }); if (oc) sv.appendChild(svg("path", {d: path(oc[key].mean), fill: "none", stroke: other.color, "stroke-width": 2.5, "stroke-dasharray": "8 4"})); }
-      sv.appendChild(svg("path", {d: path(S.mean), fill: "none", stroke: color, "stroke-width": 3}));
-      if (key === "throttle" && S.analysis_mean) sv.appendChild(svg("path", {d: path(S.analysis_mean), fill: "none", stroke: color, "stroke-width": 2, "stroke-dasharray": "2 4"}));
-      return fsable(h("div", {class: "panel pad", style: {paddingTop: "40px"}}, h("h3", null, label), sv,
-        h("p", {class: "hint"}, "Thin grey: each lap. Shaded: the middle half of your laps. Bold: your recorded average. Dashed black: your fastest lap" + (other ? ". Dashed " + other.driver + ": their average." : ".") +
-          (key === "throttle" && S.analysis_mean ? " Dotted green: the trace used for scoring. " + (S.analysis_note || "") + " " + (S.shift_transients || 0) + " brief shift transients filtered." : ""))));
+      sv.appendChild(svg("path", {d: path(selectedValues||S.mean), fill: "none", stroke: color, "stroke-width": 3}));
+      if (!selected&&key === "throttle" && S.analysis_mean) sv.appendChild(svg("path", {d: path(S.analysis_mean), fill: "none", stroke: color, "stroke-width": 2, "stroke-dasharray": "2 4"}));
+      return fsable(h("div", {class: "panel pad", style: {paddingTop: "40px"}}, h("h3", null, label+(selected?' · lap '+selected.lap:'')), sv,
+        h("p", {class: "hint"}, (selected?'Raw recorded input for lap '+selected.lap+'.':"Thin grey: each lap. Shaded: the middle half of your laps. Bold: your recorded average. Dashed black: your fastest lap.") + (other ? " Dashed " + other.driver + ": their average." : "") +
+          (!selected&&key === "throttle" && S.analysis_mean ? " Dotted green: the trace used for scoring. " + (S.analysis_note || "") + " " + (S.shift_transients || 0) + " brief shift transients filtered." : ""))));
+    }
+    function alignedInputs(c) {
+      var data=c.inputs;
+      if(!data)return h('p',{class:'hint'},'Aligned steering traces need a refreshed analysis.');
+      var laps=data.laps||[], selected=laps.find(function(l){return String(l.lap)===inputLap;});
+      if(inputLap&&!selected)inputLap='';
+      var values=selected||data.mean,W=1000,H=320,left=56,right=18,top=20,bottom=35;
+      var X=function(x){return left+(x-data.x[0])/(data.x[data.x.length-1]-data.x[0])*(W-left-right);};
+      var Y=function(v){return top+(100-v)/200*(H-top-bottom);};
+      var chart=svg('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',role:'img','aria-label':'Aligned steering brake and throttle traces'});
+      [-100,-50,0,50,100].forEach(function(v){chart.appendChild(svg('line',{x1:left,x2:W-right,y1:Y(v),y2:Y(v),stroke:'var(--line)'}));chart.appendChild(svg('text',{x:left-8,y:Y(v)+4,'text-anchor':'end',fill:'var(--muted)','font-size':12},v+'%'));});
+      for(var x=Math.ceil(data.x[0]/100)*100;x<=data.x[data.x.length-1];x+=100)chart.appendChild(svg('text',{x:X(x),y:H-10,'text-anchor':'middle',fill:'var(--muted)','font-size':12},x===0?'apex':x+' m'));
+      chart.appendChild(svg('line',{x1:X(0),x2:X(0),y1:top,y2:H-bottom,stroke:'var(--faint)','stroke-dasharray':'4 4'}));
+      [['brake','var(--red)'],['throttle','var(--green)'],['steering','#4FA9EE']].forEach(function(channel){
+        var d='',started=false;(values[channel[0]]||[]).forEach(function(v,i){if(v==null){started=false;return;}d+=(started?'L':'M')+X(data.x[i]).toFixed(1)+','+Y(v).toFixed(1);started=true;});
+        chart.appendChild(svg('path',{d:d,fill:'none',stroke:channel[1],'stroke-width':2.6,'data-channel':channel[0]}));
+      });
+      var select=h('select',{'aria-label':'Corner trace lap',style:{width:'auto',maxWidth:'100%',minWidth:'0',flex:'1 1 200px'},onchange:function(e){inputLap=e.target.value;draw();}},h('option',{value:'',selected:!inputLap},'Average of clean laps'),laps.map(function(l){return h('option',{value:String(l.lap),selected:inputLap===String(l.lap)},'Lap '+l.lap);}));
+      function cycle(step){var choices=[''].concat(laps.map(function(l){return String(l.lap);}));inputLap=choices[(choices.indexOf(inputLap)+step+choices.length)%choices.length];draw();}
+      return fsable(h('div',{class:'panel pad',style:{paddingTop:'40px',marginBottom:'16px'}},h('h3',null,'Steering, brake and throttle together'),
+        h('div',{class:'actions',style:{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}},h('button',{class:'btn ghost small','aria-label':'Previous trace lap',onclick:function(){cycle(-1);}},'Previous'),select,h('button',{class:'btn ghost small','aria-label':'Next trace lap',onclick:function(){cycle(1);}},'Next')),
+        chart,h('p',{class:'hint'},(selected?'Lap '+selected.lap:'Average')+' · Red: brake · Green: throttle · Blue: signed steering. All channels share distance to the apex. Steering is recorded normalized input, not wheel degrees. Raw pedal traces retain shift blips.')));
     }
     function paceSection(D) {
       var P = D.pace_comparison || {}, signedS = function (v) { return v == null ? "-" : (v > 0 ? "+" : "") + v.toFixed(3) + " s"; };
@@ -3314,6 +3358,7 @@ function viewTechnique(recording, query) {
           (c.scores.brake == null ? "Braking point not rated for this corner. " : "Braking point scatter \u00b1" + c.scatter.onset_sd + " m. ") +
           (c.laps.filter(function (l) { return l.pickup != null; }).length < 2 ? "No repeatable exit-onset marker here; modulated and already-flat laps are assessed by their throttle shape." : "Throttle pickup scatter \u00b1" + c.scatter.pickup_sd + " m.") +
           (c.scatter.throttle_hesitation_penalty != null ? " Commitment penalty " + c.scatter.throttle_hesitation_penalty.toFixed(1) + " points; small corrections carry a small cost." : ""))), cmpSel),
+        alignedInputs(c),
         h("div", {class: "grid2", style: {gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)"}},
           shapeChart(c, "brake", "Brake pressure", "var(--red)", other), shapeChart(c, "throttle", "Throttle", "var(--green)", other)),
         h("div", {class: "panel scroll", style: {marginTop: "16px"}}, h("table", null,
@@ -3359,6 +3404,7 @@ function viewTechnique(recording, query) {
     if (TQ.type === "qualify") backs.push(h("a", {class: "btn ghost small", href: "#/quali/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : "")}, "Back to qualifying"));
     if (TQ.race) backs.push(h("a", {class: "btn small", href: raceHref(TQ.race, champ)}, "Back to the race"));
     if (TQ.type === "practice") {
+      backs=backs.concat(practiceButtons(recording,champ,'technique'));
       backs.push(h("a", {class: "btn small", href: "#/laps/" + encodeURIComponent(recording)}, "Replay your laps"));
       backs.push(h("a", {class: "btn ghost small", href: "#/practice"}, "Practice"));
     }
@@ -3458,8 +3504,9 @@ function viewPace(recording, query) {
     var nameCell = function (d) { return h("td", null, d.is_ai ? null : h("span", {class: "dot", style: {background: d.color || "var(--ink)"}}), h(d.is_ai ? "span" : "b", {class: d.is_ai ? "muted" : null}, d.name)); };
     var sgn = function (v, dp) { return v == null ? "-" : (v > 0 ? "+" : "") + v.toFixed(dp == null ? 3 : dp); };
     // 1. race summary remains available when qualifying was not recorded
-    var qSec = h("section", {"data-testid": "pace-summary"}, h("h2", null, "Race pace"),
-      h("p", {class: "explain"}, "Average is the arithmetic mean of representative race laps; typical pace is their median. These exclude lap 1, pit and invalid laps, and laps over 107% of the best. Qualifying is matched when available; your race average does not need it."),
+    var isPractice=P.meta.session_type==='practice';
+    var qSec = h("section", {"data-testid": "pace-summary"}, h("h2", null, isPractice?'Practice pace':"Race pace"),
+      h("p", {class: "explain"}, isPractice?'Average and median of complete clean flying laps within 107% of each driver’s best. Practice lap counts do not measure racing gaps; traffic-cost and race-result comparisons are omitted.':"Average is the arithmetic mean of representative race laps; typical pace is their median. These exclude lap 1, pit and invalid laps, and laps over 107% of the best. Qualifying is matched when available; your race average does not need it."),
       h("div", {class: "panel scroll"}, h("table", null,
         h("thead", null, h("tr", null, ["Driver", "Laps analysed", "Average lap", "Typical lap", "Race best", "Qualifying best", "Typical vs qualifying"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
         h("tbody", null, D.map(function (d) {
@@ -3495,7 +3542,7 @@ function viewPace(recording, query) {
         h("span", null, h("i", {class: "sw dash"}), "Field median"))));
     }
     var trendTxt = function (v) { return v == null ? "-" : Math.abs(v) < 0.01 ? "steady" : Math.abs(v).toFixed(2) + " s " + (v < 0 ? "quicker" : "slower") + " per lap"; };
-    var paceSec = h("section", null, h("h2", null, "Pace through the race"),
+    var paceSec = h("section", null, h("h2", null, isPractice?'Pace through practice':"Pace through the race"),
       h("p", {class: "explain"}, "Dots are each of your representative laps; the line is a rolling 3-lap average. The dashed line is the whole field's median lap. Thirds need at least six representative laps; trend needs four. Short recordings still show the overall average above."),
       chart || h("p", {class: "muted"}, "More representative laps are needed to draw a pace trend."), h("div", {class: "panel scroll", style: {marginTop: "14px"}}, h("table", null,
         h("thead", null, h("tr", null, ["Driver", "First third", "Middle third", "Last third", "Trend"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
@@ -3515,7 +3562,7 @@ function viewPace(recording, query) {
             h("td", {class: "num"}, d.mixed && d.mixed.median != null ? lapTime(d.mixed.median) : "No laps"), h("td", {class: "num muted"}, d.mixed ? d.mixed.laps : 0),
             h("td", {class: "num " + (d.traffic_cost > 0.05 ? "lose" : d.traffic_cost < -0.05 ? "gain" : "")}, d.traffic_cost == null ? "Needs 2 laps in each" : sgn(d.traffic_cost) + " s"));
         })))));
-    setView(raceSubHead("Pace", P.meta, recording, champ, "pace"), pageAwards(P.awards, recording, champ), qSec, paceSec, airSec);
+    setView(raceSubHead("Pace", P.meta, recording, champ, "pace"), pageAwards(P.awards, recording, champ), qSec, paceSec, isPractice?null:airSec);
   });
 }
 
@@ -3525,17 +3572,18 @@ function viewRaceCars(recording, query) {
   setView(h("div", {class: "spinner"}, "Comparing cars..."));
   return api("/api/race-cars?recording=" + encodeURIComponent(recording) + (champ ? "&champ=" + champ : "")).then(function (Dd) {
     var C = Dd.cars || [], F = (Dd.car_extra || {}).field, turns = (Dd.car_extra || {}).turns || [];
+    var practiceCars=Dd.meta.session_type==='practice';
     var sgn = function (v, dp, unit) { return v == null ? "-" : (v > 0 ? "+" : "") + v.toFixed(dp) + (unit || ""); };
     var head = h("div", null, raceSubHead("Cars", Dd.meta, recording, champ, "cars"), pageAwards(Dd.awards, recording, champ));
-    if (C.length < 2) { setView(head, h("div", {class: "panel", style: {marginTop: "20px"}}, emptyState("Only one car model in this race", "Car comparisons need at least two different models on track."))); return; }
+    if (C.length < 2) { setView(head, h("div", {class: "panel", style: {marginTop: "20px"}}, emptyState("Only one car model in this session", "Car comparisons need at least two different models on track."))); return; }
     var fastest = Math.min.apply(null, C.filter(function (c) { return c.best_lap; }).map(function (c) { return c.best_lap; }));
     var overview = h("section", null, h("h2", null, "Every car"),
       h("p", {class: "explain"}, "Each model's pace (the median of its drivers' clean laps) against the whole field (top row), best lap, top speed and results."),
       h("div", {class: "panel scroll"}, h("table", null,
-        h("thead", null, h("tr", null, ["Car", "Drivers", "Pace", "vs field", "Best lap", "Top speed", "Best finish", "Avg finish", "Wins"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
+        h("thead", null, h("tr", null, ["Car", "Drivers", "Pace", "vs field", "Best lap", "Top speed"].concat(practiceCars?[]:["Best finish", "Avg finish", "Wins"]).map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
         h("tbody", null, F ? h("tr", {class: "fieldrow"}, h("td", null, "Whole field"), h("td", {class: "num"}, F.drivers), h("td", {class: "num"}, F.pace ? lapTime(F.pace) : "-"),
             h("td", {class: "num muted"}, "reference"), h("td", {class: "num"}, F.best_lap ? lapTime(F.best_lap) : "-"), h("td", {class: "num"}, F.top_speed ? Math.round(F.top_speed) + " km/h" : "-"),
-            h("td", null, ""), h("td", null, ""), h("td", null, "")) : null,
+            practiceCars?null:[h("td", null, ""), h("td", null, ""), h("td", null, "")]) : null,
           C.map(function (c, i) {
             return h("tr", null, h("td", null, h("b", null, c.car), i === 0 && c.pace ? h("span", {class: "badge", style: {marginLeft: "8px"}}, "fastest") : null),
               h("td", {class: "num"}, c.drivers + (c.humans ? " (" + c.humans + " human" + (c.humans > 1 ? "s" : "") + ")" : "")),
@@ -3543,7 +3591,7 @@ function viewRaceCars(recording, query) {
               h("td", {class: "num " + (c.pace_vs_field < -0.05 ? "gain" : c.pace_vs_field > 0.05 ? "lose" : "")}, sgn(c.pace_vs_field, 2, "%")),
               h("td", {class: "num" + (c.best_lap === fastest ? " purple" : "")}, c.best_lap ? lapTime(c.best_lap) : "-"),
               h("td", {class: "num"}, c.top_speed ? Math.round(c.top_speed) + " km/h" : "-"),
-              h("td", {class: "num"}, c.best_finish ? "P" + c.best_finish : "-"), h("td", {class: "num"}, c.avg_finish ? c.avg_finish.toFixed(1) : "-"), h("td", {class: "num"}, c.wins));
+              practiceCars?null:[h("td", {class: "num"}, c.best_finish ? "P" + c.best_finish : "-"), h("td", {class: "num"}, c.avg_finish ? c.avg_finish.toFixed(1) : "-"), h("td", {class: "num"}, c.wins)]);
           })))));
     var cols = [["s1_delta", "S1", -1, 3, " s"], ["s2_delta", "S2", -1, 3, " s"], ["s3_delta", "S3", -1, 3, " s"],
                 ["apex_delta_slow", "Slow corners", 1, 1, " km/h"], ["apex_delta_medium", "Medium corners", 1, 1, " km/h"], ["apex_delta_fast", "Fast corners", 1, 1, " km/h"]]
@@ -3727,7 +3775,8 @@ function viewTyres(recording, query) {
     var sg = function (v, dp, u) { return v == null ? "-" : (v > 0 ? "+" : "") + v.toFixed(dp) + (u || ""); };
     var backs = [];
     if (T.race) backs.push(h("a", {class: "btn small", href: raceHref(T.race, champ)}, "Back to the race"));
-    backs.push(h("a", {class: "btn ghost small", href: "#/technique/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : "")}, "Brake & throttle"));
+    backs.push(h("a", {class: "btn ghost small", href: "#/technique/" + encodeURIComponent(recording) + (champ ? "?champ=" + champ : "")}, "Corner by corner"));
+    if(T.type==='practice')backs=practiceButtons(recording,champ,'tyres');
     var winForm = h("details", {class: "winedit"}, h("summary", {class: "btn ghost small"}, "Operating window"),
       h("div", {class: "panel pad"}, h("p", {class: "hint"}, "The surface temperature and hot pressure (bar, as in the garage) this car's tyres like. Saved per car (" + (T.car || "this car") + "); defaults are generic GT values."),
         h("div", {class: "wingrid"}, [["temp_lo", "Temperature from (°C)"], ["temp_hi", "to (°C)"], ["press_lo", "Hot pressure from (bar)"], ["press_hi", "to (bar)"]].map(function (k) {
@@ -3940,7 +3989,7 @@ function rateCell(v) {
 }
 function watchHref(recording, champ, t) { return "#/replay/" + encodeURIComponent(recording) + "?" + (champ ? "champ=" + champ + "&" : "") + "t=" + Math.max(0, Math.round(t - 4)); }
 // every race-review page, reachable from every other: small buttons in each page's header, as before
-var RACE_PAGES = [["replay", "Replay"], ["style", "Driving style"], ["technique", "Brake & throttle"], ["tyres", "Tyres"],
+var RACE_PAGES = [["replay", "Replay"], ["style", "Driving style"], ["technique", "Corner by corner"], ["tyres", "Tyres"],
                   ["pace", "Pace"], ["overtakes", "Overtaking"], ["errors", "Errors"], ["cars", "Cars"]];
 function raceButtons(recording, champ, active) {
   var q = champ ? "?champ=" + champ : "";
@@ -3949,8 +3998,14 @@ function raceButtons(recording, champ, active) {
       return h("a", {class: "btn ghost small", href: "#/" + t[0] + "/" + encodeURIComponent(recording) + q}, t[1]); }));
 }
 function raceSubHead(kind, M, recording, champ, active) {
-  return h("div", {class: "headrow"}, h("div", null, h("p", {class: "kicker"}, "Race, " + fmtDate(M.started_at)), h("h1", null, kind + ": " + M.track)),
-    h("div", {class: "actions"}, raceButtons(recording, champ, active)));
+  var practice=M.session_type==='practice';
+  return h("div", {class: "headrow"}, h("div", null, h("p", {class: "kicker"}, (practice?'Practice, ':"Race, ") + fmtDate(M.started_at)), h("h1", null, kind + ": " + M.track)),
+    h("div", {class: "actions"}, practice?practiceButtons(recording,champ,active):raceButtons(recording, champ, active)));
+}
+function practiceButtons(recording,champ,active) {
+  var q=champ?'?champ='+encodeURIComponent(champ):'';
+  return [['laps','Replay your laps'],['style','Driving style'],['technique','Corner by corner'],['tyres','Tyres'],['pace','Pace'],['errors','Errors'],['cars','Cars']]
+    .filter(function(p){return p[0]!==active;}).map(function(p){return h('a',{class:'btn ghost small',href:'#/'+p[0]+'/'+encodeURIComponent(recording)+q},p[1]);});
 }
 function pageAwards(list, recording, champ) {   // this page's share of the race's awards
   if (!list || !list.length) return null;
@@ -3969,17 +4024,18 @@ function viewErrors(recording, query) {
   var champ = query.champ || "";
   setView(h("div", {class: "spinner"}, "Looking for mistakes..."));
   return api("/api/errors?recording=" + encodeURIComponent(recording) + (champ ? "&champ=" + champ : "")).then(function (E) {
+    var practiceErrors=E.meta.session_type==='practice';
     var who = {v: "humans"}, byName = {};
     E.drivers.forEach(function (d) { byName[d.name] = d; });
     var shown = function () { return E.errors.filter(function (e) { return who.v === "all" ? true : who.v === "humans" ? !byName[e.name].is_ai : e.name === who.v; }); };
     var summary = h("section", null, h("h2", null, "Who made mistakes"),
       h("p", {class: "explain"}, "Every corner on every lap is compared with that driver's own typical time through it. Losing more than half a second is an error, unless they were stuck right behind another car. Spin: the speed collapsed. Off track: the lap was invalidated there. Braked too late: braking started well after their usual point and the corner was slower. Slow corner: anything else (missed apex, ran wide, a moment). Positions lost are passes in the seconds that followed."),
       h("div", {class: "panel scroll"}, h("table", null,
-        h("thead", null, h("tr", null, ["Driver", "Errors", "Spins", "Off track", "Braked too late", "Slow corners", "Time lost", "Positions lost", "Error-free laps", "Worst turn", "Contacts"].map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
+        h("thead", null, h("tr", null, ["Driver", "Errors", "Spins", "Off track", "Braked too late", "Slow corners", "Time lost"].concat(practiceErrors?[]:["Positions lost"]).concat(["Error-free laps", "Worst turn", "Contacts"]).map(function (x, i) { return h("th", {class: i ? "num" : null}, x); }))),
         h("tbody", null, E.drivers.map(function (d) {
           return h("tr", {class: d.is_ai ? "ai" : null}, driverCell(d), h("td", {class: "num"}, h("b", null, d.errors)), h("td", {class: "num"}, d.spin), h("td", {class: "num"}, d.off_track),
             h("td", {class: "num"}, d.braked_too_late), h("td", {class: "num"}, d.slow_corner), h("td", {class: "num" + (d.time_lost > 3 ? " lose" : "")}, d.time_lost.toFixed(1) + " s"),
-            h("td", {class: "num" + (d.positions_lost ? " lose" : "")}, d.positions_lost), h("td", {class: "num"}, d.clean_lap_share == null ? "-" : d.clean_lap_share + "%"),
+            practiceErrors?null:h("td", {class: "num" + (d.positions_lost ? " lose" : "")}, d.positions_lost), h("td", {class: "num"}, d.clean_lap_share == null ? "-" : d.clean_lap_share + "%"),
             h("td", {class: "num"}, d.worst_corner ? d.worst_corner.corner + " (" + d.worst_corner.errors + ")" : "-"), h("td", {class: "num"}, d.contacts));
         })))));
     var mapBox = h("div", {class: "panel pad"}), listBox = h("div", {class: "panel scroll", style: {maxHeight: "560px", overflowY: "auto"}}), cornerBox = h("div");
@@ -3998,13 +4054,13 @@ function viewErrors(recording, query) {
       }
       listBox.innerHTML = "";
       listBox.appendChild(es.length ? h("table", null,
-        h("thead", null, h("tr", null, ["Lap", "Driver", "Turn", "What happened", "Detail", "Time lost", "Places lost", ""].map(function (x, i) { return h("th", {class: i === 5 || i === 6 ? "num" : null}, x); }))),
+        h("thead", null, h("tr", null, ["Lap", "Driver", "Turn", "What happened", "Detail", "Time lost"].concat(practiceErrors?[]:["Places lost"]).concat(['']).map(function (x, i) { return h("th", {class: i === 5 || i === 6 ? "num" : null}, x); }))),
         h("tbody", null, es.map(function (e) { var k = ERR_KINDS[e.kind] || ERR_KINDS["slow corner"], d = byName[e.name];
           var detail = [e.brake_later_m > 5 ? "braked " + e.brake_later_m + " m later" : null, e.speed_lost_kph > 3 ? e.speed_lost_kph + " km/h slower at the apex" : null].filter(Boolean).join(", ");
           return h("tr", null, h("td", null, e.lap), driverCell(d), h("td", null, h("b", null, e.corner)),
             h("td", null, h("span", {class: "kindchip", style: {background: k[1]}}, k[0])), h("td", {class: "muted"}, detail || "-"),
-            h("td", {class: "num"}, e.loss.toFixed(1) + " s"), h("td", {class: "num" + (e.positions ? " lose" : "")}, e.positions || "-"),
-            h("td", null, h("a", {class: "link", href: watchHref(recording, champ, e.t)}, "Watch")));
+            h("td", {class: "num"}, e.loss.toFixed(1) + " s"), practiceErrors?null:h("td", {class: "num" + (e.positions ? " lose" : "")}, e.positions || "-"),
+            h("td", null, h("a", {class: "link", href: practiceErrors?'#/laps/'+encodeURIComponent(recording):watchHref(recording, champ, e.t)}, "Watch")));
         }))) : h("div", {class: "pad"}, emptyState("No errors", who.v === "humans" ? "None of you made a mistake that cost half a second. Tidy." : "Nothing for this selection.")));
       var byTurn = {};
       es.forEach(function (e) { var r = byTurn[e.corner] = byTurn[e.corner] || {n: 0, loss: 0, kinds: {}}; r.n++; r.loss += e.loss; r.kinds[e.kind] = (r.kinds[e.kind] || 0) + 1; });
@@ -4051,7 +4107,8 @@ function viewOvertakes(recording, query) {
     function heatColor(v) { var x = Math.max(0, Math.min(1, v)) * (HEAT.length - 1), i = Math.min(HEAT.length - 2, Math.floor(x)), f = x - i;
       return "rgb(" + HEAT[i].map(function (a, k) { return Math.round(a + (HEAT[i + 1][k] - a) * f); }).join(",") + ")"; }
     function draw() {
-      var ps = O.passes.filter(function (p) { return p.x != null && (!st.focus || p.passer === st.focus || p.passed === st.focus); });
+      var firstTurn=(O.track.corners||[]).slice().sort(function(a,b){return a.apex-b.apex;})[0];
+      var ps = O.passes.filter(function (p) { return p.x != null && (st.showOpening || !(p.lap===1 && firstTurn && p.corner===firstTurn.name)) && (!st.focus || p.passer === st.focus || p.passed === st.focus); });
       var s = trackSvg(O.track); mapBox.innerHTML = "";
       if (s) {
         var u = s._u, P = O.track.points, n = P.length;
@@ -4094,7 +4151,9 @@ function viewOvertakes(recording, query) {
       O.drivers.filter(function (d) { return d.made || d.lost || d.gifted_gained || d.gifted_lost; }).map(function (d) { return h("option", {value: d.name}, d.name); }));
     draw();
     setView(raceSubHead("Overtaking", O.meta, recording, champ, "overtakes"), pageAwards(O.awards, recording, champ), ratings,
-      h("section", null, h("div", {class: "headrow"}, h("h2", null, "Where the passes happened"), h("div", {class: "actions"}, modeSeg, focus)), expl,
+      h("section", null, h("div", {class: "headrow"}, h("h2", null, "Where the passes happened"), h("div", {class: "actions"}, modeSeg, focus,
+        h('label',null,h('input',{type:'checkbox',checked:false,'aria-label':'Show lap 1 first-corner overtakes',onchange:function(e){st.showOpening=e.target.checked;draw();}}),' Show lap 1 first-corner overtakes'))),
+        h('p',{class:'hint'},'The map and pass log exclude lap 1 at the first corner by default. Overall overtaking totals still include those passes.'),expl,
         h("div", {class: "heatwrap"}, mapBox, h("div", null, h("h3", null, "Pass log"), logBox))));
   });
 }
@@ -4244,31 +4303,86 @@ document.addEventListener("click", function (e) {
 });
 // ------------------------------------------------------------------ views: race engineer
 var ENG_COLOR = {red: "#C81E2B", orange: "#E8742A", yellow: "#D9A400", green: "#178A4C", blue: "#2E6FD8"};
+function engCoachPanel() {
+  if (window.PaddockCoach) return window.PaddockCoach({h:h,api:api});
+  return {element:h("section",{class:"panel pad eng-coach"},h("h2",null,"Private race coach"),
+    h("p",{class:"hint"},"The private coach update is ready. Restart Paddock after your recording finishes to load it.")),destroy:function(){}};
+}
+// Keep the old radio URL as an alias for the shared engineer workspace.
+function engTabs() {
+  return h("div", {class:"actions", "aria-label":"Engineer workspace"},
+    h("a", {class:"btn ghost small", href:"#engineer-live-controls", onclick:function(e){
+      e.preventDefault(); var el=document.getElementById("engineer-live-controls"); if(el)el.scrollIntoView({block:"start"});
+    }}, "Live controls & garage overlay"));
+}
+function engLegacyRadio() {
+  var panel = null;
+  var details=h("details",{class:"panel pad"},h("summary",null,"External Crew Chief connection (optional)"));
+  details.addEventListener("toggle",function(){
+    if(details.open&&!panel){ panel=window.PaddockCrewChief({h:h,api:api}); details.appendChild(panel.element); }
+  });
+  return {element:details,destroy:function(){if(panel)panel.destroy();}};
+}
+function viewEngineerRadio() {
+  location.replace("#/engineer");
+  return Promise.resolve();
+}
 function engPracticeOptions(list, car) {
   return list.filter(function (p) { return !car || !p.car || p.car === car; }).map(function (p) {
     return h("option", {value: p.id}, (p.car ? p.car + " · " : "") + p.track + " · " + fmtDate(p.started_at)); });
 }
 function viewEngineer() {
   return api("/api/engineer").then(function (E) {
-    var live = E.live && E.live.car ? E.live : null;
-    var pick = h("select", {"aria-label": "Start from a recorded practice session"}, h("option", {value: ""}, live ? "Use the car and track AMS2 is showing now" : "Pick a recorded practice session"),
+    var alive = true, busy = false;
+    var coach=engCoachPanel(),radio=engLegacyRadio();
+    coach.element.id="engineer-live-controls";
+    var currentLabel = h("p", {class: "sub", role: "status", "aria-live": "polite"});
+    var liveStart = h("button", {class: "btn", onclick: function () {
+      busy = true; liveStart.disabled = true;
+      // Resolve the latest snapshot on the server: AMS2 may have changed since
+      // the page's last poll. No saved practice or second start step is needed.
+      api("/api/engineer/live/start", "POST", {}).then(function (s) {
+        if (alive) location.hash = "#/engineer/" + encodeURIComponent(s.key);
+      }).catch(function (err) { fail(err); }).finally(function () { busy = false; if (alive) pollCurrent(); });
+    }}, "Open setup for current car");
+    function showCurrent(data) {
+      if (!alive) return;
+      var current = data.current;
+      fill(currentLabel, current ? current.car + " · " + String(current.track).replace(/_/g, " ") +
+        (current.layout !== current.track ? " · " + String(current.layout).replace(/_/g, " ") : "")
+        : "Waiting for a live car and track. Start the recorder and load a session in AMS2.");
+      liveStart.disabled = busy || !current;
+    }
+    function pollCurrent() { return api("/api/engineer/current").then(showCurrent).catch(function () {
+      if (alive) { liveStart.disabled = true; fill(currentLabel, "Couldn't read the live recorder. Retrying…"); }
+    }); }
+    showCurrent(E);
+    var pick = h("select", {"aria-label": "Start from a recorded practice session"}, h("option", {value: ""}, "Pick a recorded practice session"),
       E.practice.map(function (p) { return h("option", {value: p.id}, (p.car || "?") + " · " + p.track + " · " + fmtDate(p.started_at)); }));
     var create = h("button", {class: "btn", onclick: function () {
       var p = E.practice.find(function (x) { return x.id === pick.value; });
-      var body = p ? {car: p.car, track: p.track_raw || p.track, layout: p.layout_raw || p.track} : live ? {car: live.car, track: live.track, layout: live.layout} : null;
-      if (!body || !body.car) { toast("Pick a recorded practice session, or sit in the car in AMS2 first.", {error: true}); return; }
+      var body = p ? {car: p.car, track: p.track_raw || p.track, layout: p.layout_raw || p.track} : null;
+      if (!body || !body.car) { toast("Pick a recorded practice session.", {error: true}); return; }
       api("/api/engineer/session", "POST", body).then(function (s) { location.hash = "#/engineer/" + encodeURIComponent(s.key); }).catch(fail);
-    }}, "Start engineering");
+    }}, "Open recorded session");
     setView(h("div", {class: "headrow"}, h("div", null, h("h1", null, "Race engineer"),
-        h("p", {class: "sub"}, "Your engineering team for practice: go out, come back in, and get the setup changes to make in ticks, with the evidence behind each one. One session per car and track."))),
+        h("p", {class: "sub"}, "Your engineering team for practice: go out, come back in, and get the setup changes to make in ticks, with the evidence behind each one. One session per car and track.")),
+        engTabs("setup")),
+      coach.element,
+      h("section", null, h("h2", null, "Current car and track"), h("div", {class: "panel pad eng-current"}, currentLabel,
+        h("div", {class: "actions", style: {marginTop: "12px"}}, liveStart),
+        h("p", {class: "hint"}, "Opens or resumes this car's session and turns live engineering on. Runs are analysed when you return to the pits."))),
       h("section", null, h("h2", null, "Your sessions"),
         E.sessions.length ? h("div", {class: "engsessions"}, E.sessions.map(function (s) {
           return h("a", {class: "panel pad engsess", href: "#/engineer/" + encodeURIComponent(s.key)},
             h("b", null, s.car), h("div", {class: "muted"}, String(s.track).replace(/_/g, " ") + " · " + s.runs + " run" + (s.runs === 1 ? "" : "s")),
             h("div", {class: "dots"}, (s.categories ? Object.keys(s.categories).map(function (k) { return h("i", {title: s.categories[k].label + ": " + s.categories[k].text, style: {background: ENG_COLOR[s.categories[k].color]}}); }) : [h("span", {class: "muted"}, "No runs yet")])));
         })) : h("div", {class: "panel"}, emptyState("No sessions yet", "Start one below for the car and track you're practising."))),
-      h("section", null, h("h2", null, "New session"), h("div", {class: "panel pad"}, h("div", {class: "row", style: {gap: "10px", flexWrap: "wrap"}}, pick, create),
-        h("p", {class: "hint"}, live ? "AMS2 is showing the " + live.car + " at " + live.track + "." : "Or sit in the car in AMS2 with the recorder running and choose the first option."))));
+      h("section", null, h("details", {class: "panel pad eng-recorded"}, h("summary", null, "Use a recorded practice session instead"),
+        h("div", {class: "actions", style: {marginTop: "12px"}}, pick, create),
+        h("p", {class: "hint"}, "Use this for an earlier session or when AMS2 isn't running."))),radio.element);
+    var timer = setInterval(pollCurrent, 2000);
+    state.cleanup = function () { alive = false; clearInterval(timer); coach.destroy(); radio.destroy(); };
   });
 }
 function viewEngineerSession(key) {
@@ -4279,10 +4393,20 @@ function viewEngineerSession(key) {
     el.addEventListener("toggle", function () { es.open[name] = el.open; });
     return el;
   }
-  var poll = null;
+  var poll = null, alive=true, liveBusy=false, pollBusy=false;
   function load() { return api("/api/engineer/session?key=" + encodeURIComponent(key)); }
   return Promise.all([load(), api("/api/engineer")]).then(function (res) {
-    var S = res[0], E = res[1];
+    var S = res[0], E = res[1], coach=engCoachPanel(), radio=engLegacyRadio();
+    coach.element.id="engineer-live-controls";
+    function changeLive(on){
+      if(liveBusy)return;
+      liveBusy=true;showLive();
+      api("/api/engineer/live/"+(on?"start":"stop"),"POST",on?{key:key}:{})
+        .then(load).then(function(x){if(alive){S=Object.assign(x,{settings:S.settings,categories:S.categories});render2(S);}})
+        .catch(function(e){if(alive)fail(e);})
+        .finally(function(){liveBusy=false;if(alive)showLive();});
+    }
+    function showLive(){var old=document.getElementById("englive");if(old)old.replaceWith(liveEl(S.live));}
     function liveEl(lv) {
       return h("div", {class: "panel pad", id: "englive"}, h("p", {class: "kicker"}, "Live"),
         lv ? h("div", null, h("div", {class: "pills"}, h("span", {class: "pill " + (lv.connected ? "ok" : "")}, lv.connected ? "Connected" : "Waiting for AMS2"),
@@ -4290,9 +4414,9 @@ function viewEngineerSession(key) {
             h("div", {class: "livegrid"}, h("div", null, h("small", null, "Laps"), h("b", null, lv.laps || 0)), h("div", null, h("small", null, "Last lap"), h("b", null, lv.last_lap ? lapTime(lv.last_lap) : "-")),
               h("div", null, h("small", null, "Best"), h("b", null, lv.best_lap ? lapTime(lv.best_lap) : "-")), h("div", null, h("small", null, "Fuel"), h("b", null, lv.fuel_l != null ? lv.fuel_l + " L" : "-"))),
             h("p", {class: "hint"}, lv.state === "running" ? "Keep going: the run is analysed when you're back in the garage or pit box." : "Leave the garage to start a run."),
-            h("button", {class: "btn ghost small", onclick: function () { api("/api/engineer/live/stop", "POST", {}).then(function () { S.live = null; render2(S); }).catch(fail); }}, "Stop live engineering"))
+            h("button", {class: "btn ghost small", disabled:liveBusy, onclick:function(){changeLive(false);}},liveBusy?"Updating…":"Stop live engineering"))
           : h("div", null, h("p", {class: "muted"}, "Turn this on before you drive: each run is analysed automatically when you return to the pits."),
-            h("button", {class: "btn small", onclick: function () { api("/api/engineer/live/start", "POST", {key: key}).then(function () { toast("Live engineering on. Go out when ready."); startPoll(); }).catch(fail); }}, "Start live engineering")));
+            h("button", {class: "btn small", disabled:liveBusy, onclick:function(){changeLive(true);}},liveBusy?"Starting…":"Start live engineering")));
     }
     var first = true;
     function render2(S) {
@@ -4349,9 +4473,9 @@ function viewEngineerSession(key) {
             .then(function () { toast("Session setup saved."); es.open.setup = false; return load(); }).then(function (x) { S = Object.assign(x, {live: S.live}); render2(S); }).catch(fail);
         }}, "Save setup"))), !S.symmetrical_off || !S.baseline_default || !S.runs.length);
       // ---- top row: next run, setup status, live
-      var nr = S.next_run || {fuel_l: 120, tyres: "Slick", laps: 6, objective: "Full tank: measure fuel use and tyre behaviour, and see the car's pace on maximum fuel."};
+      var nr = S.next_run || {fuel_l: null, tyres: "Slick", laps: 4, objective: "Learn the track and do at least two clean flying laps, so I can measure fuel use and work out what the race needs."};
       var next = h("div", {class: "panel pad engnext"}, h("p", {class: "kicker"}, "Next run"), h("h3", null, "Go out when ready with"),
-        h("dl", null, h("dt", null, "Tyres"), h("dd", null, nr.tyres), h("dt", null, "Fuel"), h("dd", null, nr.fuel_l + " L"), h("dt", null, "Laps"), h("dd", null, "at least " + nr.laps),
+        h("dl", null, h("dt", null, "Tyres"), h("dd", null, nr.tyres), h("dt", null, "Fuel"), h("dd", null, nr.fuel_l == null ? "Whatever\u2019s in the car" : nr.fuel_l + " L"), h("dt", null, "Laps"), h("dd", null, "at least " + nr.laps),
           S.race_fuel ? [h("dt", null, "Race"), h("dd", null, S.race_fuel.laps + " laps, " + S.race_fuel.litres + " L at " + S.race_fuel.per_lap_l + " L a lap, " +
             (S.race_fuel.stops ? S.race_fuel.stops + " stop" + (S.race_fuel.stops > 1 ? "s" : "") + " (" + S.race_fuel.stops_reason.join(", ") + ")" : "no stops"))] : null,
           S.fuel_effect_s_per_10l != null ? [h("dt", null, "Fuel costs"), h("dd", null, S.fuel_effect_s_per_10l.toFixed(2) + " s a lap per 10 L")] : null),
@@ -4483,7 +4607,25 @@ function viewEngineerSession(key) {
         var d = {}; Object.keys(es.dec).forEach(function (k) { if (es.dec[k]) d[k] = es.dec[k]; });
         api("/api/engineer/decide", "POST", {key: key, decisions: d, manual: es.manual}).then(function (x) {
           es.dec = {}; es.manual = []; toast("Changes noted. Go out with the plan above."); S = Object.assign(x, {live: S.live, settings: S.settings, categories: S.categories}); render2(S); }).catch(fail);
-      }}, "Confirm changes")) : null;
+      }}, "Save choices")) : null;
+      var setupReview=S.setup_review, submitBox=null;
+      if(setupReview&&(setupReview.items.length||setupReview.pending_changes.length)){
+        var setupReceipt=setupReview;
+        var submit=h("button",{class:"btn",disabled:!setupReceipt.can_submit||setupReceipt.submitted,onclick:function(){
+          submit.disabled=true;
+          api("/api/engineer/submit","POST",{key:key,run_id:setupReceipt.run_id,token:setupReceipt.token})
+            .then(load).then(function(x){if(alive){S=Object.assign(x,{settings:S.settings,categories:S.categories});render2(S);toast("Submitted to engineer. Your changes are logged for the next run.");}})
+            .catch(function(e){if(alive){fail(e);submit.disabled=false;}});
+        }},setupReceipt.submitted?"Submitted to engineer":"Submit to engineer");
+        submitBox=h("div",{class:"panel pad",id:"eng-setup-review",role:"status",style:{marginTop:"12px"}},
+          h("h3",null,"Setup change review"),
+          h("p",null,setupReceipt.submitted?"Submitted at "+setupReceipt.submitted_at+". The engineer will compare these changes with your next run.":
+            setupReceipt.remaining?setupReceipt.remaining+" instruction(s) still need a saved choice.":"All instructions reviewed. Submit when your changes in AMS2 are complete."),
+          h("ul",null,setupReceipt.items.map(function(item){return h("li",null,item.label+" — "+
+            ({applied:"Applied",skipped:"Skipped",maxed:"Maxed out",unavailable:"Not available"}[item.decision]||"Awaiting choice")+
+            (item.decision==="applied"?" ("+(item.ticks>0?"+":"")+item.ticks+" ticks)":""));})),
+          h("p",{class:"hint"},"Overlay confirmations and saved page choices are already logged. Submit records your final review; it never adds those ticks again."),submit);
+      }
       // ---- run review (advanced), analyse a recording, runs
       var review = null;
       if (R && es.adv) {
@@ -4519,30 +4661,36 @@ function viewEngineerSession(key) {
         }))))) : null;
       var warn = !S.symmetrical_off || !S.baseline_default ? h("div", {class: "panel pad warnline", style: {marginBottom: "12px"}}, "Confirm in Session setup that Symmetrical Setup is off and you're starting from the default setup: the engineer's left/right advice and tick tracking depend on both.") : null;
       setView(h("div", {class: "headrow"}, h("div", null, h("p", {class: "kicker"}, "Race engineer"), h("h1", null, S.car), h("p", {class: "sub"}, String(S.track).replace(/_/g, " ") + (S.layout && S.layout !== S.track ? " · " + String(S.layout).replace(/_/g, " ") : ""))),
-          h("div", {class: "actions"}, h("a", {class: "btn ghost small", href: "#/engineer"}, "All sessions"))),
-        warn, setup, h("div", {class: "engtop"}, next, status, liveBox),
+          h("div", {class: "actions"}, h("a", {class: "btn ghost small", href: "#/engineer"}, "All sessions"),
+            engTabs())),
+        coach.element,warn, setup, h("div", {class: "engtop"}, next, status, liveBox),
         catBox, prefsBox, feedbackBox,
         h("section", null, h("div", {class: "headrow"}, h("h2", null, "Engineer recommendations" + (R ? " after run " + R.id : "")), h("div", {class: "actions"}, setupToggle, advToggle)),
-          recBox, R && es.setup !== "quali" ? manualBox : null, es.setup !== "quali" ? confirm : null),
-        review, analyse, runs);
+          recBox, R && es.setup !== "quali" ? manualBox : null, es.setup !== "quali" ? confirm : null,es.setup !== "quali" ? submitBox : null),
+        review, analyse, runs,radio.element);
       if (!first) mainEl.scrollTop = keepY;
       first = false;
     }
     function startPoll() {
       if (poll) clearInterval(poll);
       poll = setInterval(function () {
+        if(pollBusy||liveBusy||!alive)return;
+        pollBusy=true;
         load().then(function (x) {
-          var had = S.runs.length;
+          if(!alive)return;
+          var had = S.runs.length, changed=JSON.stringify([S.latest,S.setup_review])!==JSON.stringify([x.latest,x.setup_review]);
           S = Object.assign(x, {settings: S.settings, categories: S.categories});
-          if (x.runs.length !== had) { render2(S); toast("Run " + x.runs.length + " analysed: new recommendations below."); }
-          else { var old = document.getElementById("englive"); if (old) old.replaceWith(liveEl(S.live)); }
-        }).catch(function () {});
-      }, 2500);
+          if(changed){render2(S);if(x.runs.length!==had)toast("Run "+x.runs.length+" analysed: new recommendations below.");}
+          else showLive();
+        }).catch(function () {}).finally(function(){pollBusy=false;});
+      }, 2000);
     }
     S.settings = S.settings || E.settings; S.categories = S.categories || E.categories;
     render2(S);
-    if (S.live) startPoll();
-    state.cleanup = function () { if (poll) clearInterval(poll); };
+    // Track starts and overlay decisions made elsewhere even when initially off.
+    startPoll();
+    state.cleanup = function () { alive=false;if(poll)clearInterval(poll);coach.destroy();radio.destroy(); };
+
   });
 }
 
@@ -4553,6 +4701,7 @@ function viewStyle(recording, query) {
   setView(h("div", {class: "spinner"}, "Working out everyone's driving style..."));
   return api("/api/style?recording=" + encodeURIComponent(recording) + (champ ? "&champ=" + champ : "")).then(function (S) {
     var mode = {v: S.racing_mode || "reduced"}, box = h("div");
+    var includeAI=h('input',{type:'checkbox','aria-label':'Include AI driving styles',onchange:function(){draw();}});
     var score = function (v, sd) {
       if (v == null) return h("td", {class: "num muted"}, "-");
       var c = v >= 75 ? "var(--green)" : v >= 50 ? "var(--amber)" : "var(--red)";
@@ -4563,7 +4712,7 @@ function viewStyle(recording, query) {
       box.innerHTML = "";
       box.appendChild(h("div", {class: "panel scroll"}, h("table", null,
         h("thead", null, h("tr", null, ["Pos", "Driver", "Braking points", "Throttle", "Track usage", "At the apex", "At exit", "Racing corners"].map(function (x, i) { return h("th", {class: i > 1 ? "num" : null}, x); }))),
-        h("tbody", null, S.drivers.map(function (d) {
+        h("tbody", null, S.drivers.filter(function(d){return includeAI.checked||!d.is_ai;}).map(function (d) {
           var b = d["brake_consistency_" + mode.v], t = d["throttle_consistency_" + mode.v], same = mode.v === S.racing_mode;
           return h("tr", {class: d.is_ai ? "ai" : null}, h("td", {class: "pos"}, d.pos || "-"), driverCell(d),
             score(b != null ? b : d.brake_consistency, same ? d.brake_point_sd : null), score(t != null ? t : d.throttle_consistency, same ? d.throttle_point_sd : null),
@@ -4577,7 +4726,8 @@ function viewStyle(recording, query) {
         mode.v = m[0]; e.target.parentNode.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === e.target)); }); draw(); }}, m[1]); }));
     draw();
     setView(raceSubHead("Driving style", S.meta, recording, champ, "style"), pageAwards(S.awards, recording, champ),
-      h("section", null, h("div", {class: "headrow"}, h("h2", null, "Every driver"), h("div", {class: "racingbox", style: {margin: 0}}, h("span", {class: "muted"}, "Corners spent racing another car count:"), seg)),
+      window.PaddockSkills?window.PaddockSkills.recorded({h:h,api:api},S.skills,S.skills_driver,recording):null,
+      h("section", null, h("div", {class: "headrow"}, h("h2", null, "Driver consistency & track use"),h('label',null,includeAI,' Include AI'), h("div", {class: "racingbox", style: {margin: 0}}, h("span", {class: "muted"}, "Corners spent racing another car count:"), seg)),
         h("p", {class: "explain"}, "Braking and throttle measure repeatability. Recorded player throttle uses pedal shape with shift filtering and a modest commitment penalty; other cars use an acceleration-based pickup proxy. ± is pickup scatter in metres, not the pedal rating scale. Track usage measures sustained wheel proximity to the edges, scaled to road width. Within 40 cm earns full credit. Supported linked-corner compromises and configured intended narrow exits carry no wide-exit penalty. Apex and exit show actual wheel clearance, with mapped or estimated edges. Racing-corner weighting adjusts for nearby cars."),
         box));
   });
@@ -4624,7 +4774,7 @@ function viewSettings() {
                 .then(function () { toast("Talking points saved."); }).catch(fail);
             }}, "Save talking points")),
         h("div", {class: "panel pad", style: {marginTop: "14px"}}, h("h3", null, "Racing corners"),
-          h("p", {class: "hint"}, "Braking and throttle consistency, in race reports, season stats and driver profiles: how much should corners spent racing another car count? (Another car within 1 s ahead or 0.7 s behind at the braking point or apex.) The Brake & throttle page has its own switch to see all three."),
+          h("p", {class: "hint"}, "Braking and throttle consistency, in race reports, season stats and driver profiles: how much should corners spent racing another car count? (Another car within 1 s ahead or 0.7 s behind at the braking point or apex.) The Corner by corner page has its own switch to see all three."),
           h("select", {"aria-label": "Racing corners", onchange: function (e) {
             api("/api/settings", "POST", {racing_corners: e.target.value}).then(function () { toast("Saved. Reports re-analyse with this the next time you open them."); }).catch(fail); }},
             [["equal", "Equal weight (count them like any other corner)"], ["reduced", "Less weight (a quarter, the default)"], ["excluded", "Excluded (leave them out)"]].map(function (o) {
@@ -4709,6 +4859,7 @@ function render(skipIdentity, identityChamp) {
   else if (path === "#/bop") p = viewBop();
   else if (path === "#/conversion") p = viewConversion();
   else if (path === "#/engineer") p = viewEngineer();
+  else if (path === "#/engineer/radio") p = viewEngineerRadio();
   else if ((m = path.match(/^#\/engineer\/(.+)$/))) p = viewEngineerSession(decodeURIComponent(m[1]));
   else if ((m = path.match(/^#\/pace\/(.+)$/))) p = viewPace(decodeURIComponent(m[1]), q);
   else if ((m = path.match(/^#\/tyres\/(.+)$/))) p = viewTyres(decodeURIComponent(m[1]), q);
@@ -4735,6 +4886,38 @@ window.addEventListener("beforeunload", function (e) {
 // Keep the background service alive while this window is open. Browsers throttle or freeze hidden
 // windows, so the service only quits on a real close (pagehide), never because heartbeats paused.
 var serviceDown = false;
+// Exit / Restart: shut the Paddock service down completely (the window alone may leave it running,
+// e.g. while a session is being recorded, and reopening would then show the old version).
+function appQuit(restart) {
+  var rec = document.getElementById("rec");
+  var recording = rec && /recording/i.test(rec.textContent || "");
+  if (recording && !confirm("A session is being recorded. " + (restart ? "Restart" : "Exit") + " anyway? The recording is finished and saved first.")) return;
+  var box = document.getElementById("appctl");
+  box.textContent = restart ? "Restarting Paddock\u2026" : "Paddock has shut down. You can close this window.";
+  fetch("/api/app/quit", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({restart: !!restart})})
+    .catch(function () {});
+  if (restart) {
+    var started = Date.now(), seenDown = false;
+    var timer = setInterval(function () {
+      fetch("/api/ping", {cache: "no-store"}).then(function () {
+        if (seenDown || Date.now() - started > 8000) { clearInterval(timer); location.reload(); }
+      }).catch(function () {
+        seenDown = true;
+        if (Date.now() - started > 60000) { clearInterval(timer); box.textContent = "Paddock did not come back. Start it again from its shortcut."; }
+      });
+    }, 700);
+  }
+}
+document.getElementById("apprestart").addEventListener("click", function () { appQuit(true); });
+document.getElementById("appexit").addEventListener("click", function () { appQuit(false); });
+function checkUpdate() {
+  fetch("/api/app/version", {cache: "no-store"}).then(function (r) { return r.json(); }).then(function (v) {
+    var note = document.getElementById("appupdate");
+    if (note) note.hidden = !(v && v.update_waiting);
+  }).catch(function () {});
+}
+setInterval(checkUpdate, 30000);
+checkUpdate();
 function heartbeat() {
   return fetch("/api/heartbeat", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"})
     .then(function (r) { if (r.ok && serviceDown) { serviceDown = false; var b = document.getElementById("svc-down"); if (b) b.remove(); render(); } })
@@ -4771,7 +4954,7 @@ function importFiles(list) {
     var all = []; rs.forEach(function (r) { all = all.concat(r.imported || []); });
     var fresh = all.filter(function (x) { return !x.already; });
     toast(fresh.length ? "Imported " + fresh.map(function (x) { return x.driver + "'s " + (x.type === "qualify" ? "qualifying" : x.type || "session") + " at " + (x.track || "?"); }).join(", ")
-      + ". If you were in the same session, their car now shows beside yours in Brake & throttle." : "Already imported: nothing new.");
+      + ". If you were in the same session, their car now shows beside yours in Corner by corner." : "Already imported: nothing new.");
     render();
   }).catch(fail);
 }

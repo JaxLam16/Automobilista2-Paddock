@@ -1,0 +1,192 @@
+{
+  "upstream": [
+    {
+      "file": "GameState/GameStateMapper.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/GameState/GameStateMapper.cs",
+      "sha256": "bab6df81baef6311ada65a6e381f1cec21c5bf9719e23a64a64ca01f94f2e5a7",
+      "bytes": 25267
+    },
+    {
+      "file": "CarData.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/CarData.cs",
+      "sha256": "dabb24be0a240abd6a432132fe95f413329460cc565636123d05658d6b09750d",
+      "bytes": 75586
+    },
+    {
+      "file": "TrackData/TrackData.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/TrackData/TrackData.cs",
+      "sha256": "39641e47c5fa81885a6da44ecbf7d422d599f5fc8678ce1e148030497322f7d2",
+      "bytes": 72798
+    },
+    {
+      "file": "AMS2/AMS2Struct.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/AMS2/AMS2Struct.cs",
+      "sha256": "e9786ec4a1795df62302b6075982df94a07d3a7b50663226e874acfdf57524f2",
+      "bytes": 46206
+    },
+    {
+      "file": "AMS2/enums.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/AMS2/enums.cs",
+      "sha256": "e6d88cd73d277d57752dbcc398ce55af5b70b98f454dd48f51e838978d7d333c",
+      "bytes": 8528
+    },
+    {
+      "file": "GameState/GlobalBehaviourSettings.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/GameState/GlobalBehaviourSettings.cs",
+      "sha256": "0696e97f18d1a446f4c0ff0e3873637660f73d8e7cb05fd0404c1b3f6f018ee5",
+      "bytes": 14388
+    },
+    {
+      "file": "AllGames/Game.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/AllGames/Game.cs",
+      "sha256": "4ae1a8038da544b8caae6eaef157c656ed8c39f3e3d8422d5bb117e2f8018b08",
+      "bytes": 10132
+    },
+    {
+      "file": "AllGames/GameDefinition.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/AllGames/GameDefinition.cs",
+      "sha256": "dd493ec16037af131f28cf5129086b97e967b0f15e5fa684f509ce33d23a4a8e",
+      "bytes": 10893
+    },
+    {
+      "file": "AllGames/GameDefinitionTable.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/AllGames/GameDefinitionTable.cs",
+      "sha256": "22e9e12fae2aec0c1870ec61354b0b854adeebea7ac36291d13d0a86ccf2d740",
+      "bytes": 22569
+    },
+    {
+      "file": "DriverNameHelper.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/DriverNameHelper.cs",
+      "sha256": "df1bf0a42a0e07b8a1a077866f86283defb39fbb8579427215ece690fb07366c",
+      "bytes": 40269
+    },
+    {
+      "file": "Events/CommonDataContainers.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/Events/CommonDataContainers.cs",
+      "sha256": "a2d8105ecaf200a16d77323657f37a64f92b4b84588aae630ad54bee8ed81971",
+      "bytes": 5263
+    },
+    {
+      "file": "Events/ConditionsMonitor.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/Events/ConditionsMonitor.cs",
+      "sha256": "2cba7685acfe26bbf79ef297400af24ea1573440382cb68372cf19c839e55187",
+      "bytes": 34800
+    },
+    {
+      "file": "AdditionalDataProvider.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/AdditionalDataProvider.cs",
+      "sha256": "e19d326f6c881aff26ff68f8a62de37b4ae60343702ae873cddd2fdd048fe5ea",
+      "bytes": 1279
+    },
+    {
+      "file": "Utilities.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/Utilities.cs",
+      "sha256": "f5d3f175582d9432c06f3966a898f488d9a285f2309718e66a95a436ed348c9f",
+      "bytes": 45900
+    },
+    {
+      "file": "Extensions.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/Extensions.cs",
+      "sha256": "f2e5a684d6a10e93139ed624e8de9835b1f68f2f4bc300fb47e89774466eef7a",
+      "bytes": 11645
+    },
+    {
+      "file": "AMS2/AMS2GameStateMapper.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/AMS2/AMS2GameStateMapper.cs",
+      "sha256": "4e8b752a3f6e2599b1219e349d88d25c42557c73425b21f98db28e2374870db3",
+      "bytes": 123862
+    },
+    {
+      "file": "GameState/GameStateData.cs",
+      "source": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/main/CrewChiefV4/GameState/GameStateData.cs",
+      "sha256": "963b088f874d880c93832a5263e7e4bbe21bfb35b9089204d114ed348e60127b",
+      "bytes": 227006
+    }
+  ],
+  "projection": {
+    "GameStateData.cs": {
+      "original": "diagnostics\\cc-next-20261015\\GameState\\GameStateData.cs",
+      "sha256": "963b088f874d880c93832a5263e7e4bbe21bfb35b9089204d114ed348e60127b",
+      "transformation": "4 UTC clock reads use injected sample clock; all original decisions unchanged",
+      "projected_sha256": "e986d2cf65b6589cc9d8972675bc58a140e8271e2bc124ddb8c6b035b0e2a375"
+    },
+    "AMS2GameStateMapper.cs": {
+      "original": "diagnostics\\cc-next-20261015\\AMS2\\AMS2GameStateMapper.cs",
+      "sha256": "4e8b752a3f6e2599b1219e349d88d25c42557c73425b21f98db28e2374870db3",
+      "transformation": "1 UTC clock reads use injected sample clock; all original decisions unchanged",
+      "projected_sha256": "c23382962d8766d0c8323323a9fca08257e68ebf394e81754fdfc14d4ace696b"
+    },
+    "GameStateMapper.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\GameState\\GameStateMapper.cs",
+      "sha256": "bab6df81baef6311ada65a6e381f1cec21c5bf9719e23a64a64ca01f94f2e5a7",
+      "transformation": "none"
+    },
+    "CarData.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\CarData.cs",
+      "sha256": "dabb24be0a240abd6a432132fe95f413329460cc565636123d05658d6b09750d",
+      "transformation": "none"
+    },
+    "TrackData.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\TrackData\\TrackData.cs",
+      "sha256": "39641e47c5fa81885a6da44ecbf7d422d599f5fc8678ce1e148030497322f7d2",
+      "transformation": "none"
+    },
+    "GlobalBehaviourSettings.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\GameState\\GlobalBehaviourSettings.cs",
+      "sha256": "0696e97f18d1a446f4c0ff0e3873637660f73d8e7cb05fd0404c1b3f6f018ee5",
+      "transformation": "none"
+    },
+    "Game.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\AllGames\\Game.cs",
+      "sha256": "4ae1a8038da544b8caae6eaef157c656ed8c39f3e3d8422d5bb117e2f8018b08",
+      "transformation": "none"
+    },
+    "GameDefinition.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\AllGames\\GameDefinition.cs",
+      "sha256": "dd493ec16037af131f28cf5129086b97e967b0f15e5fa684f509ce33d23a4a8e",
+      "transformation": "none"
+    },
+    "GameDefinitionTable.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\AllGames\\GameDefinitionTable.cs",
+      "sha256": "22e9e12fae2aec0c1870ec61354b0b854adeebea7ac36291d13d0a86ccf2d740",
+      "transformation": "none"
+    },
+    "ams2_enums.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\AMS2\\enums.cs",
+      "sha256": "e6d88cd73d277d57752dbcc398ce55af5b70b98f454dd48f51e838978d7d333c",
+      "transformation": "none"
+    },
+    "CommonDataContainers.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\Events\\CommonDataContainers.cs",
+      "sha256": "a2d8105ecaf200a16d77323657f37a64f92b4b84588aae630ad54bee8ed81971",
+      "transformation": "none"
+    },
+    "AdditionalDataProvider.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\AdditionalDataProvider.cs",
+      "sha256": "e19d326f6c881aff26ff68f8a62de37b4ae60343702ae873cddd2fdd048fe5ea",
+      "transformation": "none"
+    },
+    "DriverNameHelper.cs": {
+      "original": "diagnostics\\cc-mapper-20261016\\DriverNameHelper.cs",
+      "sha256": "df1bf0a42a0e07b8a1a077866f86283defb39fbb8579427215ece690fb07366c",
+      "transformation": "none"
+    },
+    "ams2_structs.cs": {
+      "original": "diagnostics/cc-mapper-20261016/AMS2/AMS2Struct.cs",
+      "transformation": "unchanged SHM structs, encoding initializer and two string helpers; omit UDP merge/serialization routines",
+      "sha256": "d73232505e167562cf9bc14c8d1ca444d2d42fedf46a4caf0c5a2c72adc2a5a5"
+    },
+    "mapper_conditions.cs": {
+      "original": "diagnostics/cc-mapper-20261016/Events/ConditionsMonitor.cs",
+      "transformation": "unchanged enums, thresholds and pure weather helper methods only; event integration pending",
+      "sha256": "58a5c100ac1b5977309feb402bbdde3cc77da8c5315b307d94a8d76d80a22ff4"
+    },
+    "mapper_extensions.cs": {
+      "original": "diagnostics/cc-mapper-20261016/Extensions.cs",
+      "transformation": "unchanged IndexOfMin extension only; omit graphics/UI dependencies",
+      "sha256": "92ce61997923407ab8324a03b63ecab4849c98ff16afcf6db8f394ea5642c219"
+    }
+  },
+  "settings_source": "diagnostics\\crew-chief-baseline-20261015\\current\\CrewChiefV4\\Properties\\Settings.settings",
+  "settings_sha256": "0b193d1c40e4412ff83da7a7ac8f171d1e85f746b04508249086f31fa02fbd99"
+}

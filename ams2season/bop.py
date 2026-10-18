@@ -539,7 +539,7 @@ class BopEditor:
                 if raw != source.raw: new_sources.append((source, raw))
             for key, value in changed.items():
                 p = known[key]
-                if p.value != value: descriptions.append({'parameter': p.label, 'before': p.value, 'after': value, 'unit': p.unit})
+                if p.value != value: descriptions.append({'id':p.id,'parameter': p.label, 'before': p.value, 'after': value, 'unit': p.unit})
         target_name = request.get('target_class')
         if target_name is not None:
             if car.errors.get('crd') or not car.sources.get('crd'):

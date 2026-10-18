@@ -1,0 +1,2 @@
+# Native build receipts verify exact source bytes; preserve packaged sources.
+ams2season/** -text

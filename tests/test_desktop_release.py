@@ -47,3 +47,9 @@ def test_release_allowlist_excludes_installed_data_and_includes_ui_assets():
     names = {file.name for file in files}
     assert {'app_ui.html', 'bop_editor.js', 'development_ui.js', 'replay_timing.js',
             'livery_editor.css', 'icon.ico', 'LIVERY_EDITOR_NOTICES.txt', 'desktop.py'} <= names
+    assert not any(name.endswith(('.building', '.tmp')) for name in names)
+    import json
+    for family in ('mapper_core', 'audio_core'):
+        receipt = json.loads((module.ROOT / 'ams2season/assets/crew_chief' / (family + '.build.json')).read_text())
+        assert {name for name in names if name.startswith(family) and name.endswith('.dll')} == {receipt['assembly_file']}
+    assert not any(file.suffix.lower() in ('.wav', '.mp3', '.flac') for file in files)

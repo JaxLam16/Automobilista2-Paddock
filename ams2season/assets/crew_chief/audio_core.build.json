@@ -1,0 +1,16 @@
+{
+  "version": "4.19.5.4",
+  "language": "C# 7.2",
+  "framework": ".NET Framework 4.8",
+  "sources": {
+    "NumberReader.cs": "d1bfa457d9b166bc8bb07abcd3190f4d80f489371934afc1342ccc6a135d7119",
+    "NumberReaderEn.cs": "c1e8191cbfdf4a96757cc79a3ab6c3253e3a4bef1d322a9f4b3b43a0a543e106",
+    "TimeSpanWrapper.cs": "51dfc264d1711b964f0c90102606f38c5b4d19689db14f0710aeb2495fffe3f1",
+    "CarNumber.cs": "71bbfb04bf77b79e95030e58a3a67c2151a341333bc2914c96eebc90d4b84691",
+    "SoundSet.cs": "96996cc81c5a2820f77bf8908b44fa067d1507c49814a4ef904612a459e1eb6e",
+    "SoundCacheSelection.cs": "a9c52766464a4931fb020d72360d54ed2da1173cbbeef0bd2b55308a7171efbf",
+    "audio_metadata_host.cs": "e3877d34cd18089e88a6269796d6adc0c6d7ca52fd81d51881a13a4973983eee"
+  },
+  "assembly_file": "audio_core.9b7215b315d1fbd7d63eadf1e70b6838a5cfcc212feadbc43b32a02fa2134280.dll",
+  "assembly_sha256": "9b7215b315d1fbd7d63eadf1e70b6838a5cfcc212feadbc43b32a02fa2134280"
+}

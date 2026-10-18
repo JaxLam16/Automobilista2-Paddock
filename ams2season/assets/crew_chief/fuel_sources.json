@@ -1,0 +1,87 @@
+{
+  "Fuel.cs": {
+    "original": "diagnostics\\cc-baseline-next-20261016\\Fuel.cs",
+    "original_sha256": "8f5986c2b901dbca7fdbd81ceda11d44c88415c95c274ec00405ee6cddf069ec",
+    "sha256": "8f5986c2b901dbca7fdbd81ceda11d44c88415c95c274ec00405ee6cddf069ec",
+    "transformation": "none"
+  },
+  "Fuel_legacy.cs": {
+    "original": "diagnostics\\cc-fuel-20261016\\Fuel_legacy.cs",
+    "original_sha256": "df2f7a0fdc80a882bbedeb0089f1527dab3e1b8b21341aa66b4726cc4f97e78e",
+    "sha256": "df2f7a0fdc80a882bbedeb0089f1527dab3e1b8b21341aa66b4726cc4f97e78e",
+    "transformation": "none"
+  },
+  "Fuel.TopicWindow.cs": {
+    "original": "diagnostics\\cc-fuel-20261016\\Fuel.TopicWindow.cs",
+    "original_sha256": "756e0d1986f883f02bbc6f688f24befa6d529c71ce06d23e378db84c29876a66",
+    "sha256": "1de9e16b3f709afeb9085545bd07bdbca5e0368ffd4f4af307e803b91693b5db",
+    "transformation": "2 UTC clock reads injected"
+  },
+  "RaceTime.cs": {
+    "original": "diagnostics\\cc-weather-20261016\\RaceTime.cs",
+    "original_sha256": "65a86222c8862c41247d1101f4682ba1c2c9452f2d651604358b627400afbc13",
+    "sha256": "65a86222c8862c41247d1101f4682ba1c2c9452f2d651604358b627400afbc13",
+    "transformation": "none"
+  },
+  "fuel_dependencies.cs": {
+    "sha256": "9329bc1667aa12182c3d6cb3f9df678f8159ff4c2e5101881d6c20568aed8e17",
+    "dependencies": [
+      {
+        "original": "diagnostics\\crew-chief-baseline-20261015\\current\\CrewChiefV4\\CrewChief.cs",
+        "original_sha256": "e65a70ce0a553dc475bfcdbc53772346da9e9644026ff1094ae205b439890542",
+        "methods": [
+          "public class FuelMultiplier"
+        ]
+      },
+      {
+        "original": "diagnostics\\cc-mapper-20261016\\Utilities.cs",
+        "original_sha256": "f5d3f175582d9432c06f3966a898f488d9a285f2309718e66a95a436ed348c9f",
+        "methods": [
+          "public static float convertLitresToGallons"
+        ]
+      },
+      {
+        "original": "diagnostics\\cc-fuel-20261016\\Strategy.cs",
+        "original_sha256": "a4c83dcdcad35fb05cc213c653a904439ccfbe13040bb4b2c3a38e99166c7800",
+        "methods": [
+          "public static float getExpectedPlayerTimeLossFallback",
+          "class PersistedBenchmark",
+          "class BenchmarkHelper"
+        ]
+      },
+      {
+        "original": "diagnostics\\cc-headless-20261016\\SpeechRecogniser.cs",
+        "original_sha256": "8e58b256eaabefa630b77a2daded3963e700f5ed220083d3a3e65fdbbdd26089",
+        "methods": [
+          "public static Boolean ResultContains(String result, String[] alternatives"
+        ]
+      },
+      {
+        "original": "diagnostics\\cc-headless-20261016\\Audio\\AudioPlayer.cs",
+        "original_sha256": "5624cfdab1b5bf3a72e794df7b51e2b183c41145b10dc8e960db36775ade6d9b",
+        "methods": [
+          "public void playMessageOrFallback("
+        ]
+      }
+    ],
+    "transformation": "unchanged original method/class bodies with namespace/using wrappers; adapters are separate; enclosing host partial type declaration only (member bodies unchanged)",
+    "lap_times_boundary_change": "Trailing reduced LapTimes constants stub removed. Other original dependency method pins unchanged. The full original LapTimes.cs is pinned separately below; dictionary values verified identical in promotion.json.",
+    "superseded_lap_times_constants": [
+      {
+        "original": "diagnostics\\cc-fuel-20261016\\LapTimes.cs",
+        "original_sha256": "d7938df8fb0db6416a74a592e919479e85e2ca8ef753f52bce27a5d3e3147151",
+        "methods": [
+          "public static readonly Dictionary<TrackData.TrackLengthClass, float> outlierPaceLimits",
+          "public static Dictionary<TrackData.TrackLengthClass, int> lapsBeforeAnnouncingGaps"
+        ]
+      }
+    ],
+    "replacement_constant_proof": "diagnostics/cc-laptimes-live-20261017/promotion.json"
+  },
+  "LapTimes.cs": {
+    "original": "diagnostics\\cc-laptimes-prep-20261017\\installed-IL-source\\CrewChiefV4.Events.LapTimes.cs",
+    "original_sha256": "1ba0069c97fff8d20944a9fda37cf93c280a22a9bfa5c17237968d1db92414f8",
+    "sha256": "1ba0069c97fff8d20944a9fda37cf93c280a22a9bfa5c17237968d1db92414f8",
+    "transformation": "none; unchanged installed 4.19.5.4 IL source view"
+  }
+}

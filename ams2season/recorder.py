@@ -86,6 +86,10 @@ LOCAL_SCHEMA = pa.schema([
     *[(f"{k}_{w}", pa.float32()) for k in WHEEL_DYN for w in ("fl", "fr", "rl", "rr")],
     *ENGINEER_COLS,
     ("compound", pa.string()), ("local_lap", pa.int16()), ("local_lap_invalid", pa.bool_()),
+    # Exact inputs used by Crew Chief's AMS2 spotter; older recordings lack these.
+    ("spotter_yaw", pa.float32()), ("world_vx", pa.float32()), ("world_vz", pa.float32()),
+    ("pit_schedule", pa.int8()),  # authoritative local channel used by Crew Chief
+    ("highest_flag_colour", pa.int8()),  # local channel can differ from per-car flags
 ])
 
 FRAME_COLUMNS = FRAME_SCHEMA.names
@@ -185,6 +189,8 @@ class Recorder:
         self._version_warned = False
         self.game_connected = False
         self.game_state: int | None = None
+        self.current = None
+        self.last_snapshot_at = None
         self.on_snapshot = None  # single listener (kept for compatibility)
         self.hooks: dict = {}    # named live listeners: the track mapper, the practice tracker
 
@@ -198,10 +204,25 @@ class Recorder:
             session = {"folder": a.path.name, "track": a.key[0], "layout": a.key[1], "type": a.key[2],
                        "elapsed_s": round(now - a.t0, 1), "cars": len(a.last_participants), "rows": a.rows,
                        "green": a.green_t is not None, "warnings": sorted(a.out_of_range)}
-        return {"connected": self.game_connected, "game_state": self.game_state, "session": session,
+        current = self.current if self.last_snapshot_at is not None and now - self.last_snapshot_at < 3 else None
+        return {"connected": self.game_connected, "game_state": self.game_state, "session": session, "current": current,
                 "completed": [p.name for p in self.completed]}
 
     def step(self, snap: S.SharedMemory | None, now: float) -> None:
+        # Session metadata can survive a disconnected game during the recorder's
+        # grace period. Use fresh snapshots for the engineer's start selection.
+        self.current = None
+        self.last_snapshot_at = now if snap is not None else None
+        if (snap is not None and snap.mGameState in RECORDABLE_GAME_STATES
+                and snap.mSessionState != S.SESSION_INVALID and snap.mTrackLength > 0
+                and 0 <= snap.mViewedParticipantIndex < min(snap.mNumParticipants, S.STORED_PARTICIPANTS_MAX)
+                and snap.mParticipantInfo[snap.mViewedParticipantIndex].mIsActive):
+            car, track = S.cstr(snap.mCarName).strip(), S.cstr(snap.mTrackLocation).strip()
+            if car and track:
+                self.current = {"car": car, "track": track,
+                                "driver": S.cstr(getattr(snap.mParticipantInfo[snap.mViewedParticipantIndex], "mName", b"")).strip(),
+                                "layout": S.cstr(snap.mTrackVariation).strip() or track,
+                                "type": session_type(snap.mSessionState)}
         if snap is not None:
             for hook in list(self.hooks.values()) + ([self.on_snapshot] if self.on_snapshot else []):
                 try:
@@ -428,7 +449,9 @@ class Recorder:
             snap.mLocalAcceleration[0], snap.mLocalAcceleration[1], snap.mLocalAcceleration[2],
             snap.mLocalVelocity[0], snap.mLocalVelocity[2],
             S.cstr(snap.mTyreCompound[0]),
-            self._local_lap(snap), bool(snap.mLapInvalidated))
+            self._local_lap(snap), bool(snap.mLapInvalidated),
+            snap.mOrientation[1], snap.mWorldVelocity[0], snap.mWorldVelocity[2],
+            e('pit_schedule',snap.mPitSchedule),e('flag_colour',snap.mHighestFlagColour))
         for col, v in zip(LOCAL_COLUMNS, local_row):
             a.local[col].append(v)
 

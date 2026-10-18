@@ -8,6 +8,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+pytestmark = pytest.mark.usefixtures('closed_synthetic_game')
+
 from ams2season.app import App
 from ams2season.development import Development, eligible_fields, evaluate, measure, objectives
 from ams2season.legends import scores_from_raw
@@ -79,9 +81,10 @@ def test_missing_profile_values_stay_unrated_and_starts_are_gradual():
     assert scores_from_raw({'lap_cv_pct': 1})['consistency'] == 80
 
 
-def test_measure_selects_three_actual_reference_laps_and_consistent_corner_grid(practices):
+def test_measure_averages_all_eligible_reference_laps_and_consistent_corner_grid(practices):
     ref = measure(practices[0]); run = measure(practices[1], ref)
-    assert len(ref['reference_laps']) == 3 and ref['clean_laps'] >= 5
+    assert len(ref['reference_laps']) == ref['clean_laps'] and ref['clean_laps'] >= 5
+    assert ref['average'] == pytest.approx(sum(x['time'] for x in ref['laps']) / len(ref['laps']),abs=.001)
     assert ref['car'] == 'CAR_A' and ref['fuel_used'] > 0
     assert run['median'] < ref['median'] - .3
     assert run['corners'] == ref['corners']
@@ -247,14 +250,14 @@ def test_reference_is_locked_and_cannot_be_used_as_practice_two(campaign):
     with pytest.raises(ValueError, match='changed'): dev.submit(cid, {'plan': plan['id']})
 
 
-def test_goals_fail_when_laps_are_not_consecutive_or_not_comparable():
+def test_one_clean_lap_is_enough_and_nonconsecutive_extra_laps_are_averaged():
     ref = {'driver': 'Jax', 'car': 'Car', 'track': 'Track', 'layout': 'GP', 'length': 5000, 'hash': 'p1', 'median': 100,
            'started_at': '2026-10-01', 'corner_speeds': {'T1': 170}, 'kinds': {'fast': ['T1'], 'corner': [], 'exit': []}}
     project = [{'category': 'front_aero', 'objectives': objectives('front_aero', ref)}]
     run = ref | {'hash': 'p2', 'started_at': '2026-10-02', 'clean_laps': 3,
                  'laps': [{'n': n, 'time': 100, 'speeds': {'T1': 173}} for n in (1, 3, 5)]}
     result = evaluate(project, ref, run)
-    assert result['projects'][0]['points'] == 0
+    assert result['projects'][0]['points'] == 1
     run['laps'] = [{'n': n, 'time': 100, 'speeds': {'T1': 173}} for n in (1, 2, 3)]
     result = evaluate(project, ref, run)
     assert result['projects'][0]['points'] == 1
@@ -265,12 +268,64 @@ def test_goals_fail_when_laps_are_not_consecutive_or_not_comparable():
     with pytest.raises(ValueError, match='same driver'): evaluate(project, ref, run)
 
 
+def test_one_lap_p1_and_p2_with_no_race_or_qualifying_can_plan_and_assess(campaign,monkeypatch):
+    import ams2season.development as module
+    app,cid,dev,game=campaign
+    original=module.recording_laps
+    def one_lap(sess):
+        driver,laps,length=original(sess)
+        return driver,[next(lp for lp in laps if lp['valid'])],length
+    monkeypatch.setattr(module,'recording_laps',one_lap)
+    reference=measure(practices_path:=app.lib.recording_path(weekends(app.lib,cid)[0]['practice1']))
+    assert reference['clean_laps']==1 and reference['sample_quality']=='single_lap'
+    assert reference['average']==reference['median']
+    assert not weekends(app.lib,cid)[0]['race'] and not weekends(app.lib,cid)[0]['qualify']
+    plan=plan_and_assign(campaign,('power',))
+    result=dev.submit(cid,{'plan':plan['id']})
+    assert result['evaluation']['clean_laps']==1
+    assert result['evaluation']['sample_quality']=='single_lap'
+    assert result['evaluation']['projects'][0]['points']==2
+
+
+def test_extra_laps_cannot_be_cherry_picked_and_legacy_unassessed_targets_are_lowered():
+    ref={'driver':'Jax','car':'Car','track':'Track','layout':'GP','length':5000,'hash':'p1','median':100,
+         'started_at':'2026-10-01','corner_speeds':{},'kinds':{'fast':[],'corner':[],'exit':[]}}
+    project=[{'category':'power','objectives':[
+        {'id':'repeatability','kind':'repeatability','target':1,'text':'3 consecutive laps'},
+        {'id':'performance','kind':'pace','target':99.7,'text':'3 laps'}]}]
+    run=ref|{'hash':'p2','started_at':'2026-10-02','clean_laps':3,
+             'laps':[{'n':i+1,'time':t,'speeds':{}} for i,t in enumerate((99,101,101))]}
+    result=evaluate(project,ref,run)
+    assert result['projects'][0]['points']==1
+    assert result['projects'][0]['objectives'][1]['actual']==pytest.approx(100.3333)
+    run['laps']=run['laps'][:1];run['clean_laps']=1
+    assert evaluate(project,ref,run)['projects'][0]['points']==2
+    assert project[0]['objectives'][0]['kind']=='repeatability'
+
+
 def test_catalog_marks_unsupported_physics_instead_of_faking_an_upgrade(campaign):
     _, cid, dev, _ = campaign
     cats = {c['id']: c for c in dev.overview(cid)['catalog']}
     assert len(cats) >= 20 and cats['power']['available'] and cats['brakes']['available']
     assert not cats['tyres']['available'] and not cats['underbody']['available']
     with pytest.raises(ValueError, match='Tyres'): dev.create(cid, {'round': 1, 'categories': ['tyres']})
+
+
+def test_reference_mismatch_names_weekend_and_both_cars_without_changing_binding(campaign,monkeypatch):
+    import ams2season.development as module
+    app,cid,dev,_=campaign;before=dev.config(cid)
+    original=module.measure
+    monkeypatch.setattr(module,'measure',lambda path:original(path)|{'car':'Porsche 992 GT3 R'})
+    with pytest.raises(ValueError,match='Weekend 1 P1 used Porsche 992 GT3 R.*CAR_A'):
+        dev.create(cid,{'round':1,'categories':['power']})
+    assert dev.config(cid)==before and not dev.plans(cid)
+
+
+def test_changing_unplanned_car_does_not_keep_previous_telemetry_alias(campaign):
+    _,cid,dev,_=campaign
+    dev.config(cid,{'car':'car_a','telemetry_car':'Custom old name'})
+    cfg=dev.config(cid,{'car':'car_b','telemetry_car':''})
+    assert cfg['telemetry_car']==dev.editor._car('car_b').name
 
 
 def test_manual_mode_keeps_earned_levels_queued(campaign):

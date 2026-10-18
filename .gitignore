@@ -34,4 +34,6 @@ __pycache__/
 
 # Livery designer user projects and supplied import archive
 /livery_designer/
+/crew_chief/
+/private_coach/
 /ams2_livery_tool.zip

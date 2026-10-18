@@ -16,6 +16,16 @@ Use Recordings to review the session. Create a championship and import recorded
 races for standings and season statistics. Track map capture and track boundaries
 improve corner geometry analysis; only available telemetry can be analysed.
 
+For setup work, open **Race engineer** with the recorder running and your car
+loaded in AMS2. **Start live engineering** uses the current car and track,
+resumes any saved setup for them, and analyses each run when you return to the
+pits. You can also expand **Use a recorded practice session instead** to work
+from an earlier recording. Confirm the engineer's Session setup before following
+tick-based advice.
+
+The **Crew Chief radio** panel can connect your installed Crew Chief to Paddock
+and send a spoken test message. See [Crew Chief setup](CREW_CHIEF.md).
+
 The window uses a local web server, normally `http://127.0.0.1:8642`.
 Closing the window normally stops the app after a short delay. Close the app
 before copying data or replacing release files.
@@ -28,6 +38,9 @@ the new release into a separate folder and copy these items from the old folder:
 - `ams2season.json` — settings, including any custom recording directory paths.
 - `recordings/` and `championships/` — telemetry and championship databases.
 - `tracks/`, `car_icons/`, `engineer/` — captured maps, custom icons and engineer state.
+- `crew_chief/` — optional Crew Chief connection settings and original-file backups.
+- `private_coach/` — local coach settings, optional voice packs and imported corner references.
+- `livery_designer/` — editable livery projects and imported decals.
 - `livery_editor/`, `balance_of_performance/` — editor state, profiles and game backups.
 - `Car Setups/` and any other folders where you exported your setups.
 

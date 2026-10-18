@@ -100,6 +100,7 @@ def _linked_exit(c, next_corner, L, curvature):
     if next_corner is None or c.get("dir") not in ("left", "right") or next_corner.get("dir") not in ("left", "right"):
         return False
     span = (float(next_corner["apex"]) - float(c["apex"])) % L
+    if _continuous_sequence(c,next_corner,L,curvature):return True
     if c["dir"] == next_corner["dir"] or not 20.0 <= span <= 180.0:
         return False
     if curvature is not None:
@@ -114,6 +115,22 @@ def _linked_exit(c, next_corner, L, curvature):
         if _sustained(np.abs(k) < 1 / 800, max(2, int(np.ceil(45.0 / step)))) is not None:
             return False
     return True
+
+
+def _continuous_sequence(c, following, L, curvature):
+    """Connected curvature has no independent straight requiring a wide exit."""
+    if following is None or curvature is None or L<=0:return False
+    span=(float(following['apex'])-float(c['apex']))%L
+    if not 20<=span<=500:return False
+    k=np.asarray(curvature,float)
+    if not len(k):return False
+    step=L/len(k)
+    loc=(float(c['apex'])+np.arange(0,span+step/2,step))%L
+    values=k[np.minimum((loc/step).astype(int),len(k)-1)]
+    if not np.isfinite(values).all() or len(values)<5:return False
+    turning=np.abs(values)>1/800
+    return bool(turning[:2].all() and turning[-2:].all() and turning.mean()>=.7
+                and _sustained(~turning,max(2,int(np.ceil(45/step)))) is None)
 
 
 def corner_track_usage(ld, off, c, L, left, right, before, after, *, next_corner=None,
@@ -165,6 +182,9 @@ def corner_track_usage(ld, off, c, L, left, right, before, after, *, next_corner
     if policy == 'compromise':
         out['exit_treatment'] = 'configured_compromise'
         out['exit_reason'] = "Exit scoring disabled for this corner's intended line."
+    elif policy != 'wide' and _continuous_sequence(c,next_corner,L,curvature):
+        out['exit_treatment']='linked_corner';out['next_corner']=next_corner.get('name')
+        out['exit_reason']='Continuous corner sequence: no separate wide exit is required before '+str(next_corner.get('name','the next turn'))+'.'
     elif policy != 'wide' and _linked_exit(c, next_corner, L, curvature):
         next_rel = (ld - next_corner['apex'] + L / 2) % L - L / 2
         next_band = float(np.clip((next_corner.get('radius') or 100) * 0.2, 12, 35))

@@ -108,8 +108,6 @@ def measure(path, reference=None):
         raise ValueError('No complete valid flying laps were found in this practice.')
     best = min(x['time'] for x in usable)
     usable = [x for x in usable if x['time'] <= best * 1.05]
-    if len(usable) < 3:
-        raise ValueError('Record at least three clean flying laps within 5% of the best lap.')
     car = (sess.meta.get('local') or {}).get('car')
     ref_lap = min(usable, key=lambda x: x['time'])
     fr = sess.frames[(sess.frames.name == driver) & (sess.frames.t >= ref_lap['t0']) & (sess.frames.t <= ref_lap['t'][-1])]
@@ -135,42 +133,58 @@ def measure(path, reference=None):
         fuel_load = float(np.median(fuel)) if {'fuel_level', 'fuel_capacity'} <= set(seg.columns) and len(seg) else None
         row['fuel_load'] = fuel_load if fuel_load is not None and math.isfinite(fuel_load) else None
         per_lap.append(row)
-    selected = sorted(per_lap, key=lambda x: (x['time'], x['n']))[:3]
-    medians = {c['name']: round(float(np.median([x['speeds'][c['name']] for x in selected])), 3) for c in corners}
+    selected = sorted(per_lap, key=lambda x: x['n'])
+    medians = {c['name']: round(float(np.mean([x['speeds'][c['name']] for x in selected])), 3) for c in corners}
     kinds = {'fast': [k for k, v in medians.items() if v >= 160],
              'corner': [k for k, v in medians.items() if v < 160],
              'exit': [k for k, v in medians.items() if v < 160]}
-    def finite_median(vals):
+    def finite_average(vals):
         vals = [v for v in vals if v is not None and math.isfinite(v)]
-        return float(np.median(vals)) if vals else None
+        return float(np.mean(vals)) if vals else None
     return {'driver': driver, 'car': car, 'track': sess.meta['track_location'], 'layout': sess.meta['track_variation'],
             'started_at': sess.meta.get('started_at'), 'length': length, 'hash': fingerprint(path), 'credit_hash': fingerprint(path, False),
             'clean_laps': len(per_lap), 'total_laps': len(laps), 'laps': per_lap,
             'reference_laps': [x['n'] for x in selected], 'median': round(float(np.median([x['time'] for x in selected])), 3),
-            'fuel_used': finite_median([x['fuel_used'] for x in selected]),
-            'fuel_load': finite_median([x['fuel_load'] for x in selected]),
+            'average': round(float(np.mean([x['time'] for x in selected])), 3),
+            'sample_quality': 'single_lap' if len(selected) == 1 else 'multiple_laps',
+            'fuel_used': finite_average([x['fuel_used'] for x in selected]),
+            'fuel_load': finite_average([x['fuel_load'] for x in selected]),
             'corner_speeds': medians, 'kinds': kinds, 'corners': corners}
 
 
 def objectives(category, baseline):
     mode = BY_ID[category][5]
-    goals = [{'id': 'repeatability', 'kind': 'repeatability', 'target': 1.,
-              'text': 'Drive 3 consecutive clean laps within 1.000 s of one another, each within 3 s of the P1 reference.'}]
+    goals = [{'id': 'repeatability', 'kind': 'clean_lap', 'target': 1,
+              'text': 'Complete at least one clean flying lap in Practice 2.'}]
     if mode in ('fast', 'corner', 'exit') and baseline['kinds'][mode]:
         names = baseline['kinds'][mode]
         delta = 4. if mode == 'fast' else 2.
         goals.append({'id': 'performance', 'kind': 'corner', 'corners': names, 'target': delta,
-                      'text': 'Over 3 clean laps, average ' + str(int(delta)) + ' km/h faster through ' + ', '.join(names) + ' than P1.'})
+                      'text': 'Using one or more clean laps, average ' + str(int(delta)) + ' km/h faster through ' + ', '.join(names) + ' than P1.'})
     elif mode == 'fuel' and baseline.get('fuel_used'):
         goals.append({'id': 'performance', 'kind': 'fuel', 'target': baseline['fuel_used'] * .995,
-                      'text': 'Use at least 0.5% less fuel per lap over 3 clean laps, staying within 1 s of the P1 reference.'})
+                      'text': 'Use at least 0.5% less fuel per lap, averaging eligible clean laps within 1 s of the P1 reference. One lap is enough.'})
     elif mode == 'endurance':
-        goals.append({'id': 'performance', 'kind': 'endurance', 'target': 5,
-                      'text': 'Complete 5 consecutive clean flying laps, each within 3 s of the P1 reference.'})
+        goals.append({'id': 'performance', 'kind': 'endurance', 'target': 1,
+                      'text': 'Complete at least one clean flying lap within 3 s of the P1 reference. This is a short research run, not a durability measurement.'})
     else:
-        goals.append({'id': 'performance', 'kind': 'pace', 'target': baseline['median'] - .3,
-                      'text': 'Over 3 clean laps, beat the P1 reference median by at least 0.300 s.'})
+        goals.append({'id': 'performance', 'kind': 'pace', 'target': baseline.get('average', baseline['median']) - .3,
+                      'text': 'Average at least 0.300 s faster than the P1 reference using one or more clean laps.'})
     return goals
+
+
+def short_practice_projects(projects, baseline):
+    """Lower unassessed legacy lap requirements without rewriting earned history."""
+    result = []
+    for project in projects:
+        current = {g['id']: g for g in objectives(project['category'], baseline)}
+        goals = []
+        for old in project['objectives']:
+            fresh = current.get(old['id'], old)
+            # Existing performance targets remain locked to their original P1.
+            goals.append(fresh if old['kind'] in ('repeatability', 'endurance') else old | {'text': fresh['text']})
+        result.append(project | {'objectives': goals})
+    return result
 
 
 def evaluate(projects, baseline, session):
@@ -188,50 +202,71 @@ def evaluate(projects, baseline, session):
         if timestamp(session['started_at']) <= timestamp(baseline['started_at']):
             raise ValueError('Practice 2 must have been recorded after Practice 1.')
     laps = sorted(session['laps'], key=lambda x: x['n'])
-    windows = [laps[i:i + 3] for i in range(len(laps) - 2)
-               if laps[i + 2]['n'] - laps[i]['n'] == 2]
+    reference_time = baseline.get('average', baseline['median'])
     outcomes = []
-    for project in projects:
+    for project in short_practice_projects(projects, baseline):
         goals = []
         for goal in project['objectives']:
             kind = goal['kind']; actual = None; samples = []
-            if kind == 'repeatability':
-                groups = [g for g in windows if all(abs(x['time'] - baseline['median']) <= 3 for x in g)]
-                if groups:
-                    group = min(groups, key=lambda g: max(x['time'] for x in g) - min(x['time'] for x in g))
-                    actual = max(x['time'] for x in group) - min(x['time'] for x in group)
-                    samples = [x['n'] for x in group]
-                passed = actual is not None and actual <= goal['target'] + 1e-8
+            if kind == 'clean_lap':
+                actual = len(laps); samples = [x['n'] for x in laps]
+                passed = actual >= 1
             elif kind == 'endurance':
-                run = []; longest = []
-                for lp in laps:
-                    if abs(lp['time'] - baseline['median']) > 3:
-                        run = []; continue
-                    if run and lp['n'] != run[-1]['n'] + 1:
-                        run = []
-                    run.append(lp)
-                    if len(run) > len(longest): longest = list(run)
-                actual = len(longest); samples = [x['n'] for x in longest]
+                comparable = [lp for lp in laps if abs(lp['time'] - reference_time) <= 3]
+                actual = len(comparable); samples = [x['n'] for x in comparable]
                 passed = actual >= goal['target']
             else:
-                candidates = []
-                for group in windows:
-                    if kind == 'pace':
-                        val = float(np.median([x['time'] for x in group]))
-                    elif kind == 'fuel':
-                        if any(x.get('fuel_used') is None or abs(x['time'] - baseline['median']) > 1 for x in group): continue
-                        val = float(np.median([x['fuel_used'] for x in group]))
+                group = laps
+                if kind == 'fuel':
+                    group = [x for x in laps if x.get('fuel_used') is not None and abs(x['time'] - reference_time) <= 1]
+                if group:
+                    if kind == 'pace': actual = float(np.mean([x['time'] for x in group]))
+                    elif kind == 'fuel': actual = float(np.mean([x['fuel_used'] for x in group]))
                     else:
                         names = goal['corners']
-                        val = float(np.mean([x['speeds'][k] - baseline['corner_speeds'][k] for x in group for k in names]))
-                    candidates.append((val, group))
-                if candidates:
-                    actual, group = (max if kind == 'corner' else min)(candidates, key=lambda x: x[0])
+                        actual = float(np.mean([x['speeds'][k] - baseline['corner_speeds'][k] for x in group for k in names]))
                     samples = [x['n'] for x in group]
                 passed = actual is not None and (actual >= goal['target'] - 1e-8 if kind == 'corner' else actual <= goal['target'] + 1e-8)
             goals.append(goal | {'passed': bool(passed), 'actual': None if actual is None else round(float(actual), 4), 'laps': samples})
         outcomes.append({'category': project['category'], 'objectives': goals, 'points': sum(x['passed'] for x in goals)})
-    return {'assessed_at': now(), 'recording_hash': session.get('credit_hash', session['hash']), 'clean_laps': session['clean_laps'], 'projects': outcomes}
+    return {'assessed_at': now(), 'recording_hash': session.get('credit_hash', session['hash']),
+            'clean_laps': session['clean_laps'], 'sample_quality': 'single_lap' if len(laps) == 1 else 'multiple_laps',
+            'minimum_clean_laps': 1, 'aggregation': 'mean_of_eligible_clean_laps', 'projects': outcomes}
+
+
+def waiting_plans(lib, *, driver, car, track, layout, length=None):
+    """R&D plans whose goals are locked and still wait for their Practice 2 recording, for
+    this exact driver, car, track and layout. Read only: championships are opened read-only
+    and nothing is assessed or credited here (that still happens when Practice 2 is filed)."""
+    import re
+    normalize = lambda value: re.sub(r'[^a-z0-9]', '', str(value or '').lower())
+    found = []
+    for path in lib._champ_files():
+        try:
+            con = sqlite3.connect(f'file:{Path(path).resolve().as_posix()}?mode=ro', uri=True)
+            try:
+                rows = con.execute("SELECT data FROM development WHERE state='planned'").fetchall()
+            finally:
+                con.close()
+        except sqlite3.Error:
+            continue  # an older championship without R&D, or one being written right now
+        for (data,) in rows:
+            try:
+                plan = json.loads(data)
+                base = plan['baseline']
+                if (plan.get('evaluation') or plan.get('practice2') or plan.get('weekend_deleted')
+                        or base.get('driver') != driver or normalize(base.get('car')) != normalize(car)
+                        or base.get('track') != track or base.get('layout') != layout
+                        or (length is not None and abs(float(base['length']) - float(length)) > 10)):
+                    continue
+                found.append({'champ': Path(path).stem, 'round': plan['round'], 'plan': plan['id'],
+                              'created_at': plan.get('created_at') or '',
+                              'projects': short_practice_projects(plan['projects'], base),
+                              'baseline': {k: base.get(k) for k in ('driver', 'car', 'track', 'layout', 'length', 'median',
+                                                                     'average', 'fuel_used', 'corner_speeds', 'corners', 'kinds')}})
+            except (KeyError, TypeError, ValueError):
+                continue
+    return sorted(found, key=lambda p: p['created_at'])
 
 
 class Development:
@@ -241,6 +276,10 @@ class Development:
         self.lock = threading.RLock()
         self.stop = threading.Event()
         self.worker = None
+        from .development_states import DevelopmentStates
+        self.states = DevelopmentStates(self)
+        from .development_ai import AIResearch
+        self.ai = AIResearch(self)
 
     @property
     def editor(self):
@@ -260,7 +299,8 @@ class Development:
                     raise ValueError('Automatic application must be on or off.')
                 if cfg.get('car') and cfg['car'] != car.id and self.plans(cid):
                     raise ValueError('This championship already has development for its bound car.')
-                telemetry_car = str(body.get('telemetry_car') or cfg.get('telemetry_car') or car.name).strip()
+                previous_name = cfg.get('telemetry_car') if cfg.get('car') == car.id else None
+                telemetry_car = str(body.get('telemetry_car') or previous_name or car.name).strip()
                 cfg = {'car': car.id, 'name': car.name, 'telemetry_car': telemetry_car, 'automatic': body.get('automatic', True),
                        'expected_fingerprint': car.fingerprint}
                 with con:
@@ -272,7 +312,11 @@ class Development:
     def plans(self, cid):
         con = connection(self.lib._db(cid))
         try:
-            return [json.loads(r['data']) for r in con.execute('SELECT data FROM development ORDER BY round,id')]
+            plans = [json.loads(r['data']) for r in con.execute('SELECT data FROM development ORDER BY round,id')]
+            for plan in plans:
+                if not plan.get('evaluation'):
+                    plan['projects'] = short_practice_projects(plan['projects'], plan['baseline'])
+            return plans
         finally:
             con.close()
 
@@ -334,6 +378,7 @@ class Development:
             for x in (p.get('evaluation') or {}).get('projects', []): earned[x['category']] += x['points']
             if p['state'] == 'applied':
                 for k, n in p.get('upgrades', {}).items(): applied[k] += n
+        if self.states.active()[0]:applied.update({k:0 for k in applied}|self.states.human_levels(cid))
         catalog = []
         for ident, name, desc, _, factor, _, _ in CATALOG:
             fields, reason = eligible_fields(car, ident) if car else ([], 'Scan AMS2 and bind your installed car to this championship.')
@@ -342,6 +387,8 @@ class Development:
                             'applied': applied[ident], 'max_level': MAX_LEVEL,
                             'step_pct': round((factor - 1) * 100, 3)})
         return {'config': cfg, 'physics': ed.config_info(), 'cars': [c.public() for c in ed.cars.values()],
+                'saved_states':self.states.status(cid),
+                'ai_development':self.ai.status(cid),
                 'catalog': catalog, 'plans': plans, 'weekends': weekends(self.lib, cid)}
 
     def create(self, cid, body):
@@ -372,7 +419,9 @@ class Development:
             import re
             normalize = lambda value: re.sub(r'[^a-z0-9]', '', str(value).lower())
             if normalize(ref['car']) != normalize(cfg['telemetry_car']):
-                raise ValueError('The P1 car does not match the bound installed car. Set its exact telemetry name in Installed car before planning development.')
+                raise ValueError(f"Weekend {rnd} P1 used {ref['car'] or 'an unknown car'}, but R&D is bound to "
+                    f"{cfg['name']} (telemetry name: {cfg['telemetry_car']}). Choose a weekend recorded in "
+                    'the bound car, or correct its telemetry name in Installed car if it is the same model.')
             plan = {'id': uuid.uuid4().hex, 'round': rnd, 'driver': ref['driver'], 'car': car.id, 'car_name': car.name,
                     'state': 'planned', 'created_at': now(), 'practice1': w['practice1'], 'practice2': None,
                     'baseline': ref, 'projects': [{'category': k, 'name': BY_ID[k][1], 'objectives': objectives(k, ref)} for k in selected],
@@ -384,6 +433,7 @@ class Development:
         with self.lock, self.lib.lock:
             plan = next((p for p in self.plans(cid) if p['id'] == body.get('plan')), None)
             if not plan: raise ValueError('Choose an existing development plan.')
+            if plan.get('weekend_deleted'):raise ValueError('This weekend was deleted; its development is retained as history only.')
             if plan.get('evaluation'): return plan  # retries cannot award twice
             w = next(w for w in weekends(self.lib, cid) if w['round'] == plan['round'])
             if not w.get('practice2'): raise ValueError('Assign a Practice 2 recording to this weekend first.')
@@ -422,6 +472,10 @@ class Development:
             if plan['state'] == 'blocked' and not retry: return plan
             ed = self.editor
             try:
+                if ed.game is None: ed.scan()
+                managed,active=self.states.active()
+                if managed and active!=cid:
+                    raise ValueError('A different championship R&D state is active. Load this championship state before applying its queued upgrades.')
                 if ed.game is None: ed.scan()
                 record = self.journal(cid, ident)
                 if record and record['status'] == 'applied':
@@ -498,6 +552,7 @@ class Development:
             while not self.stop.wait(5):
                 for db in self.lib._champ_files():
                     try:
+                        self.ai.advance(db.stem)
                         if not self.config(db.stem).get('automatic'): continue
                         for p in self.plans(db.stem):
                             if p['state'] in ('queued', 'applying'): self.apply(db.stem, p['id'])
@@ -516,4 +571,8 @@ class Development:
         if method == 'POST' and action == 'submit': return self.submit(cid, body)
         if method == 'POST' and action == 'retry': return self.retry(cid, body)
         if method == 'POST' and action == 'undo': return self.undo(cid, body)
+        if method == 'POST' and action == 'save-state': return self.states.save(cid,body)
+        if method == 'POST' and action == 'preview-state': return self.states.preview(cid,body)
+        if method == 'POST' and action == 'apply-state': return self.states.apply(cid,body)
+        if method == 'POST' and action == 'ai-configure': return self.ai.configure(cid,body)
         raise LookupError('Unknown championship development request.')

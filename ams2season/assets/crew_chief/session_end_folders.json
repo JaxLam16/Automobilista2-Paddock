@@ -1,0 +1,10 @@
+[
+  "lap_counter/won_race",
+  "lap_counter/podium_finish",
+  "lap_counter/finished_race",
+  "lap_counter/finished_race_good_finish",
+  "lap_counter/finished_race_last",
+  "lap_counter/end_of_session",
+  "lap_counter/end_of_session_pole",
+  "penalties/penalty_disqualified"
+]

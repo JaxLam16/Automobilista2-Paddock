@@ -1,4 +1,22 @@
-# 0.1.0 alpha 4
+# 0.1.0 alpha 8
+
+Alpha 8 is a testing release for recording, championship and practice workflows.
+It adds the latest corner-by-corner traces, telemetry skill measurements, minimal
+live skill overlay, private reference-pack export/import, garage setup checklist,
+practice/R&D improvements and championship fixes from the development build.
+See [Corner skills](CORNER_SKILLS.md) for comparisons, configuration and limits.
+
+**Engineer audio:** this ZIP contains no voice pack, Jim reference speech or
+original Crew Chief recordings. Standalone radio and speech recognition remain
+experimental; original baseline integration needs a compatible local Crew Chief
+installation and sound pack. Cached Daniel audio is not included. Keep using
+Crew Chief for your session if you need its established calls. Full Crew Chief
+parity is incomplete; this release does not claim to replace every call.
+
+Automatic league synchronization is not included. Reference packs can be shared
+manually; they contain driver names and selected telemetry, so choose who receives
+them. Physical in-game overlay, wheel and microphone compatibility still need
+tester validation.
 
 This portable Windows build of the current Paddock app bundles
 the recorder, race and championship analysis, practice tools, race engineer,
@@ -19,6 +37,25 @@ filter with per-picker exceptions, and livery pictures beside drivers in
 standings, race results and replay. Replay car markers use estimated paint
 colors with manual overrides. The race assignment button remains visible
 before roster setup and provides a shortcut to the championship Settings.
+
+Alpha 5 defaults Race engineer to the car and track currently detected by the
+recorder. **Start live engineering** opens or resumes that setup and enables
+live run analysis in one click. The selection refreshes while the page is open;
+recorded practice remains an optional alternative. Stale or disconnected game
+data cannot create a live session, and changing cars/layouts cannot mix run data.
+Long track names wrap in the recording widget, race header and recordings table;
+table controls remain inside their panel.
+
+Alpha 6 adds an optional local connection to an installed Crew Chief: a separate
+Paddock profile, original-file backups/restore, connection status and a spoken
+radio check. Automatic corner coaching is not included in this first connection.
+See [Crew Chief setup](CREW_CHIEF.md).
+
+Alpha 7 requests immediate playback for radio checks instead of waiting in the
+regular race-message queue. Crew Chief still requires a recognized active AMS2
+session for custom MQTT speech. The latest source panel distinguishes connection
+from session availability and disables the check when it observes game menus,
+replay or no game. Delivery acknowledgement remains separate from confirmed hearing.
 
 ## Current limits
 

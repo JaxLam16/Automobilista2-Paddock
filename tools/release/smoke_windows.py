@@ -115,7 +115,7 @@ def main():
         assert call(port, 'GET', '/api/recordings')['recordings'] == []
         assert call(port, 'GET', '/api/home')['total_recordings'] == 0
         assert not call(port, 'GET', '/api/recorder')['running']
-        for path in ('/', '/bop-editor.js', '/bop-editor.css', '/livery-editor.js',
+        for path in ('/', '/crew-chief.js', '/coach.js', '/bop-editor.js', '/bop-editor.css', '/livery-editor.js',
                      '/livery-editor.css', '/development-ui.js', '/development-ui.css',
                      '/replay-timing.js', '/identity-ui.js', '/favicon.ico', '/livery-designer/',
                      '/livery-designer/editor/app.js', '/livery-designer/editor/engine.js',
@@ -123,8 +123,36 @@ def main():
                      '/livery-designer/vendor/three-mesh-bvh/build/index.module.js'):
             assert len(call(port, 'GET', path)) > 50
         for path in ('/api/car-icons', '/api/engineer', '/api/bop', '/api/bop/config',
-                     '/api/bop/car-setups', '/api/liveries', '/api/identities/catalog', '/api/tracks', '/api/livery-designer'):
+                     '/api/bop/car-setups', '/api/liveries', '/api/identities/catalog', '/api/tracks', '/api/livery-designer', '/api/engineer/current'):
             call(port, 'GET', path)
+        assert call(port, 'GET', '/api/engineer/current')['current'] is None
+        skill_settings = call(port, 'GET', '/api/skills/overlay')
+        assert skill_settings['settings']['enabled'] is False
+        assert skill_settings['settings']['timing'] == 'exit'
+        assert skill_settings['settings']['selected'] == 'trail_braking'
+        assert skill_settings['settings']['corners'] == []
+        assert (portable / '_internal/ams2season/assets/skill_overlay.exe').is_file()
+        assert (portable / '_internal/ams2season/assets/practice_overlay.exe').is_file()
+        assert not any(p.suffix.lower() in ('.wav', '.mp3', '.flac', '.building') for p in portable.rglob('*'))
+        # Authored portable data only; do not copy any real driver's recording.
+        reference = Path(__file__).with_name('skill_reference_fixture.paddockref')
+        imported = call(port, 'POST', '/api/skills/packs/import',
+                        {'data': base64.b64encode(reference.read_bytes()).decode('ascii')})
+        again = call(port, 'POST', '/api/skills/packs/import',
+                     {'data': base64.b64encode(reference.read_bytes()).decode('ascii')})
+        assert imported['id'] == again['id'] and again['already_imported']
+        assert len(list((portable / 'private_coach/reference-packs').glob('*.paddockref'))) == 1
+        call(port, 'POST', '/api/skills/packs/import', {'data': 'invalid'}, expected_status=400)
+        report['checks'].extend(['frozen minimal skill defaults and bundled overlay executables',
+                                 'frozen private reference import / duplicate / invalid-file guard',
+                                 'no voice audio or unfinished compiler outputs in payload'])
+        radio = call(port, 'GET', '/api/crew-chief')
+        assert not radio['configured'] and not radio['listening']
+        call(port, 'POST', '/api/crew-chief/test', {}, expected_status=400)
+        from radio_fixture import verify_radio_host
+        report['radio_host_checked'] = verify_radio_host(portable, env)
+        if report['radio_host_checked']:
+            report['checks'].append('packaged local radio host with installed MQTTnet; no real settings or audio')
         scan_guard = call(port, 'GET', '/api/bop/class-sets', expected_status=400)
         assert 'scan' in scan_guard['error'].lower()
         report['checks'].extend(['fresh start', 'default root beside EXE from another working directory',
@@ -149,6 +177,7 @@ def main():
         assert len(call(port, 'GET', '/report?recording=' + recording)) > 1000
         for path in ('/api/replay', '/api/technique', '/api/tyres', '/api/pace', '/api/style'):
             call(port, 'GET', path + '?recording=' + recording)
+        call(port, 'GET', '/api/skills/references?recording=' + recording)
         cid = call(port, 'POST', '/api/championships', {'name': 'Alpha Smoke Championship'})['id']
         call(port, 'PUT', '/api/championships/' + cid,
              {'drivers': [{'display': name, 'aliases': ''} for name in ('AlphaOne', 'AlphaTwo')]})
@@ -223,18 +252,28 @@ def main():
         call(port, 'POST', '/livery-designer/api/project?car=sample&name=Portable',
              {'car': 'sample', 'version': 1, 'name': 'Portable', 'layers': []})
         assert call(port, 'GET', '/livery-designer/api/projects')[0]['name'] == 'Portable'
+        game_before = {p.relative_to(game.root).as_posix(): digest(p) for p in Path(game.root).rglob('*') if p.is_file()}
         connection = http.client.HTTPConnection('127.0.0.1', port, timeout=90)
         try:
             connection.request('POST', '/livery-designer/api/install?car=sample&width=64&height=64&name=Portable',
                 body=bytes([200, 30, 40, 255]) * 64 * 64, headers={'Content-Type': 'application/octet-stream'})
             response = connection.getresponse()
             saved = json.loads(response.read())
-            assert response.status == 200 and saved['slot'] == 2
+            installed = response.status == 200
+            if installed:
+                assert saved['slot'] == 2, saved
+            else:
+                assert response.status == 400 and saved.get('error') == 'Close Automobilista 2 before saving a livery to the game.', (response.status, saved)
+                assert game_before == {p.relative_to(game.root).as_posix(): digest(p) for p in Path(game.root).rglob('*') if p.is_file()}
         finally:
             connection.close()
-        assert call(port, 'GET', '/livery-designer/api/info/sample')['next'] == 3
+        assert call(port, 'GET', '/livery-designer/api/info/sample')['next'] == (3 if installed else 2)
         assert before == {name: digest(original / name) for name in before}
-        report['checks'].extend(['bundled offline 3D designer assets', 'frozen designer mesh / project save / DDS install with authored fixtures'])
+        report['designer_installation_checked'] = installed
+        report['designer_game_running_guard_checked'] = not installed
+        report['checks'].extend(['bundled offline 3D designer assets',
+            'frozen designer mesh / project save / DDS install with authored fixtures' if installed else
+            'frozen designer mesh / project save / live-game write guard; authored fixture unchanged'])
         close(process, port)
         process = None
         report['checks'].extend(['persistent livery AI without an installed game', 'fictional AI full-field points / human-only separation',

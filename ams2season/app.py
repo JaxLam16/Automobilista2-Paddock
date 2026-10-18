@@ -102,6 +102,12 @@ class RecorderService:
             self.rec.hooks["practice"] = self.practice.feed
         if getattr(self, "engineer", None):
             self.rec.hooks["engineer"] = self.engineer.feed
+        if getattr(self, "coach", None) and self.coach.running:
+            self.rec.hooks["coach"] = self.coach.feed
+        if getattr(self, 'practice_overlay', None):
+            self.rec.hooks['practice_overlay'] = self.practice_overlay.feed
+        if getattr(self, 'skill_overlay', None):
+            self.rec.hooks['skill_overlay'] = self.skill_overlay.feed
         self.stop_event = threading.Event()
         self.error = None
 
@@ -138,11 +144,11 @@ class RecorderService:
         if self.rec:
             self.rec.hooks["mapper"] = self.mapper.feed
 
-    def start_engineer(self, on_run_end) -> None:
+    def start_engineer(self, on_run_end, expected=None) -> None:
         from .engineer.live import EngineerTracker
         if not self.running:
             self.start()
-        self.engineer = EngineerTracker(on_run_end)
+        self.engineer = EngineerTracker(on_run_end, expected=expected)
         if self.rec:
             self.rec.hooks["engineer"] = self.engineer.feed
 
@@ -186,6 +192,8 @@ class RecorderService:
             st["state"] = "connected"
         else:
             st["state"] = "waiting"
+        if not self.running:
+            st["current"] = None
         return st
 
 
@@ -548,7 +556,13 @@ class Library:
         try:
             # Standalone reports borrow human aliases only; fictional identity is championship-scoped.
             session = project_session(path, cfg if champ_id else None)
-            ra = analyze_race(session, humans=humans, corners_override=corners, params=params, racing_mode=self.settings.racing_corners)
+            if session.type=='practice':
+                from .practice_analysis import analyze_practice_telemetry
+                samples,width,_=self.track_file(meta['track_location'],meta['track_variation'])
+                ra=analyze_practice_telemetry(session,humans=humans,corners_override=corners,mode=self.settings.racing_corners,
+                                            track_samples=samples,track_width=width)
+            else:
+                ra = analyze_race(session, humans=humans, corners_override=corners, params=params, racing_mode=self.settings.racing_corners)
             original = session.meta.get('_recorded_names', {})
             ra.entrants['recorded_name'] = ra.entrants.name.map(lambda name: original.get(name, name))
             ra.classification['recorded_name'] = ra.classification.name.map(lambda name: original.get(name, name))
@@ -743,14 +757,14 @@ class Library:
                     best = x["fastest_lap"] if best is None else min(best, x["fastest_lap"])
         return best
 
-    TECHNIQUE_VERSION = 8  # shift-aware throttle shapes and modulated/flat-out corners
+    TECHNIQUE_VERSION = 11  # coherent fast clean corner targets per skill
 
     def technique_cached(self, path: Path) -> dict:
         from .report import _clean
         from .technique import technique_report
         meta = self.recording_summary(path)
         stamp = max(((path / f).stat().st_mtime for f in ("frames.parquet", "local.parquet") if (path / f).exists()), default=0)
-        stamp = f"{stamp}|{json.dumps(self.track_corners(meta['track_raw'], meta['layout_raw']))}|{self.settings.racing_corners}"
+        stamp = f"{stamp}|{json.dumps(self.track_corners(meta['track_raw'], meta['layout_raw']))}|{self.settings.racing_corners}|{self.track_file(meta['track_raw'],meta['layout_raw'])[2]}"
         cache = path / "analysis" / "technique.json"
         if cache.exists():
             try:
@@ -759,7 +773,16 @@ class Library:
                     return c
             except Exception:
                 pass
-        rep = _clean(technique_report(path, self.track_corners(meta["track_raw"], meta["layout_raw"]), mode=self.settings.racing_corners))
+        geometry = None
+        from .trackmap import load_track_file
+        from .coach.apex import ApexMap
+        mapped = load_track_file(self.root,meta['track_raw'],meta['layout_raw'])
+        if mapped:
+            try:
+                geometry = ApexMap(mapped,meta['track_raw'],meta['layout_raw'],float(mapped['length']),'recorded-map')
+            except (ValueError,TypeError,KeyError):
+                pass
+        rep = _clean(technique_report(path, self.track_corners(meta["track_raw"], meta["layout_raw"]), mode=self.settings.racing_corners,skill_geometry=geometry))
         rep.update({"_stamp": stamp, "_v": self.TECHNIQUE_VERSION})
         try:
             cache.parent.mkdir(exist_ok=True)
@@ -966,6 +989,13 @@ class Library:
         ra, colors = self._analysis(recording, champ_id)[:2]
         is_ai = dict(zip(ra.entrants.name, ra.entrants.is_ai.astype(bool)))
         data = race_pace(ra.laps, is_ai)
+        if ra.session.type=='practice':
+            # Practice lap numbers are independent stint counters, not a race
+            # timing reference. Do not turn crossing order into traffic gaps.
+            for driver in data['drivers']:
+                for lap in driver['laps']:lap.update(gap_ahead=None,air='unknown')
+                driver.update(clean_air={'median':None,'laps':0},traffic={'median':None,'laps':0},
+                              traffic_cost=None,mixed={'median':driver['median'],'laps':driver['representative_laps']})
         rec = next((r for r in self.recordings() if r["id"] == recording), {})
         quali = {}
         if rec.get("quali"):
@@ -979,8 +1009,7 @@ class Library:
             d["quali_best"] = quali.get(d["name"])
             d["color"] = colors.get(d["name"])
         meta = ra.session.meta
-        data.update({"meta": {"track": meta.get("track_location_translated") or meta.get("track_location"),
-                              "started_at": meta.get("started_at")}, "quali_recording": rec.get("quali"),
+        data.update({"meta": self._race_meta(ra), "quali_recording": rec.get("quali"),
                      "classification": [r.name for r in ra.classification.itertuples()]})
         data["awards"] = self._race_awards(ra, "pace")
         return data
@@ -997,10 +1026,12 @@ class Library:
 
     def _race_meta(self, ra) -> dict:
         m = ra.session.meta
-        return {"track": m.get("track_location_translated") or m.get("track_location"), "started_at": m.get("started_at")}
+        return {"track": m.get("track_location_translated") or m.get("track_location"), "started_at": m.get("started_at"),
+                'session_type':ra.session.type}
 
     def _race_awards(self, ra, page: str | None = None) -> list:
         """The race's awards, worked out once per analysis; with a page, only the ones that belong there."""
+        if ra.session.type!='race':return []
         if getattr(ra, "_awards_cache", None) is None:
             from .awards import race_awards
             ra._awards_cache = race_awards(ra, self.settings.pinned_awards or [])
@@ -1021,8 +1052,52 @@ class Library:
             r.update({"pos": order.get(r["name"]), "color": cols.get(r["name"]), "is_ai": bool(r.get("is_ai"))})
             rows.append(r)
         rows.sort(key=lambda r: r["pos"] or 99)
+        technique = self.technique_cached(self.recording_path(recording))
         return {"meta": self._race_meta(ra), "drivers": rows, "racing_mode": getattr(ra, "racing_mode", "reduced"),
+                "skills": technique.get('skills'), "skills_driver": technique.get('driver'),
                 "awards": self._race_awards(ra, "style")}
+
+    def skill_references(self, recording, reference=None):
+        from .skill_references import match, compare
+        from .skill_packs import PackStore,report as pack_report
+        path=self.recording_path(recording)
+        meta=json.loads((path/'session.json').read_text(encoding='utf-8'))
+        if reference is not None:
+            imported=reference.startswith('pack:')
+            if imported:
+                pack=PackStore(self.root).get(reference);other=pack['meta']
+                rep={'driver':other['local']['name'],'skills':pack_report(pack)}
+            else:
+                target=self.recording_path(reference)
+                other=json.loads((target/'session.json').read_text(encoding='utf-8'))
+                rep=self.technique_cached(target)
+            kind=match(meta,other)
+            if kind is None:raise ValueError('Reference needs the same layout/length and exact car or matching reported class, with local driver inputs.')
+            own=self.technique_cached(path).get('skills') or {}
+            if not (rep.get('skills') or {}).get('passes'):raise ValueError('Reference has no complete clean corner passes with supported local telemetry.')
+            return {**compare(own,rep['skills'],kind),'driver':rep.get('driver'),'car':(other.get('local') or {}).get('car'),'recording':reference,
+                    'reference_source':'imported_pack' if imported else 'local_recording',
+                    'reference_verification':'Imported statistics; raw telemetry was not independently reanalysed.' if imported else 'Calculated from this PC\'s recording.',
+                    'reference_traces':rep['skills'].get('traces',[])}
+        rows=[]
+        for target in self.recordings_dir.iterdir():
+            if not target.is_dir() or not (target/'session.json').is_file():continue
+            try:other=json.loads((target/'session.json').read_text(encoding='utf-8'))
+            except (OSError,ValueError):continue
+            kind=match(meta,other)
+            if kind and other.get('status')=='complete':
+                rows.append({'id':target.name,'kind':kind,'driver':other['local']['name'],'car':other['local']['car'],'started_at':other.get('started_at')})
+        rows.extend(PackStore(self.root).matching(meta))
+        rows.sort(key=lambda r:(r['kind']!='exact_car',r['id']!=recording,r['id']))
+        return {'references':rows,'default':'telemetry'}
+
+    def export_skill_pack(self,recording):
+        from .skill_packs import from_report,encode,selected_traces
+        path=self.recording_path(recording)
+        meta=json.loads((path/'session.json').read_text(encoding='utf-8'))
+        if meta.get('status')!='complete':raise ValueError('Finish the recording before exporting its reference data.')
+        rep=self.technique_cached(path)
+        return encode(from_report(meta,rep,path.name,traces=selected_traces(path,rep)))
 
     def errors_page(self, recording: str, champ_id: str | None) -> dict:
         from .errors import race_errors
@@ -1069,7 +1144,7 @@ class Library:
         ra = self._analysis(recording, champ_id)[0]
         meta = ra.session.meta
         return {"awards": self._race_awards(ra, "cars"), "cars": _car_rows(ra), "car_extra": _car_extra(ra),
-                "meta": {"track": meta.get("track_location_translated") or meta.get("track_location"), "started_at": meta.get("started_at")}}
+                "meta": self._race_meta(ra)}
 
     def track_turns(self, key: str) -> dict:
         from .derive import curvature_profile, detect_corners
@@ -1250,21 +1325,47 @@ def _clean_drivers(drivers: list[dict]) -> list[dict]:
 
 
 # --------------------------------------------------------------------------- HTTP
+def code_stamp() -> int:
+    """Newest modification time of Paddock's own code and pages: tells a running Paddock that an
+    update has been installed since it started."""
+    package = Path(__file__).resolve().parent
+    newest = 0
+    for pattern in ("*.py", "*.js", "*.html", "coach/*.py", "engineer/*.py", "assets/*.ps1", "assets/*.cs"):
+        for f in package.glob(pattern):
+            try:
+                newest = max(newest, f.stat().st_mtime_ns)
+            except OSError:
+                pass
+    return newest
+
+
 class App:
     def __init__(self, root: Path, reader_factory=None):
         self.lib = Library(root)
         self.recorder = RecorderService(self.lib, reader_factory)
+        self.started_stamp = code_stamp()
+        self.quit_requested = None          # 'exit' or 'restart', from the Exit / Restart buttons
         self.last_heartbeat: float | None = None
         self.closing_at: float | None = None
         self.port = None
         self._livery_editor = None
         self._livery_designer = None
+        self._crew_chief = None
+        self._coach = None
+        self._practice_overlay = None
+        self._skill_overlay = None
         self._bop_editor = None
         self._development = None
         if (self.lib.root / 'balance_of_performance' / 'development_receipts.db').exists():
             from .development import Development
             self._development = Development(self)
             self._development.start_worker()
+        if (self.lib.root / 'crew_chief' / 'settings.json').exists():
+            try:
+                if self.crew_chief.settings.get('enabled'):
+                    self.crew_chief.start()
+            except (ValueError, OSError) as exc:
+                self.crew_chief.error = str(exc)
 
     CLOSE_GRACE_S = 15          # a reload sends "closing" then heartbeats again straight away
     SILENT_LIMIT_S = 3 * 3600   # fallback if the close signal never arrives (crash, killed browser)
@@ -1301,8 +1402,11 @@ class App:
         lib = self.lib
         store = EngineerStore(lib.root)
         eng = getattr(self.recorder, "engineer", None)
-        live = eng.status() if eng else None
         live_key = getattr(self.recorder, "engineer_key", None)
+        if method == "GET" and path == "/api/engineer/current":
+            status = self.recorder.status()
+            return {"current": status.get("current"), "recorder": status["state"], "live_key": live_key}
+        live = eng.status() if eng else None
         if method == "GET" and path == "/api/engineer":
             prac = [{"id": r["id"], "car": r.get("car"), "track": r["track"], "track_raw": r.get("track_raw"), "layout_raw": r.get("layout_raw"),
                      "started_at": r["started_at"]} for r in lib.recordings() if r["type"] == "practice" and r["status"] == "complete"]
@@ -1313,6 +1417,7 @@ class App:
                     except Exception:
                         pass
             return {"sessions": store.list(), "live": live, "live_key": live_key, "practice": prac,
+                    "current": self.recorder.status().get("current"),
                     "settings": SETTINGS, "categories": CATEGORIES}
         if method == "POST" and path == "/api/engineer/session":
             s = store.create(body["car"], body["track"], body.get("layout") or body["track"], body.get("race_target"),
@@ -1324,9 +1429,7 @@ class App:
             out.update({"live": live if live_key == query["key"] else None, "settings": SETTINGS, "categories": CATEGORIES})
             return out
         if method == "DELETE" and path == "/api/engineer/session":
-            p = store.path(query["key"])
-            if p.exists():
-                p.unlink()
+            store.delete(query['key'])
             return {"ok": True}
         if method == "POST" and path == "/api/engineer/analyse":
             s = store.get(body["key"])
@@ -1342,22 +1445,101 @@ class App:
             return summary_for_ui(store.feedback(body["key"], body.get("feedback") or {}))
         if method == "POST" and path == "/api/engineer/decide":
             return summary_for_ui(store.decide(body["key"], body.get("decisions") or {}, body.get("manual") or []))
+        if method == "POST" and path == "/api/engineer/submit":
+            return store.submit_changes(body['key'], body.get('run_id'), body.get('token'))
         if method == "POST" and path == "/api/engineer/live/start":
-            key = body["key"]
-            store.get(key)
-
-            def on_run_end(df, info):
-                L = info.get("track_length") or float(df.lap_dist.max())
-                s = store.add_run(key, df, L, "live run")
-                return {"run": len(s["runs"])}
-            self.recorder.start_engineer(on_run_end)
-            self.recorder.engineer_key = key
-            return {"ok": True}
+            return {"ok": True, "key": self.start_live_engineer(body.get("key"))}
         if method == "POST" and path == "/api/engineer/live/stop":
-            self.recorder.stop_engineer()
-            self.recorder.engineer_key = None
+            self.stop_live_engineer()
             return {"ok": True}
         raise LookupError("unknown engineer request")
+
+    def start_live_engineer(self, key=None, *, started_by=None):
+        """Track live runs for the setup engineer: each run is analysed when the car is back in.
+        The practice coach also starts this for Practice 1 and hears about each analysed run."""
+        from .engineer.store import EngineerStore
+        store = EngineerStore(self.lib.root)
+        current = self.recorder.status().get("current")
+        if key:
+            session = store.get(key)
+            if current and any(session[k] != current[k] for k in ("car", "track", "layout")):
+                raise ValueError("AMS2 is showing a different car or track. Start engineering from the current car instead.")
+        else:
+            if not current:
+                raise ValueError("No live car and track detected. Start the recorder and load a session in AMS2 first.")
+            session = store.create(current["car"], current["track"], current["layout"])
+            key = session["key"]
+        if getattr(self.recorder, "engineer", None) is not None and getattr(self.recorder, "engineer_key", None) == key:
+            # A second Start is a resume: retain the run and restore detached hooks.
+            if not self.recorder.running:
+                self.recorder.start()
+            overlay = self.practice_overlay
+            if self.recorder.rec:
+                self.recorder.rec.hooks['engineer'] = self.recorder.engineer.feed
+                self.recorder.rec.hooks['practice_overlay'] = overlay.feed
+            if overlay.enabled:
+                overlay.start()
+            return key
+
+        def on_run_end(df, info):
+            L = info.get("track_length") or float(df.lap_dist.max())
+            s = store.add_run(key, df, L, "live run")
+            coach = self._coach
+            if coach is not None:
+                coach.engineer_run_done(key, s)
+            return {"run": len(s["runs"])}
+        self.recorder.start_engineer(on_run_end, expected={k: session[k] for k in ("car", "track", "layout")})
+        overlay = self.practice_overlay
+        if self.recorder.rec:
+            self.recorder.rec.hooks['practice_overlay'] = overlay.feed
+        self.recorder.engineer_key = key
+        self.recorder.engineer_started_by = started_by
+        return key
+
+    def stop_live_engineer(self, *, started_by=None):
+        """Stop live run tracking; with started_by, only if that owner started it."""
+        if started_by is not None and getattr(self.recorder, "engineer_started_by", None) != started_by:
+            return False
+        self.recorder.stop_engineer()
+        self.recorder.engineer_key = None
+        self.recorder.engineer_started_by = None
+        return True
+
+    @property
+    def coach(self):
+        if self._coach is None:
+            from .coach.service import CoachService
+            self._coach = CoachService(self)
+        return self._coach
+
+    @property
+    def practice_overlay(self):
+        if self._practice_overlay is None:
+            from .practice_overlay import PracticeOverlay
+            self._practice_overlay = PracticeOverlay(self)
+            self.recorder.practice_overlay = self._practice_overlay
+            if self.recorder.rec:
+                self.recorder.rec.hooks['practice_overlay'] = self._practice_overlay.feed
+            if self._practice_overlay.enabled:
+                self._practice_overlay.start()
+        return self._practice_overlay
+
+    @property
+    def skill_overlay(self):
+        if self._skill_overlay is None:
+            from .skill_overlay import SkillOverlay
+            self._skill_overlay=SkillOverlay(self)
+            self.recorder.skill_overlay=self._skill_overlay
+            if self.recorder.rec:self.recorder.rec.hooks['skill_overlay']=self._skill_overlay.feed
+            if self._skill_overlay.settings['enabled']:self._skill_overlay.start()
+        return self._skill_overlay
+
+    @property
+    def crew_chief(self):
+        if self._crew_chief is None:
+            from .crew_chief import CrewChief
+            self._crew_chief = CrewChief(self.lib.root)
+        return self._crew_chief
 
     @property
     def livery_designer(self):
@@ -1473,6 +1655,9 @@ class App:
 
     def route(self, method: str, path: str, query: dict, body: dict):
         lib = self.lib
+        if path == '/api/driver-name-presets' and method == 'GET':
+            from .driver_presets import catalogue
+            return catalogue()
         if path == '/api/identities/catalog' and method == 'GET':
             return self.identity_catalog()
         if path == '/api/identities' and method == 'GET':
@@ -1498,11 +1683,19 @@ class App:
                     driver['livery'] = snap
         weekend_route = re.fullmatch(r"/api/championships/([\w-]+)/weekends", path)
         if weekend_route:
-            from .weekends import weekends, assign
+            from .weekends import weekends, assign, next_round
             cid = weekend_route.group(1)
-            if method == "GET": return {"weekends": weekends(lib, cid)}
+            if method == "GET": return {"weekends": weekends(lib, cid),'can_delete':True,'next_round':next_round(lib,cid)}
             if method == "POST":
                 with lib.lock: return assign(lib, cid, body)
+        weekend_item = re.fullmatch(r'/api/championships/([\w-]+)/weekends/(\d+)',path)
+        if weekend_item and method in ('GET','DELETE'):
+            from .weekends import deletion_review,remove
+            cid,rnd=weekend_item.group(1),int(weekend_item.group(2))
+            lock=self._development.lock if self._development else lib.lock
+            with lock,lib.lock:
+                if method=='GET':return deletion_review(lib,cid,rnd)
+                return remove(lib,cid,rnd,body.get('token'))
         dev_route = re.fullmatch(r"/api/championships/([\w-]+)/development(?:/([\w-]+))?", path)
         if dev_route:
             if self._development is None:
@@ -1525,6 +1718,13 @@ class App:
             self.last_heartbeat = time.monotonic()
             self.closing_at = None
             return {"ok": True}
+        if method == "GET" and path == "/api/app/version":
+            installed = code_stamp()
+            return {"running": self.started_stamp, "installed": installed, "update_waiting": installed > self.started_stamp}
+        if method == "POST" and path == "/api/app/quit":
+            # Exit or restart Paddock completely (a recording in progress is finished and saved first).
+            self.quit_requested = "restart" if (body or {}).get("restart") is True else "exit"
+            return {"ok": True, "action": self.quit_requested}
         if method == "GET" and path == "/api/recorder":
             return self.recorder.status()
         if method == "POST" and path == "/api/recorder/start":
@@ -1672,6 +1872,27 @@ class App:
             return lib.driver_profiles(m_.group(1))
         if method == "POST" and path == "/api/recordings/import":
             return lib.import_recording(body)
+        if path == '/api/skills/packs/import' and method == 'POST':
+            from .skill_packs import PackStore,decode_upload
+            return PackStore(lib.root).add(decode_upload(body))
+        if path == '/api/skills/references' and method == 'GET':
+            return lib.skill_references(query['recording'],query.get('reference'))
+        if path == '/api/skills/overlay':
+            if method == 'GET':return self.skill_overlay.status()
+            if method == 'POST':return self.skill_overlay.configure(body)
+        if path == '/api/skills/overlay/action' and method == 'POST':
+            return self.skill_overlay.command(body.get('action'))
+        if path.startswith('/api/coach'):
+            if path == '/api/coach/overlay':
+                if method == 'GET':
+                    return self.practice_overlay.status()
+                if method == 'POST':
+                    return self.practice_overlay.configure(body)
+            if path == '/api/coach/overlay/action' and method == 'POST':
+                return self.practice_overlay.command(body.get('action'))
+            return self.coach.route(method, path, body, query)
+        if path.startswith('/api/crew-chief'):
+            return self.crew_chief.route(method, path, body)
         if path.startswith("/api/engineer"):
             return self.engineer_route(method, path, query, body)
         if method == "GET" and path == "/api/style":
@@ -1874,6 +2095,40 @@ def make_handler(app: App):
                 if method == "GET" and url.path in campaign_assets:
                     filename, ctype = campaign_assets[url.path]
                     return self._send(200, ui_file.with_name(filename).read_bytes(), ctype)
+                if method == 'GET' and url.path == '/crew-chief.js':
+                    # Keep the established entry point while old installed backends
+                    # still serve it. The HTML below gracefully handles older code.
+                    scripts = ui_file.with_name('skills_ui.js').read_bytes() + b'\n' + ui_file.with_name('crew_chief.js').read_bytes() + b'\n' + ui_file.with_name('coach.js').read_bytes()
+                    return self._send(200, scripts, 'text/javascript; charset=utf-8')
+                if method == 'GET' and url.path == '/coach.js':
+                    return self._send(200, ui_file.with_name('coach.js').read_bytes(), 'text/javascript; charset=utf-8')
+                if method == 'GET' and url.path == '/api/skills/packs/export':
+                    return self._send(200,app.lib.export_skill_pack(query['recording']),'application/gzip')
+                if method == 'GET' and url.path == '/coach-review':
+                    return self._send(200, app.coach.review_file(query.get('run')).read_bytes(), 'text/html; charset=utf-8')
+                if method == 'GET' and url.path.startswith('/api/coach/audio/'):
+                    return self._send(200, app.coach.claim_audio(url.path), 'audio/wav')
+                if method in ('POST', 'PUT', 'DELETE') and url.path.startswith(('/api/crew-chief', '/api/coach', '/api/skills')):
+                    def reject_radio(code, message):
+                        # Windows can reset a connection with unread request data,
+                        # hiding the useful403/415 response from the caller.
+                        length = int(self.headers.get('Content-Length') or 0)
+                        if 0 < length <= 1 << 20:
+                            self.connection.settimeout(.5)
+                            try:
+                                self.rfile.read(length)
+                            except OSError:
+                                pass
+                        self.close_connection = True
+                        return self._json(code, {'error': message})
+                    origin = self.headers.get('Origin')
+                    if (origin and origin != 'http://' + self.headers.get('Host', '')) or self.headers.get('Sec-Fetch-Site') == 'cross-site':
+                        return reject_radio(403, 'Radio changes must come from this app window.')
+                    if self.headers.get('Content-Type', '').split(';')[0].strip() != 'application/json':
+                        return reject_radio(415, 'Radio requests require JSON.')
+                    limit=(768<<10) if url.path=='/api/skills/packs/import' else 16384
+                    if not 0 <= int(self.headers.get('Content-Length') or 0) <= limit:
+                        return reject_radio(413, 'Reference upload is too large.' if limit>16384 else 'Radio request must be at most16 KB.')
                 bop_assets = {"/bop-editor.js": ("bop_editor.js", "text/javascript; charset=utf-8"),
                               "/bop-editor.css": ("bop_editor.css", "text/css; charset=utf-8")}
                 if method == "GET" and url.path in bop_assets:
@@ -1914,7 +2169,7 @@ def make_handler(app: App):
                     page = app.lib.race_report(query["recording"], query.get("champ") or None)
                     return self._send(200, page.encode("utf-8"), "text/html; charset=utf-8")
                 body = {}
-                if method in ("POST", "PUT"):
+                if method in ("POST", "PUT", "DELETE"):
                     n = int(self.headers.get("Content-Length") or 0)
                     if n:
                         body = json.loads(self.rfile.read(n).decode("utf-8"))
@@ -2043,6 +2298,9 @@ def run_app(root: str | Path = ".", port: int = DEFAULT_PORT, open_ui: bool = Tr
     url = f"http://127.0.0.1:{app.port}/?v={_ui_stamp()}"
     if app.lib.settings.autostart_recorder:
         app.recorder.start()
+    # Restore the saved overlay preference without requiring a visit to its page.
+    app.practice_overlay
+    app.skill_overlay
     print(f"AMS2 Season running at {url}  (close the app window to quit)")
     threading.Thread(target=server.serve_forever, name="http", daemon=True).start()
     if open_ui:
@@ -2050,7 +2308,9 @@ def run_app(root: str | Path = ".", port: int = DEFAULT_PORT, open_ui: bool = Tr
 
     try:
         while True:
-            time.sleep(1)
+            time.sleep(.5)
+            if app.quit_requested:
+                break
             if keep_alive or app.last_heartbeat is None or not app.should_quit():
                 continue
             break
@@ -2058,4 +2318,30 @@ def run_app(root: str | Path = ".", port: int = DEFAULT_PORT, open_ui: bool = Tr
         pass
     finally:
         app.recorder.stop()
+        if app._practice_overlay is not None:
+            app._practice_overlay.close()
+        if app._skill_overlay is not None:
+            app._skill_overlay.close()
+        if app._coach is not None:
+            app._coach.close()
+        if app._crew_chief is not None:
+            app._crew_chief.stop(persist=False)
+            app._crew_chief.close()
         server.shutdown()
+        server.server_close()
+        if app.quit_requested == "restart":
+            _relaunch(root)
+
+
+def _relaunch(root: Path) -> None:
+    """Start a fresh Paddock (the open window reloads itself onto it) after this one has let go of
+    its port. Same interpreter and arguments, without opening a second window."""
+    args = list(sys.argv[1:])
+    if "--no-window" not in args:
+        args.append("--no-window")
+    command = [sys.executable, *args] if getattr(sys, "frozen", False) else [sys.executable, "-m", "ams2season", *args]
+    flags = 0
+    if sys.platform == "win32":
+        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+    subprocess.Popen(command, cwd=os.getcwd(), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, creationflags=flags, close_fds=True)
